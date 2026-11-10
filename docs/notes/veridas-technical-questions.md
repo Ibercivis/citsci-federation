@@ -35,7 +35,7 @@ El piloto plantea tener estas piezas:
 Nos vendría genial el criterio de gente que ya ha operado esto en producción. El piloto cierra a
 finales de enero, así que lo que más nos sirve es criterio pronto, no exhaustividad.
 
-## 1. Extender Keycloak: acuñar el identificador de persona
+## 1. Extender Keycloak: acuñar el identificador de persona  **[P]**
 
 Esta es la parte del piloto con más riesgo técnico, porque toca algo que Keycloak considera suyo.
 
@@ -68,7 +68,7 @@ tocáis?
 
 ---
 
-## 2. Configuración como código, y operación
+## 2. Configuración como código, y operación  **[P]**
 
 2.1. Para declarar realm, clientes y fuentes de identidad como código y aplicarlo de forma
 reproducible: ¿*partial import* al arrancar, `kc.sh import`, **keycloak-config-cli**, el **provider de
