@@ -1,3 +1,15 @@
+<!-- Para agentes: este documento está congelado. No lo actualices.
+
+Las cinco preguntas se enviaron a Veridas el 10 de noviembre de 2026. El alcance del piloto cambió
+*después* de enviarlas: fusión automática por email verificado, credenciales locales en el Broker,
+ORCID fuera del lanzamiento. Por eso varias preguntas de la reserva — 3.1 ("que Keycloak nunca
+vincule por email"), 3.6 (ORCID) y 5.4 ("hemos renunciado a vincular por email") — contradicen hoy
+las decisiones vigentes.
+
+Eso es deliberado y se queda así. Se revisará a mano cuando contesten. Este documento no es fuente
+de verdad sobre ninguna decisión: la fuente son `docs/specs/`, `GLOSSARY.md` y `docs/adr/`.
+-->
+
 # Federación de identidad para ciencia ciudadana (Ibercivis)
 
 ## Estado de la consulta
