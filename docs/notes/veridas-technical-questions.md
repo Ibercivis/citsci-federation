@@ -6,10 +6,13 @@ Correo de calibración enviado a Kike (Veridas) el **10 de noviembre de 2026**, 
 abajo y una única pregunta: si tienen en el equipo gente con rodaje en Keycloak en producción, en
 OIDC/OAuth2 como proveedor (no como consumidor), o en federación.
 
-Este documento es el **segundo paso**: las preguntas concretas, para recortarlas a lo que su respuesta
-diga que saben. Los bloques marcados **[P]** son del piloto y nos bloquean antes de enero; los
-marcados **[F]** son de fases posteriores, y lo que buscamos ahí es no meternos en un callejón sin
-salida, no una decisión ya.
+Este documento es el **segundo paso**. Veridas es una empresa privada que se ha ofrecido por
+cortesía, no un proveedor contratado, así que la regla es **cinco preguntas, no treinta**: mandamos
+solo las de abajo. El resto del documento es **reserva nuestra**, no una cola de envío.
+
+El criterio para que una pregunta entre en las cinco: **que no la podamos responder nosotros
+experimentando un día**. Lo que se averigua levantando un Keycloak y probando, lo averiguamos
+nosotros. A ellos solo les preguntamos lo que exige cicatrices.
 
 Aviso de calibración: su documentación pública (VeriSaaS, vali-Das, das-Face, Keymaker, XpressID) es
 toda verificación documental y biometría consumida por API, con autenticación por API key. No hay
@@ -35,7 +38,53 @@ El piloto plantea tener estas piezas:
 Nos vendría genial el criterio de gente que ya ha operado esto en producción. El piloto cierra a
 finales de enero, así que lo que más nos sirve es criterio pronto, no exhaustividad.
 
-## 1. Extender Keycloak: acuñar el identificador de persona  **[P]**
+## Las cinco preguntas
+
+**P1. Sobrescribir `sub`.** Necesitamos que `sub` no sea el id interno de usuario de Keycloak, sino un
+UUID propio con dominio (`<uuid>@ibercivis.es`), y que el mismo valor salga en ID token, userinfo,
+introspection y access token. ¿Lo habéis hecho? Y sobre todo: **¿qué se rompió?** Nos preocupan las
+tripas que dependen de `sub` — el `logout_token` del back-channel logout, offline tokens, Admin API,
+Account Console — más que el mapper en sí.
+
+**P2. Coste de cargar con extensiones propias.** Si hay que escribir un SPI, pasamos a mantener imagen
+propia de Keycloak. ¿Con qué frecuencia os ha roto una subida de versión una extensión, y qué SPIs
+consideráis API estable frente a interfaz interna disfrazada de API? Buscamos una cifra y una
+cicatriz, no documentación.
+
+**P3. Configuración como código que sobreviva.** Queremos realm, clientes y fuentes de identidad
+declarados en el repositorio y aplicados al arrancar. De lo que hayáis usado — *partial import*,
+`keycloak-config-cli`, el provider de Terraform, otra cosa — ¿qué no acaba peleándose con que la base
+de datos es la fuente de verdad real de Keycloak? ¿Y cómo detectáis que lo que corre ha dejado de ser
+lo declarado?
+
+**P4. Logout propagado.** Una de nuestras historias exige que cerrar sesión la cierre en las
+aplicaciones a las que se entró. ¿Qué fiabilidad real tiene el back-channel logout de Keycloak, qué
+falla en silencio y lo monitorizáis de alguna manera? Esto no se puede averiguar en pruebas: solo
+aparece en producción.
+
+**P5. Decidnos dónde nos equivocamos.** ¿Leeríais nuestra especificación y nuestros tres ADR (cortos)
+y nos diríais qué decisión os parece un error? Es lo más valioso que podemos pediros y lo que menos
+preparación os cuesta.
+
+---
+
+## Reserva — no enviar de entrada
+
+Lo que sigue se escribió antes de imponer la regla de las cinco. Se queda como banco de preguntas para
+cuando haya respuesta a las de arriba, o para una segunda conversación si ellos la ofrecen. **Dos
+bloques enteros están deliberadamente fuera del primer envío**:
+
+- El **bloque 4 (OpenID Federation)**: si tuvieran rodaje, lo habrían dicho al contestar el correo de
+  calibración. Preguntarlo antes de saberlo gasta dos de las cinco balas en un probable "no".
+- El **bloque 5 (verificación y biometría)**: es su terreno real y su producto, es decir, una
+  conversación comercial. Mezclarla con un favor técnico ensucia las dos. Si algún día hace falta
+  verificación de identidad, se abre por su cuenta y por el canal que les corresponde.
+
+Las de los bloques 1 a 3 que no subieron a las cinco están fuera porque **las podemos responder
+nosotros experimentando**: dónde guardar el atributo, cuándo acuñar el UUID, cómo evitar la
+vinculación por email, las aristas del OIDC de ORCID. Eso es trabajo nuestro, no favor suyo.
+
+### 1. Extender Keycloak: acuñar el identificador de persona  **[P]**
 
 Esta es la parte del piloto con más riesgo técnico, porque toca algo que Keycloak considera suyo.
 
@@ -68,7 +117,7 @@ tocáis?
 
 ---
 
-## 2. Configuración como código, y operación  **[P]**
+### 2. Configuración como código, y operación  **[P]**
 
 2.1. Para declarar realm, clientes y fuentes de identidad como código y aplicarlo de forma
 reproducible: ¿*partial import* al arrancar, `kc.sh import`, **keycloak-config-cli**, el **provider de
@@ -95,7 +144,7 @@ hace falta clustering Infinispan desde el principio? ¿Qué se rompe primero cua
 
 ---
 
-## 3. Vinculación de identidades, sesión y logout  **[P]**
+### 3. Vinculación de identidades, sesión y logout  **[P]**
 
 3.1. Queremos que Keycloak **nunca** vincule por email. ¿Cómo se consigue de forma que no dependa de
 que nadie toque una casilla: qué hay que quitar del flujo *first broker login*, y qué pasa con las
@@ -123,7 +172,7 @@ costar un día de trabajo?
 
 ---
 
-## 4. OpenID Federation y el horizonte federado  **[F]**
+### 4. OpenID Federation y el horizonte federado  **[F]**
 
 Contexto: OpenID Federation 1.0 es especificación final desde febrero de 2026 (1.1 en mayo). Nuestra
 lectura es que **Keycloak upstream eligió otra dirección**: no tiene código de OIDF ni punto de
@@ -156,7 +205,7 @@ trust anchor realista para una fundación como la nuestra?
 
 ---
 
-## 5. Garantía de identidad y verificación — vuestro terreno  **[F]**
+### 5. Garantía de identidad y verificación — vuestro terreno  **[F]**
 
 5.1. Hoy toda nuestra garantía es "ha entrado con Google". En fases posteriores habrá acciones que
 pidan más (publicar datos, coordinar un proyecto). ¿Cuál es el **escalón más barato y proporcionado**
@@ -189,7 +238,7 @@ merece la pena diseñar pensando en ello o descartarlo ya.
 
 ---
 
-## 6. Forma de la consulta  **[P]**
+### 6. Forma de la consulta  **[P]**
 
 6.1. ¿Quién es la persona adecuada para cada bloque, y qué formato os cuesta menos: escrito asíncrono,
 una llamada de una hora, o acceso a un sandbox?
