@@ -14,9 +14,15 @@ same change: a dead link is worse than no entry.
 To change a page that is already listed, pass its URL so it is updated in place. Publishing
 without the URL creates a second page, and then nobody knows which one is current.
 
+New pages are written in English (ADR-0008). The two listed below predate that decision and their
+titles and bodies are still in Spanish; they are named here in English, and each is rewritten in
+English the next time it is touched, or deleted when what it explains is understood.
+
 ## Pages
 
-### Arquitectura del piloto de identificación
+### Architecture of the identification pilot
+
+_Published in Spanish as "Arquitectura del piloto de identificación"._
 
 <https://claude.ai/artifact/8TFnxeY4E3rpXBUee1W5uQ>
 
@@ -27,7 +33,9 @@ Identities against two that merely share an email address; and what changes in a
 _From_ `docs/specs/spec-shared-identification-pilot.md`, `GLOSSARY.md`, ADR-0001 to ADR-0003.
 Published 2026-11-09.
 
-### Keycloak, pieza por pieza
+### Keycloak, piece by piece
+
+_Published in Spanish as "Keycloak, pieza por pieza"._
 
 <https://claude.ai/artifact/SMEorrMNcYFuswAfJhXbSD>
 
