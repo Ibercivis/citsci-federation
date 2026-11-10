@@ -32,8 +32,7 @@ Single-context: `GLOSSARY.md` and `docs/adr/` at the repo root. See `docs/agents
 
 Published pages that explain the specs and ADRs, indexed in `docs/learn-artifacts.md`.
 After publishing one, ask whether to add it to the index. Don't add it unasked.
-New pages are written in English; the Spanish ones already published are listed in English
-and rewritten only when next touched (ADR-0008).
+Pages are written in English, titles included (ADR-0008).
 
 ### Internal notes
 

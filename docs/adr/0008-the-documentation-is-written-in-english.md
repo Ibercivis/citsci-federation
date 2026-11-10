@@ -39,10 +39,10 @@ The Veridas consultation (`docs/notes/veridas-technical-questions.md`) was sent 
 this decision. It is kept as the English translation of what was sent, with a note saying so: the
 document is frozen, and an answer arriving in Spanish will be recorded the same way.
 
-Learning artifacts published before this decision carry Spanish titles and Spanish bodies. They are
-learning aids with no authority over anything, so they are not retranslated on principle: each one
-is either rewritten in English when it is next touched, or deleted when what it explains is
-understood, whichever comes first. `docs/learn-artifacts.md` names them in English regardless.
+The two learning artifacts published before this decision were translated and republished at their
+existing URLs, so the links already shared with the team still resolve. Translating them fixed only
+the language: the first one's third figure still contradicts ADR-0004, which is what issue #20 is
+for, and nothing in a learning artifact decides anything either way.
 
 Nothing here claims the English will be good. A clumsy English sentence that says the right thing is
 the expected output and is not worth a round trip to fix.

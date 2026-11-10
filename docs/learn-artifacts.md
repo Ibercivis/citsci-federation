@@ -14,15 +14,11 @@ same change: a dead link is worse than no entry.
 To change a page that is already listed, pass its URL so it is updated in place. Publishing
 without the URL creates a second page, and then nobody knows which one is current.
 
-New pages are written in English (ADR-0008). The two listed below predate that decision and their
-titles and bodies are still in Spanish; they are named here in English, and each is rewritten in
-English the next time it is touched, or deleted when what it explains is understood.
+Pages are written in English, titles included (ADR-0008).
 
 ## Pages
 
 ### Architecture of the identification pilot
-
-_Published in Spanish as "Arquitectura del piloto de identificación"._
 
 <https://claude.ai/artifact/8TFnxeY4E3rpXBUee1W5uQ>
 
@@ -31,11 +27,9 @@ eleven steps of a first sign-in, and where in them the Person Identifier is mint
 Identities against two that merely share an email address; and what changes in a Federated App.
 
 _From_ `docs/specs/spec-shared-identification-pilot.md`, `GLOSSARY.md`, ADR-0001 to ADR-0003.
-Published 2026-11-09.
+Published 2026-11-09, translated into English 2026-11-10.
 
 ### Keycloak, piece by piece
-
-_Published in Spanish as "Keycloak, pieza por pieza"._
 
 <https://claude.ai/artifact/SMEorrMNcYFuswAfJhXbSD>
 
@@ -46,4 +40,4 @@ vocabulary and the glossary's, and the URLs a Federated App actually touches.
 
 _From_ the same sources, plus general Keycloak knowledge. Two details are flagged in the page
 itself as unverified against a pinned version: the exact name of the `sub` mapper, and the
-realm import strategy. Published 2026-11-10.
+realm import strategy. Published 2026-11-10, translated into English the same day.
