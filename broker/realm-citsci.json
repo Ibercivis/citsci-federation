@@ -1,0 +1,75 @@
+{
+  "realm": "citsci",
+  "enabled": true,
+  "displayName": "Ibercivis Citizen Science",
+  "loginWithEmailAllowed": true,
+  "requiredActions": [
+    {
+      "alias": "VERIFY_PROFILE",
+      "name": "Verify Profile",
+      "providerId": "VERIFY_PROFILE",
+      "enabled": false,
+      "defaultAction": false,
+      "priority": 90,
+      "config": {}
+    }
+  ],
+  "clients": [
+    {
+      "clientId": "federated-app-public",
+      "name": "Federated App (public)",
+      "description": "A single-page application. The consent screen names it.",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "consentRequired": true,
+      "redirectUris": ["http://localhost:3000/*"],
+      "webOrigins": ["+"],
+      "attributes": {
+        "pkce.code.challenge.method": "S256"
+      },
+      "defaultClientScopes": ["acr", "basic", "email", "web-origins"],
+      "optionalClientScopes": []
+    },
+    {
+      "clientId": "federated-app-confidential",
+      "name": "Federated App (confidential)",
+      "description": "A server-rendered backend. The consent screen names it.",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "consentRequired": true,
+      "redirectUris": ["http://localhost:8000/*"],
+      "webOrigins": [],
+      "attributes": {
+        "pkce.code.challenge.method": "S256"
+      },
+      "defaultClientScopes": ["acr", "basic", "email", "web-origins"],
+      "optionalClientScopes": [],
+      "clientAuthenticatorType": "client-secret",
+      "secret": "federated-app-confidential-development-secret"
+    }
+  ],
+  "users": [
+    {
+      "username": "demo",
+      "enabled": true,
+      "email": "demo@example.org",
+      "emailVerified": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "demo"
+        }
+      ]
+    }
+  ]
+}

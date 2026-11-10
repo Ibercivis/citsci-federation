@@ -1,0 +1,22 @@
+{
+  "name": "citsci-federation",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.28.1",
+  "scripts": {
+    "broker:up": "docker compose up -d --wait",
+    "broker:down": "docker compose down -v",
+    "broker:logs": "docker compose logs -f keycloak",
+    "broker:reset": "docker compose down -v && docker compose up -d --wait",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.1",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.4"
+  },
+  "dependencies": {
+    "jose": "^6.2.15"
+  }
+}
