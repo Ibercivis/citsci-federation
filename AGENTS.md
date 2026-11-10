@@ -34,6 +34,29 @@ Published pages that explain the specs and ADRs, indexed in `docs/learn-artifact
 After publishing one, ask whether to add it to the index. Don't add it unasked.
 Pages are written in English, titles included (ADR-0008).
 
+### External repositories
+
+Work on the Ibercivis application repositories never touches `main` or `master`. Each of them gets a
+branch named `federation`, cut from the latest commit of `main`: PRs target it and the pilot deploys
+from it. See `docs/agents/external-repos.md`.
+
+### Research notes
+
+`docs/notes/` holds dated evidence, never decisions. Each note opens with its verdict and a "read on
+only if" line, so take the verdict from here and open a note only when one of its branches is yours.
+When a finding changes a decision, move it into the ADR or spec that owns it: the note keeps the
+citation, not the authority.
+
+- **AUTHENIX** (`authenix-research.md`) — rejected as our Broker: it mints the subject identifier
+  per identity, has no Person, no local credential, no SLA, and its funding ends 31 Dec 2026. Open it
+  for eduGAIN reach without eduGAIN membership, for consent and data-subject design, or to defend
+  ADR-0002 and ADR-0003.
+- **Cos4Cloud** (`cos4cloud-research.md`) — closed H2020 project; nothing adoptable, its sign-on was
+  AUTHENIX. Open it for OGC Best Practice 21-068 (STAplus) before the resource-discovery service
+  gets a vocabulary, or for what EOSC onboarding really costs.
+- **Veridas** (`veridas-technical-questions.md`) — frozen; five questions sent 10 Nov 2026, awaiting
+  a reply. It predates the current identity model and contradicts it in places, deliberately.
+
 ### Internal notes
 
 `docs/private/` is gitignored operational material (server inventory, access notes).

@@ -41,6 +41,15 @@ keyed data against both identifiers. A future merge must therefore **add an alia
 reassign, because ADR-0002 promises that a Person Identifier is never reassigned and never recycled.
 A merge flow that reassigned would break every application that trusted that promise.
 
+Setting `trustEmail` per Identity Source has a limit worth stating before it is met: **a source that
+is itself a proxy over many providers cannot carry it.** `trustEmail` says "this source affirms the
+address", which is one trust decision about one operator. A broker federating thousands of upstream
+providers passes through whatever each of them asserted, so trusting it is not one decision but as
+many as it has providers, taken sight unseen. AUTHENIX is the concrete case — it fronts the whole
+eduGAIN aggregate, 6,709 providers, and documents `email_verified` as whatever the upstream identity
+management said (`docs/notes/authenix-research.md`). Were we ever to add such a source, `trustEmail`
+stays off and the Broker asks for an address and confirms it, as it already does for ORCID.
+
 The Keycloak version is pinned, `trustEmail` is set per Identity Source rather than globally, and
 seam 1 asserts the **negative** property: an Identity presenting an unverified email does not join an
 existing Person. That inverted test is the only thing standing between this decision and account

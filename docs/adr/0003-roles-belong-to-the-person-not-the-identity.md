@@ -16,6 +16,13 @@ every Federated App, against the requirement that apps change as little as possi
 
 Roles stay local to each Federated App in the pilot; nothing about roles crosses the Broker.
 
+That a broker can decline to carry authorisation data and still be useful is not only our
+expectation. AARC-style research AAIs typically do carry group and entitlement claims, but AUTHENIX —
+the shared sign-in built for EU citizen-science projects — emits none: no groups, no roles, no
+`eduperson_entitlement`, only provenance about which Identity Source was used. Worth citing when
+someone proposes that the Broker should start issuing entitlements. Evidence in
+`docs/notes/authenix-research.md`.
+
 Requiring a minimum assurance for specific actions — "publishing data requires having arrived via
 ORCID" — remains available later as a claim checked at those few actions, and adding it does not
 change this model.

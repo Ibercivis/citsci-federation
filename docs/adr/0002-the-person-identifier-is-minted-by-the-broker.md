@@ -13,6 +13,15 @@ organisation changes nothing in any app.
   and makes adding a second one a migration in every app.
 - **A bare UUID with no scope.** Rejected: it collides the moment identifiers minted by another
   organisation coexist with ours, and the only fix at that point is re-identifying every user.
+- **Delegate minting to an external broker.** Rejected, and there is a production instance to point
+  at. AUTHENIX, the shared sign-in built for EU citizen-science projects, mints the subject
+  identifier itself — a "cryptonym" derived from the upstream provider's subject value, so it is a
+  function of the *Identity* and not of the Person, with no account behind it to join two Identities
+  into. Had we put it in front of Keycloak, the `sub` our apps receive would be minted by a third
+  party, from a value we do not control, scoped to a domain we do not own, and tied to a service
+  with no SLA whose funding ends in December 2026. Delegating the identifier is not a configuration
+  detail: it gives away the one asset the Broker exists to create. Evidence in
+  `docs/notes/authenix-research.md`.
 
 ## Consequences
 
@@ -22,3 +31,13 @@ design and must be rewritten to guard the rules in this ADR instead.
 
 Tokens are not the transport for Profile data. The Profile service is out of the pilot but
 deliberately not foreclosed, and an app that read profile fields from a token would foreclose it.
+
+Opacity is what makes "never reassigned, never recycled" survive a deletion request. An identifier
+that resolves to no personal information is one we are allowed to keep when the personal data around
+it must go, so a Person erasing their data does not force the reuse of their identifier — which would
+break every app that keyed data against it. OGC Best Practice 21-068 reaches the same conclusion
+independently for the identifier's downstream consumer: after deleting a party's name and display
+name, "the only remaining property is `authId`. Assuming that the `authId` cannot be used to resolve
+personal information, it is acceptable to keep this property" (§6.4,
+https://docs.ogc.org/bp/21-068.pdf). It also requires the identifier be set by the server from the
+token and never asserted by a client, which is the same division of responsibility as here.
