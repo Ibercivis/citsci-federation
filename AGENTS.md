@@ -59,11 +59,25 @@ citation, not the authority.
 
 ### Internal notes
 
-`docs/private/` is gitignored operational material (server inventory, access notes).
+`docs/private/` is gitignored operational material: server inventory, access notes, and the security
+findings register described below.
 This repo is **public**. Never quote its contents — IPs, SSH users, software versions,
 database users, known weaknesses — into issues, PRs, commit messages, learning artifacts
 or any other published surface. Read it to do the work; describe conclusions without the detail.
 Never `git add -f` anything under it.
+
+### Security findings
+
+A weakness found in a Federated App's code is recorded in `docs/private/security-findings.md` in the
+turn it is found, and reaches nothing public — the Internal notes rule above covers it. Before
+recording one, or reporting one to its owner: `docs/agents/security-findings.md`.
+
+### Migration requirements
+
+What an integrated Federated App's **existing** accounts would need to move onto the Broker is
+recorded per app in `docs/migration/<app>.md`, as the integration turns it up. Migration is outside
+the pilot's committed scope and a record is not a commitment. Requirements are public, measurements
+taken from a production database are not: `docs/agents/migration-requirements.md`.
 
 ### Production databases
 
