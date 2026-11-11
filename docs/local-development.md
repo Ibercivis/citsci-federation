@@ -63,7 +63,7 @@ exercised.
 ## OpenRed
 
 - [`Ibercivis/OpenRed`](https://github.com/Ibercivis/OpenRed) · `federation` · `LOCAL-DEV.md` — API, data
-- [`Ibercivis/openred-react`](https://github.com/Ibercivis/openred-react) · `federation` · `LOCAL-DEV.md` — web app
+- [`frasanz/openred-react`](https://github.com/frasanz/openred-react) · `federation` · `LOCAL-DEV.md` — web app
 
 Django REST + PostGIS, Redis, **three** `rq` queues and a scheduler. The first one where the
 environment had to be **built rather than reused**: there was no Dockerfile and no compose file, so
