@@ -17,6 +17,21 @@ of its repository. This file is the index and holds no instructions of its own.
 
 **An application missing from this list has no local environment**, not an undocumented one.
 
+## What these environments are for, and what not to spend time on
+
+The pilot's claim is **one Person, several applications, no second sign-in** (ADR-0009). What has
+to work in a local environment is therefore signing in, and the profile that follows the Person
+from one application to the next. Everything else is scenery: it exists so the screens are not
+empty while you click through a sign-in.
+
+So, concretely: **a blank map is not a defect and is not worth a minute.** These applications draw
+their maps with Mapbox, which needs an access token nobody has locally; every other screen works
+without one. Do not hunt for a token, do not take one from a production bundle, and do not swap the
+map library. The same goes for anything else that only affects how the domain data is displayed.
+
+Build the environment up to the point where you can sign in as a seeded account and read a profile,
+say in `LOCAL-DEV.md` what is blank and why, and stop there.
+
 ## LostAtNight
 
 - [`Ibercivis/gdalface`](https://github.com/Ibercivis/gdalface) · `federation` · `LOCAL-DEV.md`

@@ -47,6 +47,10 @@ production**: the realistic half of the dataset is rebuilt from a public source 
 would carry personal data is invented, so there is nothing to anonymise. The environment and its
 seed command live on that application's `federation` branch, in a `LOCAL-DEV.md` at its root.
 
+What has to work is **signing in and the profile that follows the Person** (ADR-0009). Everything
+else is scenery, so a blank map is not a defect: these applications need a Mapbox token nobody has
+locally, and hunting for one is wasted time. Record what is blank and move on.
+
 The index, and the order that worked for the ones already built, is `docs/local-development.md`.
 Read it before building the next one; an application missing from it has no local environment.
 
