@@ -1,3 +1,10 @@
 # Internal operational notes. Never committed: this repo is public.
 # See AGENTS.md > Internal notes.
 docs/private/
+
+node_modules/
+
+# The tracked .env holds the development stack's constants, which are not
+# worth protecting. A local override carrying anything that is stays out of
+# a public repository.
+.env.local
