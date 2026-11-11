@@ -40,6 +40,16 @@ Work on the Ibercivis application repositories never touches `main` or `master`.
 branch named `federation`, cut from the latest commit of `main`: PRs target it and the pilot deploys
 from it. See `docs/agents/external-repos.md`.
 
+### Local environments
+
+**Every Federated App gets one, built as it is integrated**, and **none of them takes data from
+production**: the realistic half of the dataset is rebuilt from a public source and the half that
+would carry personal data is invented, so there is nothing to anonymise. The environment and its
+seed command live on that application's `federation` branch, in a `LOCAL-DEV.md` at its root.
+
+The index, and the order that worked for the ones already built, is `docs/local-development.md`.
+Read it before building the next one; an application missing from it has no local environment.
+
 ### Research notes
 
 `docs/notes/` holds dated evidence, never decisions. Each note opens with its verdict and a "read on
