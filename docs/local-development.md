@@ -7,10 +7,10 @@ built for each application, as it is integrated** — the pilot is a composition
 **No local environment takes data from production.** The rule that makes that cheap rather than
 virtuous is the same in every one of these applications so far:
 
-> The personal data is in the accounts tables, and nowhere else. The domain data carries nothing
-> about anybody. So the half of the dataset that should be realistic is exactly the half that can
-> be rebuilt from a public source, and the half that would have carried personal data is the half
-> that is cheapest to invent. Nothing is copied, so there is nothing to anonymise.
+> The personal data is in the accounts tables, and almost nowhere else. The domain data carries
+> nothing about anybody. So the half of the dataset that should be realistic is exactly the half
+> that can be rebuilt from a public source, and the half that would have carried personal data is
+> the half that is cheapest to invent. Nothing is copied, so there is nothing to anonymise.
 
 Each environment lives on that application's `federation` branch, in a `LOCAL-DEV.md` at the root
 of its repository. This file is the index and holds no instructions of its own.
@@ -62,16 +62,71 @@ exercised.
 
 ## OpenRed
 
-Not done. The application has no Dockerfile and no compose file, so the environment has to be
-built rather than reused.
+- [`Ibercivis/OpenRed`](https://github.com/Ibercivis/OpenRed) · `federation` · `LOCAL-DEV.md` — API, data
+- [`Ibercivis/openred-react`](https://github.com/Ibercivis/openred-react) · `federation` · `LOCAL-DEV.md` — web app
+
+Django REST + PostGIS, Redis, **three** `rq` queues and a scheduler. The first one where the
+environment had to be **built rather than reused**: there was no Dockerfile and no compose file, so
+both are new, along with the database image — see below. The React app is not containerised: it is
+`npm ci && npm start` on the host.
+
+```sh
+docker compose up -d --build          # first build compiles an extension, a few minutes
+docker compose exec api python manage.py seed_local
+```
+
+API on <http://localhost:8020/>, app on <http://localhost:3010/>. **The ports are deliberately
+unusual**: by the third application, a laptop already has the other stacks on 8000, 8010, 5432, 3000
+and 3001.
+
+Public sources, two, because the application has two measurement domains: real gamma readings from
+**Safecast** (CC0) and real night-sky brightness from **Globe at Night** (CC BY 4.0), both at the
+coordinates in Spain where they were really taken, from a snapshot committed in `local_dev/`. EURDEP
+and the CSN's REA network were the institutional alternatives and are not usable: EURDEP is behind a
+registration, the CSN publishes a web map rather than a dataset.
+
+Four things this one taught that the first two did not:
+
+- **The allow-list has to drop the record's own id, not just the obvious fields.** A Safecast
+  measurement id resolves to a page naming whoever submitted it, so the id is a back-reference to a
+  person; the snapshot keeps a one-way `ref` instead. Same reasoning retires `device_id` (one
+  instrument, therefore one owner) and Globe at Night's `SQMSerial`.
+- **An open dataset publishes impossible values, and the fetch script is where to catch them.**
+  Globe at Night's 2025 file has sky-brightness readings brighter than daylight and a row at
+  latitude 0.0 filed under Spain; seeded unchecked they produced a "brightest sky" above direct
+  sunlight.
+- **Dropping the device id costs you the ability to tell two contributors apart**, so routes from
+  different people in the same area at the same time merge. Cutting a track wherever the step
+  between readings implies a speed no vehicle reaches separates them again without knowing who
+  either was.
+- **Real timestamps, kept in order, give real geometry for free.** Keeping one reading per ~1 km
+  cell preserves the shape of each volunteer's drive, so tracks, their distances and their speeds
+  are all real rather than arranged.
+
+Before starting the app, two things: its dev server **defaulted to production** —
+`"proxy": "https://api.open-red.es"` in `package.json`, now a configurable `setupProxy.js` that
+defaults to the local API and warns on a non-local target — and `npm install` produces a tree that
+does not compile, so **use `npm ci`** and leave the committed lockfile alone. Maps need a Mapbox
+token; everything else works without one. The Flutter client was not exercised: it talks to the
+devices over BLE and needs hardware.
+
+Two deviations worth knowing about, both recorded in the application's `LOCAL-DEV.md`. The database
+image is **not** `postgis/postgis`: OpenRed's raw SQL calls a server-side `h3` function for the H3
+aggregations and the PDF reports, h3-pg is not in those images, and it could not be added to the
+tags tried: they are Debian bullseye, and `apt.postgresql.org` no longer serves that suite, so
+`apt-get update` fails inside them before anything can be installed. And the map is the one screen
+that cannot show the seeded data: it reads an endpoint that exists only on an unmerged branch, left
+unmerged deliberately.
 
 ## Building one for a new application
 
-The order that worked twice:
+The order that worked three times:
 
 1. **Find the seam.** Which tables hold personal data, and which hold domain data. The answer
-   decides everything else, and so far it has always been: accounts, emails, profile — and nothing
-   else.
+   decides everything else. It is mostly accounts, emails and profile — but **check rather than
+   assume**: OpenRed also keeps every recipient's address in its email-log tables, which a "domain
+   only" extract of that database would have carried straight out. Look for the columns that point
+   at a user, and for anything the application stores *about* having contacted somebody.
 2. **Find the public source for the domain half**, and verify it answers without a key before
    building on it. Download it with a script that writes a **committed snapshot**, so the seed
    command never touches the network, and filter it by **allow-list** with an assertion, so fields
