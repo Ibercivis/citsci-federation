@@ -35,9 +35,11 @@ From the foundation's side: a new application integrates by delegating authentic
 identifier and closing its own registration. Adding a fourth Identity Source later changes nothing in any
 application.
 
-This is a pilot, and it runs **on a laptop**. Accounts that already exist in the applications keep their
-current per-application sign-in, untouched and with no sunset date; the Broker serves accounts created
-from now on. The pilot closes at the end of January.
+This is a pilot, and it runs as **one Docker composition**: the Broker and every integrated application
+together, brought up with a single command (ADR-0009). On a laptop today, and at a public address the day
+somebody outside the team needs to click through it — a later decision, not a rewrite. Accounts that
+already exist in the applications keep their current per-application sign-in, untouched and with no sunset
+date; the Broker serves accounts created from now on. The pilot closes at the end of January.
 
 ## User Stories
 
@@ -124,6 +126,14 @@ from now on. The pilot closes at the end of January.
 58. As Ibercivis, I want the identifiers we issue to stay unique when they one day sit beside another organisation's, so that federating later does not mean re-identifying everybody.
 59. As Ibercivis, I want the choices made now to leave federation reachable, so that the pilot is a first step and not a dead end.
 
+### The pilot team
+
+60. As a developer on the pilot, I want to bring the Broker and every integrated application up with one command, so that trying single sign-on by hand costs nothing.
+61. As a developer on the pilot, I want a browser test that signs in to one application and arrives already signed in at another, so that the pilot's central claim is demonstrated rather than asserted.
+62. As a developer on the pilot, I want the same composition to run on a laptop now and at a public address later, so that where it is published stays a later decision.
+63. As a developer on the pilot, I want each application's container recipe to live on its `federation` branch, so that abandoning the pilot costs deleting a branch.
+64. As somebody showing the pilot to the foundation, I want a running federation to click through, so that what is judged is what was built rather than a description of it.
+
 ## Implementation Decisions
 
 ### The Broker
@@ -131,7 +141,7 @@ from now on. The pilot closes at the end of January.
 - The Broker is **Keycloak**, at a **pinned version**, run behind a **reverse proxy in every environment, including local**. The reason for the proxy is parity of form: cookie, TLS, redirect-URI and CORS failures that depend on deployment shape otherwise appear for the first time in production. The reason for pinning is ADR-0004: a security property of the design rests on how Keycloak treats a verified email, so the version is not allowed to move on its own.
 - The `issuer` differs per environment and is **read from configuration**. It is never persisted in any database and never reconstructed by concatenating parts (ADR-0001). `/realms/<name>` stays in the path; stripping it fights Keycloak's multi-realm design and, with ADR-0001 and ADR-0002 in place, protects nothing still at risk.
 - The Broker's own `compose` stack — Keycloak, the PostgreSQL it needs and an **SMTP endpoint** — is declared **in this repository**. Locally the SMTP endpoint is a mail catcher. Mail is no longer optional: ADR-0004 and ADR-0005 both depend on the Broker being able to confirm an address.
-- No Federated App's infrastructure is declared here.
+- **This repository declares the pilot's composition, not any application's production infrastructure.** Alongside the Broker's own services, it declares how each integrated Federated App is run **for the pilot** — built from that application's `federation` branch (ADR-0009). How those applications are deployed for real is still not declared here, and containerising them in production is still not this pilot's work.
 
 ### Identity
 
@@ -177,12 +187,15 @@ from now on. The pilot closes at the end of January.
 ### Integration with the Federated Apps
 
 - Integration is **additive on the way in and subtractive in one place**: each Federated App gains delegated sign-in, keeps its existing sign-in for accounts that already exist with no sunset date, and **closes its own registration path** (ADR-0007).
-- That registration link is a change **beyond** the authentication hook. The promise to those repositories is "the authentication hook and the registration link" — not "nothing else" — and it is asked for rather than assumed. No development environment, container or infrastructure change is asked of them.
+- That registration link is a change **beyond** the authentication hook, and so is the container recipe the pilot needs. The promise to those repositories is now "the authentication hook, the registration link, and a Dockerfile on the `federation` branch" — not "nothing else" — and every part of it is asked for rather than assumed. All of it lands on the `federation` branch: `main` is never touched, and the way those applications are deployed today does not change (ADR-0009).
 - **The closure reaches the web front end, not the API endpoint.** Where a Flutter client shares an application's API, the registration endpoint stays alive while that client depends on it. Exposure therefore falls on the web and not on mobile, and ADR-0007 states that limit rather than implying otherwise.
 
 ### Deployment
 
-- **The pilot runs locally and only locally.** Nothing in it waits on a machine being provisioned.
+- **The pilot is one Docker composition and it runs wherever Docker runs** (ADR-0009): the Broker, its PostgreSQL, the mail catcher, the reverse proxy and every integrated Federated App, each built from its own `federation` branch, all up with one command. It starts on a laptop, so nothing in it waits on a machine being provisioned.
+- **Every service is reached through the proxy by hostname, never by a port on localhost.** This is the parity-of-form argument the Broker already makes, extended to the applications: redirect URIs, cookies and CORS take the shape they will have in production rather than a shape only localhost allows.
+- **Where the pilot is published, and whether it is published at all, is a later decision.** The current OVH infrastructure is not needed to make progress and nothing is built on it. When the question arrives, the answer costs a hostname and a certificate — ADR-0001 is what keeps it that cheap.
+- **Everything in the composition is fixtures.** The stories about accounts that existed before the pilot need an account that already exists, and the composition creates it. No production data and no personal data goes into it, which is also what would make a public address safe.
 - Production, afterwards, is OVH virtual or physical machines. The existing applications run there **directly on the host** — a process manager, a reverse proxy and a PostgreSQL local to each machine — and **none of them is containerised today**. A containerised Broker is therefore a new shape on those machines rather than a continuation of one, and containerising anything else is not this pilot's work.
 - **Backups are inherited, not designed.** Daily PostgreSQL dumps and folder copies already exist and will be followed; this repository declares none. What inheriting them means in practice is **confirming that the policy reaches the Broker's own PostgreSQL**, which is a new database no existing policy knows about. That confirmation is a task before production, not an assumption.
 - Deferring all of this is free because of ADR-0001: the hostname is configuration, so choosing it later costs a coordinated configuration change and one forced re-login, not a data migration.
@@ -207,6 +220,10 @@ A good test drives the Broker **over HTTP, exactly as a Federated App would**, a
 
 The test of a good test in this repository: **it would still be meaningful if Keycloak were replaced by another provider.** Anything that would have to be rewritten in that case is testing the product rather than the decision.
 
+That rule governs seams 1 and 2, which speak HTTP. Seam 3 drives a browser across two Federated Apps
+and asserts only what a **Person** can see, which is the one thing HTTP cannot show: that moving from
+one application to another asks for nothing.
+
 ### Seam 1 — the Broker's OIDC surface, driven by a stand-in Federated App
 
 The single seam for all behaviour. A test helper behaves like a real Federated App: generates a PKCE verifier and challenge, builds the authorization request, follows redirects while carrying cookies, submits the sign-in form, redeems the code, verifies the ID token against the JWKS fetched from discovery, and calls userinfo and introspection.
@@ -230,23 +247,55 @@ What is asserted at this seam:
 
 Its only job is to catch drift: that the stack being exercised is the stack this repository declares, with no silent local override; that the Keycloak version running is the pinned one; that the password policy running is the declared one; and that no credential worth protecting is committed — including, now that they exist, the Google and GitHub client secrets. This is the only thing seam 1 cannot see. **Prior art**: `stack.test.ts`.
 
+### Seam 3 — the federation in a browser, across two applications
+
+A browser test drives the composition of ADR-0009 end to end, and it lives in **this** repository
+rather than in the applications' (ADR-0010), because the assertion it exists for spans two
+applications and no single application's repository can host it.
+
+What is asserted at this seam:
+
+- **One sign-in, two applications** — a Person signs in at one Federated App through the Broker,
+  goes to a second one and is **not** asked to sign in again (story 14), and both applications
+  report the **same Person Identifier** where each already exposes it. This is the pilot's central
+  claim, and this test is the only place it is demonstrated rather than inferred.
+- **The registration link is gone** from each integrated web front end, and newcomers are sent to
+  the Broker (ADR-0007). The Broker cannot see this; a browser can.
+- **An account that existed before the pilot still signs in the old way**, unchanged (ADR-0007).
+- **Anonymous use still works without touching the Broker**, where the application allows it
+  (ADR-0006).
+
+What this seam does not do: assert anything about Keycloak's internals, and shrink seam 1. Every
+protocol assertion stays at seam 1, where it is cheaper and more precise. Seam 3 asserts only what a
+Person can see — pages, redirects, the absence of a second sign-in — and a Person Identifier is read
+where an application already exposes it, never out of a database.
+
+The list above is also the **checklist for testing by hand**. The composition exists so that a person
+can click through it; the machine clicks through it first.
+
 ### A seam deliberately rejected
 
 A guard over the realm **declaration** — the earlier effort's `realm-config.test.ts`. Rejected for two reasons: almost everything it asserts is observable at seam 1, where it is demonstrated rather than merely declared; and the three prohibitions it exists to guard were overturned on purpose by ADR-0002. It is rewritten or deleted, not ported as it stands.
 
 ### Stated in the open: what is not tested
 
-Two things, both for the same reason — they are not observable from the Broker, and both are consequences of decisions rather than oversights:
+One thing, and it is the consequence of a decision rather than an oversight:
 
-- That each Federated App actually attaches its roles to the Person (ADR-0003).
-- That each Federated App actually closed its own registration path (ADR-0007). It is the one part of the integration the Broker cannot verify, and it is the part the pilot's claim to reduce exposure rests on.
+- That each Federated App actually attaches its roles to the Person (ADR-0003). The Broker emits no
+  roles, so nothing outside the application can see whether it did.
+
+The second item used to be that each Federated App actually closed its own registration path
+(ADR-0007). It is now asserted at seam 3 for every application in the pilot's composition: the Broker
+still cannot verify it, but a browser can (ADR-0010). For an application that is integrated and not in
+the composition it stays a check by hand, and it stays the part on which the pilot's claim to reduce
+exposure rests.
 
 ## Out of Scope
 
-- **Level 2 end-to-end tests** that boot OpenRed and Geonity for real. Optional: welcome if time allows, not committed, and nothing in the pilot depends on them. Keeping them out is what lets the Federated App repositories receive the authentication hook and one link removal, and nothing more.
+- **A public address for the pilot.** The composition runs wherever Docker runs and starts on a laptop (ADR-0009). Publishing it is a later decision, taken if and when somebody outside the team needs to click through it, and the composition is built so that the decision costs a hostname.
 - **Migration of existing users.** Existing accounts keep their current per-application sign-in. The **rehearsal** of that migration against anonymised production data is also out: the data will arrive, the rehearsal is attempted only if January allows, and nothing in the pilot depends on it.
 - **A merge flow for two Persons.** Two different Verified Emails stay two Persons for the whole pilot (ADR-0004).
-- **Deployment to OVH**, containerising the existing applications, and any backup work. The existing policies are inherited and will be followed before production; none of it is designed or declared here.
+- **Deployment to OVH**, containerising the existing applications **in production**, and any backup work. The containers written for the pilot run the applications for the pilot and nothing else, and they live on the `federation` branch (ADR-0009). The existing policies are inherited and will be followed before production; none of it is designed or declared here.
 - **ORCID as an Identity Source at launch.** Deferred on a finding, not on credentials — see Further Notes.
 - **A custom Broker theme** beyond the foundation's name and logo.
 - **The central Profile service.** Out of the pilot and deliberately not foreclosed — which is why tokens must not become the transport for Profile data.
@@ -313,9 +362,11 @@ depends on anything decided here, but question P5 asks them to read this specifi
 reason it was rewritten before they could open it.
 
 **Timing.** The pilot closes at the end of January with a team of two. The optional and deferred items
-above are the first things to cut, in this order: level 2 end-to-end tests, the migration rehearsal
-against anonymised data, the EOSC sandbox enrolment, the outbound-direction experiment, and the
-EU-Citizen.Science audit.
+above are the first things to cut, in this order: the migration rehearsal against anonymised data,
+the EOSC sandbox enrolment, the outbound-direction experiment, and the EU-Citizen.Science audit.
+End-to-end tests used to head that list. They no longer do: they are committed (ADR-0010), and so is
+the composition they run against (ADR-0009), because the pilot will be judged by somebody clicking
+through it.
 
 The one optional item worth defending against that list is the **Flutter reference integration**. It is
 the cheapest of them — a redirect URI and a worked example, with no change to the Broker — and the only

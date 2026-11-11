@@ -13,6 +13,9 @@ branch of our prototype:
 - It is created from the **latest commit of `main`**, and only ever from there.
 - Pull requests target `federation`, never `main`.
 - The pilot deploys from `federation`. Production keeps following `main` and this work never touches it.
+- The application's **container recipe for the pilot** lives here too — a Dockerfile and the
+  environment it needs, so the application can join the Pilot Composition (ADR-0009). It is written
+  for the pilot and for nothing else, and `main` never sees it.
 - The repository's default branch stays as it is. We don't change it, and we don't ask for it.
 
 If `federation` already exists in a repository, use it rather than recreating it. Refreshing it from

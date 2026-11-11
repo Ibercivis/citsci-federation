@@ -16,6 +16,13 @@ _Avoid_: proxy, reverse proxy, gateway, API gateway, auth server, identity provi
 An application that delegates authentication to the Broker instead of holding credentials of its own.
 _Avoid_: client, consumer, relying party, RP, app federada
 
+**Pilot Composition**:
+The Broker and every Federated App already integrated, declared in this repository as one set of
+containers and brought up with a single command. It is where single sign-on is tried by hand and where
+the end-to-end tests run. Disposable by design, built from each application's `federation` branch, and
+never the way anything is deployed for real.
+_Avoid_: staging, the environment, dev environment, deployment, entorno de pruebas
+
 ## The subject
 
 **Person**:
