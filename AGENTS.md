@@ -64,3 +64,19 @@ This repo is **public**. Never quote its contents — IPs, SSH users, software v
 database users, known weaknesses — into issues, PRs, commit messages, learning artifacts
 or any other published surface. Read it to do the work; describe conclusions without the detail.
 Never `git add -f` anything under it.
+
+### Production databases
+
+Do not modify a production database. No `INSERT`, `UPDATE`, `DELETE`, `TRUNCATE`, `ALTER`, `DROP`, no
+`manage.py migrate`, no write from a Django or `psql` shell on a production host — unless the user
+asks for that specific change, in that turn, in so many words. Having access is not permission, and
+neither is a write being the obvious next step in the task. Read-only diagnosis needs no permission.
+When a write looks necessary, stop, say exactly what you would run, and let the user decide.
+
+This rule enforces nothing on its own: it is cooperation, deliberately chosen over a real boundary
+for now. See `docs/notes/deferred/preventing-agent-writes-to-production-databases.md`.
+
+### Deferred notes
+
+`docs/notes/deferred/` holds research that was done, decided on, and parked. Don't read it unless the
+task at hand is that topic; its header says what was decided and when.
