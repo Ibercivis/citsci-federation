@@ -56,8 +56,12 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      # `--wait` returns when the composition reports healthy, so the suite
-      # never races the Broker's start-up.
+      # `--wait` returns when the composition reports healthy, which is worth
+      # exactly what the healthchecks in compose.yaml are worth: this job's
+      # first run failed here, with Keycloak answering 503 while compose called
+      # it healthy, and the fix was in that file rather than in this one. A
+      # cold runner is the only place that race is visible, so this job is
+      # where it will show up again.
       - name: Start the Broker
         run: pnpm broker:up
 
