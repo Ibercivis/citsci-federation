@@ -32,7 +32,10 @@ that is not yours.
 |---|---|---|
 | `pre-commit` | format + lint, staged files only, **checks and never fixes** | `--no-verify` |
 | `pre-push` | `pnpm check`; the suite too, when a Broker is up | `--no-verify` |
-| CI | `pnpm check`, then its own Broker and the suite | none |
+| CI | `pnpm check`, then its own Broker and the suite | none for the developer |
+
+CI cannot be skipped the way a hook can, but **a red CI does not stop a merge**: `main` carries no
+branch protection and no rulesets, so the workflow reports and nothing acts on the report.
 
 One definition, three callers. A new check is added to `pnpm check`, never to the hook or the
 workflow alone: a check that lives only in CI is one nobody can run before pushing, and a check
