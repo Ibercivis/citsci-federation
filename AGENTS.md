@@ -40,6 +40,16 @@ Work on the Ibercivis application repositories never touches `main` or `master`.
 branch named `federation`, cut from the latest commit of `main`: PRs target it and the pilot deploys
 from it. See `docs/agents/external-repos.md`.
 
+### Reference repositories
+
+`federation-proxy` is an old repository kept only for reference. It has no remote, nothing deploys
+from it, and no pilot work goes into it. **Don't open it unless the request names it.**
+
+It is not merely stale, it competes: it carries its own `CLAUDE.md`, `AGENTS.md` and `GLOSSARY.md`,
+and that glossary calls the Broker a proxy — a term `GLOSSARY.md` here lists under _Avoid_. Reading
+it to answer a question about this project reintroduces vocabulary, and decisions, we have already
+moved past.
+
 ### Local environments
 
 **Every Federated App gets one, built as it is integrated**, and **none of them takes data from
