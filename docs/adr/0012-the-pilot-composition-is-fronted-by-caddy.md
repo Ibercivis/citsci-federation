@@ -39,7 +39,7 @@ show the pilot over HTTPS.
 ## Consequences
 
 **One tool in the house that nothing in production uses.** Accepted, and bounded by what the Pilot
-Composition is: disposable (ADR-0009), configured by a single file, and never the way anything is
+Composition is: early-stage (ADR-0009), configured by a single file, and not the way anything is
 deployed for real. Nobody has to learn Caddy in order to deploy anything, and nobody is on call for
 it.
 
