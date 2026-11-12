@@ -47,5 +47,5 @@ gh pr create --base federation   # never --base main
 
 The applications are in production and are not ours. A branch that is ours by convention keeps the
 integration reviewable and reversible: the change set for each application is exactly
-`origin/main..federation`, a deploy is a branch name, and abandoning the pilot costs deleting a
-branch rather than reverting commits in someone else's main line.
+`origin/main..federation`, a deploy is a branch name, and withdrawing the integration costs deleting
+a branch rather than reverting commits in someone else's main line.

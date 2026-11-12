@@ -27,8 +27,8 @@ HTTP surface shows it to a person who is not reading test output.
   the code could look at it.
 - **Deploy on the current servers in production's own shape** — one more reverse-proxy virtual host
   per application, the process manager, a local PostgreSQL. Rejected for now: parity would be high,
-  but it puts a deliberately disposable environment on machines that serve production, and every
-  change becomes a deploy by hand. This is the shape to reconsider *if and when* the pilot needs a
+  but it puts an early-stage environment — one that does not yet meet the standards production will
+  be held to — on machines that serve production, and every change becomes a deploy by hand. This is the shape to reconsider *if and when* the pilot needs a
   public address, and that is the later decision this ADR defers rather than forecloses.
 - **A managed platform** (Fly, Render, Railway). Rejected: it wants the same Dockerfile we are
   writing anyway, and adds an outside provider plus a fight over PostGIS and map tiles.
@@ -47,8 +47,8 @@ touched, and the way those applications are deployed for real still does not cha
 **It overturns the spec's "no Federated App's infrastructure is declared here".** What this repository
 declares is how an application runs **in the pilot**, which is not that application's infrastructure.
 The distinction is load-bearing: the day this composition becomes the way something is actually
-deployed, it has stopped being disposable, and that is a decision to take knowingly rather than to
-drift into.
+deployed, it has to meet standards it does not meet yet, and that is a decision to take knowingly
+rather than to drift into.
 
 **Every service is reached through the proxy by hostname, not by a port on localhost.** That is the
 same parity-of-form argument the spec already makes for the Broker, extended to the applications:
@@ -60,6 +60,11 @@ re-login.
 account that already exists, and the composition creates it. No production data and no personal data
 goes in — which is also what would make a public URL safe, the day we want one.
 
-**Disposable means disposable.** The composition is allowed to be crude, it carries development
-constants on purpose, and nothing in production will inherit it. Abandoning it costs deleting a branch
-in each application and a folder here.
+**Early-stage, not throwaway.** The composition is allowed to be rough and it carries development
+constants on purpose, because this is the first phase of code that will keep changing: it does not yet
+satisfy specifications and standards that become necessary later — EOSC-node conformance among them,
+if this ever becomes the germ of a Spanish node, and that conformance is explicitly out of the pilot's
+scope. What follows is that nothing here reaches production **in this state**, not that it is written
+to be discarded: the composition is meant to be hardened and grown rather than replaced. It stays
+cheap to reverse all the same — withdrawing the integration costs deleting a branch in each
+application and a folder here.
