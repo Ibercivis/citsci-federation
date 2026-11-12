@@ -2,7 +2,19 @@
 `GLOSSARY.md` and `docs/adr/`; the rule this note examines lives in `docs/agents/external-repos.md`.
 Nothing here has been adopted. Checked 12 November 2026; every liveness claim carries that date.
 No production host was contacted for this note: every fact below comes from a local git clone, the
-GitHub API, or a file in this repository. -->
+GitHub API, or a file in this repository.
+
+OVERTAKEN BY EVENTS, 12 November 2026, hours after it was written. `Ibercivis/OpenRed`'s `main` was
+re-pointed to the deployed commit: `main` and `feature/weather-cache-and-stats` are now the same
+commit (`e66a6c9`, divergence 0/0), the old `main`'s two commits are preserved on
+`legacy-main-user-groups-heatmap` with OpenRed#2 open on them, and `federation` is cut from `main`
+like everywhere else. That is exactly the condition §7 names as flipping its recommendation 1, so
+**the recommendations in §7 are spent** — do not act on them. The measurements are not: §1, §2, §3
+and §5 are why the move was the right one, and they are what this note is now for. The rule itself
+lives in `docs/agents/external-repos.md`. -->
+
+> **Spent as advice, kept as evidence.** Read §1–§5 for what was measured. Skip §7; its
+> recommendations were overtaken within hours. See the comment above.
 
 # OpenRed's `main` is not a stale copy of the application — it is the application before a model rewrite
 

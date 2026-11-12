@@ -81,10 +81,24 @@ services:
     healthcheck:
       # The image ships no curl and no wget, so readiness is read off the
       # management port with the shell's own TCP redirection.
+      #
+      # It reads the HTTP status line, not the body, and that is the whole
+      # point. The body is a list, and every entry carries a `status` of its
+      # own:
+      #
+      #   {"status": "DOWN", "checks": [
+      #       {"name": "Graceful Shutdown",    "status": "UP"},
+      #       {"name": "Keycloak Initialized", "status": "DOWN"}]}
+      #
+      # `Graceful Shutdown` is UP from the first second the port answers, so a
+      # grep for `"status": "UP"` matches that nested one and reports the
+      # Broker ready while it is still importing the realm. The endpoint
+      # answers 503 until the whole list is UP and 200 after, so the status
+      # line is the one unambiguous signal. Do not match on the body.
       test:
         [
           "CMD-SHELL",
-          "exec 3<>/dev/tcp/127.0.0.1/9000 && printf 'GET /health/ready HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3 && grep -q '\"status\": \"UP\"' <&3",
+          "exec 3<>/dev/tcp/127.0.0.1/9000 && printf 'GET /health/ready HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3 && grep -q '^HTTP/1.1 200' <&3",
         ]
       interval: 5s
       timeout: 5s

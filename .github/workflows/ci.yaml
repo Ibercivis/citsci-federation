@@ -1,0 +1,74 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+# A second push to the same branch makes the first run's answer worthless.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  # What the `pre-push` hook runs, run again where `--no-verify` cannot reach.
+  # Seconds, so it is the job that tells you whether to keep reading.
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: pnpm/action-setup@9bbca1e9dc2902adb87e8780fe5c98796985a62d # v6.1.1
+
+      # `node-version-file: package.json` reads `engines.node`, so the version
+      # is declared once, in the same file the dependencies are.
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: package.json
+          cache: pnpm
+
+      # `--frozen-lockfile` fails rather than resolving something new, which is
+      # what makes the exact versions in package.json mean anything.
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm check
+
+  # The end-to-end suite (ADR-0010), against a Broker this job starts itself.
+  # It is a separate job because it is minutes where `check` is seconds, and
+  # because a failure here means something different: the stack, not the code.
+  tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: pnpm/action-setup@9bbca1e9dc2902adb87e8780fe5c98796985a62d # v6.1.1
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: package.json
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # `--wait` returns when the composition reports healthy, which is worth
+      # exactly what the healthchecks in compose.yaml are worth: this job's
+      # first run failed here, with Keycloak answering 503 while compose called
+      # it healthy, and the fix was in that file rather than in this one. A
+      # cold runner is the only place that race is visible, so this job is
+      # where it will show up again.
+      - name: Start the Broker
+        run: pnpm broker:up
+
+      - run: pnpm test
+
+      # Keycloak's own log is the only place that says why a flow was refused,
+      # and the runner is thrown away with it.
+      - name: The Broker's log, when the suite failed
+        if: failure()
+        run: docker compose logs keycloak

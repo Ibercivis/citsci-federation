@@ -56,7 +56,11 @@ A published surface — an issue, a PR, a commit message, a learning artifact �
 integration is blocked on a security fix in that repository, reported privately. It may not say
 which weakness, where, or how. That holds until the owner has fixed it or has said it is public.
 
-The register is gitignored and therefore not backed up. A canonical copy lives outside git.
+The register is gitignored here, and `docs/private/` is its own private git repository cloned
+at that path: that repository is the canonical copy, and it is where the register's history and
+its backup live. Commit there, never here — the `pre-commit` guard refuses a commit that stages
+anything under `docs/private/`, and the session hooks in `.claude/settings.json` pull and push
+that repository for you.
 
 ## Absent is not clean
 

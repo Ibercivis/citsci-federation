@@ -1,0 +1,18 @@
+{
+  // Prose is not formatted here. The formatter's Markdown output is Prettier's:
+  // it pads every table cell out to the widest one, which turns a table in a
+  // document wrapped at 100 columns into lines of 200, and makes every later
+  // edit to a row reflow the whole table. It also rewrites `*emphasis*` as
+  // `_emphasis_` across 14 files for nothing. The documents here are written
+  // by hand, wrapped by hand, and reviewed as prose.
+  //
+  // Code, configuration and data are formatted, and no file type that arrives
+  // later should have to be listed to be covered: this is the one exception.
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "ignorePatterns": ["**/*.md"],
+
+  // The width the TypeScript in this repository was already written at. Left
+  // at the default (100) the formatter's first run rewraps every file; at 80
+  // it changes nothing, which is the whole adoption cost.
+  "printWidth": 80
+}

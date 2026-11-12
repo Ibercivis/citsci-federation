@@ -2,21 +2,40 @@
   "name": "citsci-federation",
   "private": true,
   "type": "module",
-  "packageManager": "pnpm@10.28.1",
   "scripts": {
     "broker:up": "docker compose up -d --wait",
     "broker:down": "docker compose down -v",
     "broker:logs": "docker compose logs -f keycloak",
     "broker:reset": "docker compose down -v && docker compose up -d --wait",
+    "format": "oxfmt .",
+    "format:check": "oxfmt --check .",
+    "lint": "oxlint",
+    "lint:fix": "oxlint --fix",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
-  },
-  "devDependencies": {
-    "@types/node": "^24.10.1",
-    "typescript": "^5.9.3",
-    "vitest": "^3.2.4"
+    "check": "pnpm format:check && pnpm lint && pnpm typecheck",
+    "check:fix": "pnpm format && pnpm lint:fix",
+    "test": "vitest run",
+    "prepare": "lefthook install"
   },
   "dependencies": {
-    "jose": "^6.2.15"
+    "jose": "6.2.17"
+  },
+  "devDependencies": {
+    "@types/node": "24.19.2",
+    "lefthook": "2.2.2",
+    "oxfmt": "0.78.0",
+    "oxlint": "1.93.0",
+    "oxlint-tsgolint": "7.0.2006",
+    "typescript": "5.9.3",
+    "vitest": "3.2.7"
+  },
+  "engines": {
+    "node": ">=24"
+  },
+  "packageManager": "pnpm@10.28.1",
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "lefthook"
+    ]
   }
 }

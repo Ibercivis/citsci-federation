@@ -27,23 +27,27 @@ If `federation` already exists in a repository, use it rather than recreating it
 
 ## Where `federation` is cut from
 
-`main`'s latest commit, in every repository but one.
+`main`'s latest commit, in **every** repository. There is no exception left; there was one until
+12 November 2026, and the paragraph below is why it went away rather than being granted.
 
-**OpenRed** (`Ibercivis/OpenRed`) is cut from `origin/feature/weather-cache-and-stats`, because
-**`main` predates a model rewrite: it has neither the data model nor the sign-in path the integration
-changes.** `main` holds only `Measurement` and `Track` in `measures/models.py` and one route,
-`/api/measurements/`, while the live React front end and the deployed devices call
-`/api/radiation-measurements/`, `/api/stations/`, `/api/stats/`, `/api/tracks/` and
-`/api/ingest/radiation/`; the whole sign-in surface ADR-0007 asks us to change exists only on the
-feature branch. A `federation` cut from `main` would not be a behind-the-times OpenRed, it would be a
-different application with nothing to integrate. The branch is eighteen commits ahead of `main` and
-two behind, and the local environment was built against it.
+### OpenRed's `main` was re-pointed, once
 
-The deviation is therefore not a tolerated staleness but the only cut that describes the
-application. Every pull request that targets that `federation` says so. `main` is where the branch
-would be re-cut from the day that work merges — see
-[`docs/notes/openred-live-branch.md`](../notes/openred-live-branch.md) for the evidence, for what
-that merge would cost, and for why it is the application owner's call and not ours.
+Until 12 November 2026 `Ibercivis/OpenRed` deployed the branch `feature/weather-cache-and-stats`,
+while `main` had stood still since July 2025 — it predated a model rewrite, holding neither the data
+model nor the sign-in path the integration changes, so a `federation` cut from it would have
+described a different application with nothing to integrate. The pilot moved `main` to that deployed
+commit, so the default branch, the CI workflow and the documented update procedure now all describe
+the application that actually runs, and `federation` is cut from `main`'s latest commit like
+everywhere else. The deployed tree did not change by a byte; `main` was relabelled, not rebuilt.
+
+This was a one-off on the application's own line of development, **not** a commit of pilot work onto
+`main`, and it is not a precedent — the rule above stands. The two commits the old `main` carried
+are preserved on `legacy-main-user-groups-heatmap` and left to the application owner to accept or
+close in [OpenRed#2](https://github.com/Ibercivis/OpenRed/pull/2).
+
+The measurements that argued for the move are in
+[`docs/notes/openred-live-branch.md`](../notes/openred-live-branch.md), which was written **before**
+it and whose verdict the move overtook. Read it for the evidence, not for the recommendation.
 
 ## Commands
 
@@ -89,13 +93,14 @@ moves `HEAD` out from under anyone who is on `federation`.
 - `git branch --show-current` prints a **topic branch** — never `federation`, never `main`.
 - `gh pr create` carries `--base federation`.
 - `git log --oneline origin/main..<topic>` shows only pilot work, so the branch is still a
-  descendant of `main` and nothing unrelated rode in. In OpenRed the base of that range is
+  descendant of `main` and nothing unrelated rode in. This now holds in every repository, OpenRed
+  included: before 12 November 2026 the base of that range there was
   `origin/feature/weather-cache-and-stats`.
 
 ## Why
 
 The applications are in production and are not ours. A branch that is ours by convention keeps the
 integration reviewable and reversible: the change set for each application is exactly
-`origin/main..federation`, a deploy is a branch name, and abandoning the pilot costs deleting a
-branch rather than reverting commits in someone else's main line. Review before `federation` rather
-than after keeps that change set something we have each read.
+`origin/main..federation`, a deploy is a branch name, and withdrawing the integration costs deleting
+a branch rather than reverting commits in someone else's main line. Review before `federation`
+rather than after keeps that change set something we have each read.

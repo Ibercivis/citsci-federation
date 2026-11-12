@@ -105,7 +105,7 @@ export async function requestAuthorization(
     state: base64url(randomBytes(8)),
     ...params,
   });
-  return browser.get(`${authorization_endpoint}?${query}`);
+  return browser.get(`${authorization_endpoint}?${query.toString()}`);
 }
 
 const unescapeHtml = (value: string): string =>
@@ -417,7 +417,7 @@ export async function verifyIdToken(
     issuer: ISSUER,
     audience: client.id,
   });
-  return payload as Record<string, unknown>;
+  return payload;
 }
 
 /**

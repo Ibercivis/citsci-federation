@@ -94,6 +94,18 @@ database users, known weaknesses — into issues, PRs, commit messages, learning
 or any other published surface. Read it to do the work; describe conclusions without the detail.
 Never `git add -f` anything under it.
 
+It is **its own private repository**, `agualis/citsci-federation-private`, cloned at that path: the
+canonical copy, carrying the history and the backup this folder never had. A fresh checkout fetches
+it once, into an empty `docs/private/`:
+
+    git clone https://github.com/agualis/citsci-federation-private.git docs/private
+
+Nobody runs git in there by hand afterwards. `scripts/private-sync.sh`, wired to the `SessionStart`
+and `Stop` hooks, pulls it when a session opens and commits and pushes it when a turn ends. Commit
+straight to `main` — there are no pull requests on it. A `pre-commit` job refuses any commit that
+stages `docs/private/` into *this* repository, and the nested repository makes its files unstageable
+here in the first place.
+
 ### Security findings
 
 A weakness found in a Federated App's code is recorded in `docs/private/security-findings.md` in the

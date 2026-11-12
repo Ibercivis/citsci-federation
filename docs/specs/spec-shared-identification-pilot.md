@@ -41,6 +41,13 @@ somebody outside the team needs to click through it — a later decision, not a 
 already exist in the applications keep their current per-application sign-in, untouched and with no sunset
 date; the Broker serves accounts created from now on. The pilot closes at the end of January.
 
+**A pilot here means an early stage, not a throwaway.** The code written now will change a great deal
+and does not yet satisfy specifications and standards that become necessary later — EOSC-node
+conformance among them, if this ever becomes the germ of a Spanish node, which is why that
+conformance is listed out of scope rather than denied. The decisions recorded in `docs/adr/` are
+taken to be built on: what is rough is expected to be hardened, and nothing here is written to be
+discarded.
+
 ## User Stories
 
 ### A Person arriving for the first time
@@ -131,7 +138,7 @@ date; the Broker serves accounts created from now on. The pilot closes at the en
 60. As a developer on the pilot, I want to bring the Broker and every integrated application up with one command, so that trying single sign-on by hand costs nothing.
 61. As a developer on the pilot, I want a browser test that signs in to one application and arrives already signed in at another, so that the pilot's central claim is demonstrated rather than asserted.
 62. As a developer on the pilot, I want the same composition to run on a laptop now and at a public address later, so that where it is published stays a later decision.
-63. As a developer on the pilot, I want each application's container recipe to live on its `federation` branch, so that abandoning the pilot costs deleting a branch.
+63. As a developer on the pilot, I want each application's container recipe to live on its `federation` branch, so that the integration stays reversible in a repository that is not ours.
 64. As somebody showing the pilot to the foundation, I want a running federation to click through, so that what is judged is what was built rather than a description of it.
 
 ## Implementation Decisions
