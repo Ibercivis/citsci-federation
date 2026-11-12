@@ -45,6 +45,11 @@ something on it. When a reproduction would help, run the application locally and
 **`Reported`** — the date the owner was told, and by whom. A finding that is only in the register
 has not been reported. Ask the user who receives it; don't pick a recipient.
 
+The hand-over need not be a written notice: a meeting counts, recorded with its date and who was
+there. What does not count is an intention to raise it. Fixing these is not the pilot's committed
+scope, so when a finding is deliberately held for a conversation, write that decision and its date
+into the entry — otherwise the next reader cannot tell a held finding from a forgotten one.
+
 ## Keep the boundary
 
 A published surface — an issue, a PR, a commit message, a learning artifact — may say that an
