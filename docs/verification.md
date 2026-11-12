@@ -63,7 +63,7 @@ for nothing.
 | ↳ and then three passes become two | `oxlint --type-check` — reports compiler errors from the same TypeScript program it lints with, and oxc documents it as replacing a separate `tsc --noEmit` in CI | Requires TypeScript 7, so it is the row above or nothing. Keep `tsc --noEmit` until both have run on this tree and the output has been compared | The row above. Neither alone |
 | **Newer runner** | Vitest 5.1 | Breaking: `clearMocks` defaults to `true`, unawaited `resolves`/`rejects` now fail, strict locators. Its own benchmark shows the common case gaining least | Nothing. We are on 3.2.7 and it answers in 1.6s |
 | **Coverage** | `@vitest/coverage-v8` | — | A number we would act on. We do not have one yet |
-| **Who bumps the pins** | Dependabot or Renovate, grouped and scheduled | Exact pins mean every bump is a pull request, so grouping is the whole design | When a version here is old enough that neither of us remembers choosing it |
+| **Who bumps the pins** ([#49](https://github.com/Ibercivis/citsci-federation/issues/49)) | Dependabot, grouped and scheduled | Exact pins mean every bump is a pull request, so grouping is the whole design. The Keycloak image stays out of it: ADR-0004 rests on that version | Fired, for lack of a trigger. "A version nobody remembers choosing" is not something anyone notices, and that is the argument for a mechanism over a rule |
 
 Also considered and rejected: **Vite+** (takes too many decisions for us, and its `vp hooks` fights
 lefthook for `core.hooksPath`), **eslint-plugin-boundaries** (requires ESLint), **steiger** (beta,
