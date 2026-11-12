@@ -71,9 +71,17 @@ on seeding. Accounts, organization and photographs invented. Four projects, six 
 observations.
 
 Two things to know before starting the front ends: the API sends **no CORS headers**, so both must
-go through their dev server's proxy; and both default to **production** when their `.env` is
-missing. Maps need a Mapbox token; everything else works without one. The Flutter client was not
-exercised.
+go through their dev server's proxy; and the **admin panel** defaults to production when its `.env`
+is missing, so write that file before starting it. Maps need a Mapbox token; everything else works
+without one. The Flutter client was not exercised.
+
+An earlier version of this entry said **both** front ends default to production. They do not, and
+the correction is the kind this index exists to carry. The web app's default was a host *and a
+port*, and nothing has ever listened on that port on the machine the host resolves to — so
+unconfigured it reached nothing at all, answering `502` with `ECONNREFUSED`, rather than reaching
+the live site. It now defaults to the local API. The lesson generalises: **a default that names a
+production host is not evidence that it reaches production**, and from outside a dead port and a
+filtered one look the same. Checking took access to the machine itself.
 
 ## OpenRed
 
