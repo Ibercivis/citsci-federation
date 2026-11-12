@@ -18,7 +18,7 @@ change rather than leaving it half-translated.
 
 ### Issue tracker
 
-GitHub Issues in `agualis/citsci-federation`, via the `gh` CLI. See `docs/agents/issue-tracker.md`.
+GitHub Issues in `Ibercivis/citsci-federation`, via the `gh` CLI. See `docs/agents/issue-tracker.md`.
 
 ### Triage labels
 
@@ -94,11 +94,11 @@ database users, known weaknesses — into issues, PRs, commit messages, learning
 or any other published surface. Read it to do the work; describe conclusions without the detail.
 Never `git add -f` anything under it.
 
-It is **its own private repository**, `agualis/citsci-federation-private`, cloned at that path: the
+It is **its own private repository**, `Ibercivis/citsci-federation-private`, cloned at that path: the
 canonical copy, carrying the history and the backup this folder never had. A fresh checkout fetches
 it once, into an empty `docs/private/`:
 
-    git clone https://github.com/agualis/citsci-federation-private.git docs/private
+    git clone https://github.com/Ibercivis/citsci-federation-private.git docs/private
 
 Nobody runs git in there by hand afterwards. `scripts/private-sync.sh`, wired to the `SessionStart`
 and `Stop` hooks, pulls it when a session opens and commits and pushes it when a turn ends. Commit
