@@ -1,0 +1,116 @@
+# The Broker, and nothing else.
+#
+# Three services make up what a Federated App sees as one frontier: a reverse
+# proxy, the OpenID provider behind it, and the provider's own database. No
+# Federated App's infrastructure is declared here: a Federated App's
+# development environment stays in its own repository, and what this file
+# knows about an application is nothing at all.
+#
+# Every credential here is a development constant on purpose, and `.env` says
+# why.
+
+name: citsci-broker
+
+services:
+  # The reverse proxy, in front in every environment including this one
+  # (ADR-0001). The reason is parity of form rather than the issuer string:
+  # the cookie, TLS, redirect-URI and CORS failures that depend on deployment
+  # shape otherwise appear for the first time in production. It is also why
+  # Keycloak publishes no port of its own — there is no way to reach the
+  # Broker here that bypasses the shape production will have.
+  proxy:
+    image: caddy:2.10-alpine
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./proxy/Caddyfile:/etc/caddy/Caddyfile:ro
+    networks:
+      default:
+        aliases:
+          # The other half of one issuer. `broker.localhost` is the loopback
+          # address for a browser and this proxy for anything on this network,
+          # so the name a Federated App is told to trust resolves on both
+          # sides of the port mapping. Remove this and a containerised app
+          # loses its issuer, with an error that names nothing.
+          - broker.localhost
+    depends_on:
+      keycloak:
+        condition: service_healthy
+    healthcheck:
+      # The proxy's own readiness, answered without troubling Keycloak: it is
+      # already waited for above.
+      test: ["CMD-SHELL", "wget -q -O- http://127.0.0.1:8080/healthz"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  keycloak:
+    # Pinned, and pinned because a security property of the design rests on
+    # how this version treats a verified email address (ADR-0004). It is not
+    # allowed to move on its own.
+    image: quay.io/keycloak/keycloak:26.8.1
+    environment:
+      # The issuer, read from the one place that declares it (ADR-0001). What
+      # Keycloak is told is derived from that string by dropping the realm
+      # path off the end of it — the issuer is never assembled from parts,
+      # which is the habit the ADR exists to break. Keycloak wants the origin;
+      # the realm path it serves under comes from the realm's own name, and
+      # the discovery case fails loudly if the two disagree.
+      BROKER_ISSUER: ${BROKER_ISSUER:?declare it in .env}
+      # Behind the proxy, over HTTP, in production mode: the shape the ADR
+      # asks for, with TLS terminated in front rather than absent.
+      KC_HTTP_ENABLED: "true"
+      KC_PROXY_HEADERS: xforwarded
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://broker-db:5432/keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: keycloak
+      KC_HEALTH_ENABLED: "true"
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+    # The realm is imported from the versioned file and configured nowhere
+    # else: the admin console takes no part in it.
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - exec /opt/keycloak/bin/kc.sh start --import-realm --hostname "$${BROKER_ISSUER%/realms/*}"
+    volumes:
+      - ./broker/realm-citsci.json:/opt/keycloak/data/import/realm-citsci.json:ro
+    depends_on:
+      broker-db:
+        condition: service_healthy
+    healthcheck:
+      # The image ships no curl and no wget, so readiness is read off the
+      # management port with the shell's own TCP redirection.
+      test:
+        [
+          "CMD-SHELL",
+          "exec 3<>/dev/tcp/127.0.0.1/9000 && printf 'GET /health/ready HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3 && grep -q '\"status\": \"UP\"' <&3",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 60
+      start_period: 20s
+
+  # Keycloak's own store. Deliberately not published to the host: another
+  # development stack on the same machine already wants the default
+  # PostgreSQL port, and the two must not compete for it. Nothing here needs
+  # reaching from outside this network anyway — the issuer is not in this
+  # database and never will be (ADR-0001).
+  broker-db:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: keycloak
+    volumes:
+      # PostgreSQL 18 wants a single mount one level up, so that its data
+      # lands in a version-named subdirectory and pg_upgrade can work.
+      - broker-db-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U keycloak -d keycloak"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+volumes:
+  broker-db-data:

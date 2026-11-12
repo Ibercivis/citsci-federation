@@ -1,0 +1,32 @@
+# The reverse proxy in front of the Broker's OpenID provider, in every
+# environment including local (ADR-0001). It holds no policy and terminates no
+# TLS here: its whole job in the pilot is to make the deployment shape the same
+# everywhere, so that the failures which depend on that shape show up on a
+# laptop rather than for the first time in production.
+
+{
+	# Nothing to obtain a certificate for: the pilot runs on HTTP locally and
+	# the configured issuer says so out loud. In production TLS is terminated
+	# here, and the issuer changes with it — one coordinated configuration
+	# change, which is the whole point of ADR-0001.
+	auto_https off
+	# No admin API: this proxy is configured by this file and by nothing else.
+	admin off
+}
+
+:8080 {
+	# The proxy's own readiness, so that `docker compose up --wait` can tell
+	# the difference between the proxy not listening and the Broker behind it
+	# not being up yet.
+	handle /healthz {
+		respond "ok" 200
+	}
+
+	handle {
+		# `/realms/<name>` stays in the path (ADR-0001): nothing is stripped
+		# or rewritten here, so what a Federated App is told by discovery is
+		# what it can call. Caddy adds the X-Forwarded-* headers Keycloak is
+		# configured to trust.
+		reverse_proxy keycloak:8080
+	}
+}
