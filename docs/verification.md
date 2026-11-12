@@ -30,6 +30,7 @@ that is not yours.
 
 | | Runs | Escape |
 |---|---|---|
+| the editor | oxlint as you type, if you took the extension `.vscode/extensions.json` recommends | not a gate, and not trying to be |
 | `pre-commit` | format + lint, staged files only, **checks and never fixes** | `--no-verify` |
 | `pre-push` | `pnpm check`; the suite too, when a Broker is up | `--no-verify` |
 | CI | `pnpm check`, then its own Broker and the suite | none for the developer |
@@ -54,8 +55,7 @@ for nothing.
 |---|---|---|---|
 | **Module boundaries** — features must not import each other ([#43](https://github.com/Ibercivis/citsci-federation/issues/43)) | dependency-cruiser 18.7.2, the only maintained ESLint-free option | A second, non-Rust pass. `pre-push` and CI only | A `src/` with more than one feature in it |
 | ↳ or, for free ([#45](https://github.com/Ibercivis/citsci-federation/issues/45) watches it) | oxlint `import/no-restricted-paths` | Five lines of `.oxlintrc.json` | [oxc#13789](https://github.com/oxc-project/oxc/issues/13789). Watch that one issue; it is the whole dependency |
-| **Our own CI and scripts** — nothing checks either | `actionlint` for the workflow, `shellcheck` for `scripts/*.sh` | One step each, seconds | Arguably already fired: a YAML typo in `ci.yaml` was caught by hand while writing it |
-| **Errors before the commit, not at it** | oxlint's editor integration — `oxc.oxc-vscode`, or `oxlint --lsp` elsewhere; type-aware is supported in VS Code | Per-person config. The repo's share is a `.vscode/extensions.json` recommendation | Whenever either of us wants it. The hook is the backstop, not the feedback loop |
+| **Our own CI and scripts** — nothing checks either ([#47](https://github.com/Ibercivis/citsci-federation/issues/47)) | `actionlint` for the workflow, `shellcheck` for `scripts/*.sh`, both in CI only | Two steps. Neither has a first-party npm build, which is why they stay out of `pnpm check` | Fired. The ticket carries the route and why the other two were refused |
 | **Dead code** — unused files and exports | knip 6.45 | A third pass, but it is the thing that actually rots in a feature-sliced tree | When nobody would notice an orphan |
 | **Mutation testing** | StrykerJS 10.1.1 + `@stryker-mutator/vitest-runner` | The runner forces `threads: true` and one worker, and ignores `coverageAnalysis`. Cost is controlled by `incremental: true`, **not** by `--since`, which does not exist in StrykerJS | One module of pure logic worth really trusting. Never on `pre-commit`, never on every PR |
 | **Faster hooks** | hk 2.12.0 — per-file read/write locks, so fixers can run concurrently; ships `ox-lint` and `oxfmt` builtins | Config is Pkl, and it is not on npm. Only published benchmark is the vendor's: ~1.2× ahead of lefthook on a small commit | When `pre-commit` stops feeling instant. 1.3s says not yet |
