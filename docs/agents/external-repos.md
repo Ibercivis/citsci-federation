@@ -21,6 +21,19 @@ branch of our prototype:
 If `federation` already exists in a repository, use it rather than recreating it. Refreshing it from
 `main` is a deliberate act: take `main`'s latest commit, and say in the pull request that you did it.
 
+## OpenRed's `main` was re-pointed, once
+
+Until 12 November 2026 `Ibercivis/OpenRed` deployed the branch `feature/weather-cache-and-stats`,
+while `main` had stood still since July 2025. The pilot moved `main` to that deployed commit, so the
+default branch, the CI workflow and the documented update procedure now all describe the application
+that actually runs, and `federation` is cut from `main`'s latest commit like everywhere else. The
+deployed tree did not change by a byte; `main` was relabelled, not rebuilt.
+
+This was a one-off on the application's own line of development, **not** a commit of pilot work onto
+`main`, and it is not a precedent — the rule above stands. The two commits the old `main` carried
+are preserved on `legacy-main-user-groups-heatmap` and left to the application owner to accept or
+close in [OpenRed#2](https://github.com/Ibercivis/OpenRed/pull/2).
+
 ## Commands
 
 ```bash
