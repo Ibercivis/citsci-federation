@@ -53,13 +53,17 @@ for nothing.
 | Gap | Candidate | Real cost | Trigger |
 |---|---|---|---|
 | **Module boundaries** — features must not import each other ([#43](https://github.com/Ibercivis/citsci-federation/issues/43)) | dependency-cruiser 18.7.2, the only maintained ESLint-free option | A second, non-Rust pass. `pre-push` and CI only | A `src/` with more than one feature in it |
-| ↳ or, for free | oxlint `import/no-restricted-paths` | Five lines of `.oxlintrc.json` | [oxc#13789](https://github.com/oxc-project/oxc/issues/13789). Watch that one issue; it is the whole dependency |
+| ↳ or, for free ([#45](https://github.com/Ibercivis/citsci-federation/issues/45) watches it) | oxlint `import/no-restricted-paths` | Five lines of `.oxlintrc.json` | [oxc#13789](https://github.com/oxc-project/oxc/issues/13789). Watch that one issue; it is the whole dependency |
+| **Our own CI and scripts** — nothing checks either | `actionlint` for the workflow, `shellcheck` for `scripts/*.sh` | One step each, seconds | Arguably already fired: a YAML typo in `ci.yaml` was caught by hand while writing it |
+| **Errors before the commit, not at it** | oxlint's editor integration — `oxc.oxc-vscode`, or `oxlint --lsp` elsewhere; type-aware is supported in VS Code | Per-person config. The repo's share is a `.vscode/extensions.json` recommendation | Whenever either of us wants it. The hook is the backstop, not the feedback loop |
 | **Dead code** — unused files and exports | knip 6.45 | A third pass, but it is the thing that actually rots in a feature-sliced tree | When nobody would notice an orphan |
 | **Mutation testing** | StrykerJS 10.1.1 + `@stryker-mutator/vitest-runner` | The runner forces `threads: true` and one worker, and ignores `coverageAnalysis`. Cost is controlled by `incremental: true`, **not** by `--since`, which does not exist in StrykerJS | One module of pure logic worth really trusting. Never on `pre-commit`, never on every PR |
 | **Faster hooks** | hk 2.12.0 — per-file read/write locks, so fixers can run concurrently; ships `ox-lint` and `oxfmt` builtins | Config is Pkl, and it is not on npm. Only published benchmark is the vendor's: ~1.2× ahead of lefthook on a small commit | When `pre-commit` stops feeling instant. 1.3s says not yet |
 | **Faster type check** | TypeScript 7 — `tsc` *is* the Go port, ~8–12× on full builds | No compiler API until 7.1 | When `tsc --noEmit` is the slow part of `pnpm check` |
+| ↳ and then three passes become two | `oxlint --type-check` — reports compiler errors from the same TypeScript program it lints with, and oxc documents it as replacing a separate `tsc --noEmit` in CI | Requires TypeScript 7, so it is the row above or nothing. Keep `tsc --noEmit` until both have run on this tree and the output has been compared | The row above. Neither alone |
 | **Newer runner** | Vitest 5.1 | Breaking: `clearMocks` defaults to `true`, unawaited `resolves`/`rejects` now fail, strict locators. Its own benchmark shows the common case gaining least | Nothing. We are on 3.2.7 and it answers in 1.6s |
 | **Coverage** | `@vitest/coverage-v8` | — | A number we would act on. We do not have one yet |
+| **Who bumps the pins** | Dependabot or Renovate, grouped and scheduled | Exact pins mean every bump is a pull request, so grouping is the whole design | When a version here is old enough that neither of us remembers choosing it |
 
 Also considered and rejected: **Vite+** (takes too many decisions for us, and its `vp hooks` fights
 lefthook for `core.hooksPath`), **eslint-plugin-boundaries** (requires ESLint), **steiger** (beta,
