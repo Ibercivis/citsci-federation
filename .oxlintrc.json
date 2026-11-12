@@ -1,0 +1,70 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+
+  // Setting `plugins` replaces the default set rather than adding to it, so
+  // the three oxlint enables on its own (oxc, typescript, unicorn) are listed
+  // here too. Dropping one from this list turns it off.
+  //
+  // `vitest` is here because the tests are the only code in this repository
+  // today, and `import`, `promise` and `node` because every one of its
+  // modules is ESM running on Node: those three plugins are the ones whose
+  // rules can fire at all.
+  "plugins": [
+    "oxc",
+    "typescript",
+    "unicorn",
+    "import",
+    "promise",
+    "node",
+    "vitest"
+  ],
+
+  // Two categories, not six. Measured against this repository on the day this
+  // landed: `correctness` and `suspicious` together reported 1 finding,
+  // `perf` 5, `pedantic` 26, `style` 276 and `restriction` 55. The last four
+  // are not findings, they are a style argument: `style` wants comments
+  // capitalised and object keys sorted, `restriction` forbids `async`/`await`
+  // and optional chaining, and `pedantic` includes `no-inline-comments`,
+  // which this codebase breaks on purpose, because the comments next to the
+  // code are the point.
+  //
+  // Turn one on when it is earning something. Not before.
+  "categories": {
+    "correctness": "error",
+    "suspicious": "error"
+  },
+
+  "options": {
+    // Type-aware rules, which need the `oxlint-tsgolint` package (it is a
+    // devDependency). They work against TypeScript 5.9: the TypeScript 7
+    // upgrade is not a prerequisite, it is a separate decision.
+    "typeAware": true,
+
+    // No advisory findings. A warning nothing fails on is a finding everyone
+    // learns to scroll past, so every rule here either fails the run or is
+    // switched off below with a reason.
+    "denyWarnings": true
+  },
+
+  "rules": {
+    // Wrong rule, not wrong code. Vitest's `expect` takes an optional second
+    // argument, the message printed when the assertion fails, and
+    // `tests/consent.test.ts` uses it to say what a missing consent page
+    // would mean. The rule enforces Jest's one-argument signature.
+    "vitest/valid-expect": "off",
+
+    // Off, and this one is a decision rather than a rule being wrong. It
+    // fires on four `as` casts, all the same shape: JSON off the wire
+    // asserted into the type we expect it to have. Satisfying it means a
+    // validating parse at every call site, and the shape of the discovery
+    // document is already what `tests/discovery.test.ts` exists to assert, so
+    // that would check the same thing twice, in the harness and in the suite.
+    //
+    // What makes it worth revisiting: a Broker that answered something
+    // unexpected would fail further along, on a missing field, rather than
+    // here with "discovery is not what we expect". If that ever costs real
+    // debugging time, the answer is one validating parse helper, not four
+    // type guards, and this line comes out.
+    "typescript/no-unsafe-type-assertion": "off"
+  }
+}

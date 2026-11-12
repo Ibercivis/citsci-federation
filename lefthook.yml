@@ -1,0 +1,62 @@
+# Git hooks for this repository. Installed by `pnpm install`; see
+# https://lefthook.dev/configuration/
+#
+# Run `pnpm lefthook install` if the hooks ever stop firing.
+#
+# Two layers, and the split is what keeps them worth having: `pre-commit` is
+# what you pay on every commit, so it reads only the files you staged;
+# `pre-push` is what you pay once before sharing, so it reads the whole tree.
+# Both are escapable with `--no-verify`, which is what CI is for.
+
+# Keep the output to what the commands printed.
+skip_output:
+  - meta
+  - execution_info
+
+# pre-commit CHECKS, it never fixes.
+#
+# A hook that runs `--fix` and re-stages what it changed rewrites the content
+# of the commit after you wrote it, so the bytes that land stop being the bytes
+# you read, and a reviewer reads a diff nobody wrote. When something here
+# fails it says so and stops: run `pnpm check:fix`, look at what it did, stage
+# it yourself.
+pre-commit:
+  parallel: true
+  jobs:
+    - name: internal notes stay out of this public repository
+      run: ./scripts/guard-private.sh
+
+    # Markdown is absent from the glob because `.oxfmtrc.json` does not format
+    # prose, and `--no-error-on-unmatched-pattern` is here because a commit of
+    # nothing but documents hands this job a file list the glob has already
+    # emptied, and without the flag the formatter exits non-zero on having
+    # nothing to do.
+    - name: format
+      glob: "*.{ts,mts,cts,js,mjs,cjs,json,jsonc,yml,yaml}"
+      run: pnpm exec oxfmt --check --no-error-on-unmatched-pattern {staged_files}
+
+    - name: lint
+      glob: "*.{ts,mts,cts,js,mjs,cjs}"
+      run: pnpm exec oxlint --no-error-on-unmatched-pattern {staged_files}
+
+# pre-push is the whole gate: the checks always, the tests when they can run.
+pre-push:
+  jobs:
+    - name: check
+      run: pnpm check
+
+    # The suite itself is cheap (12 cases in 1.6 seconds, measured the day this
+    # landed, because every case reuses one already-running Broker). What is
+    # not cheap is its precondition: each case drives a real authorization code
+    # flow, so with the stack down the whole suite fails for a reason that has
+    # nothing to do with the push, and a hook that fails for environmental
+    # reasons is a hook people pass `--no-verify` to by habit.
+    #
+    # So it runs when a Broker is up and steps aside when none is. The skip
+    # exits 0 (and so skips) when `docker compose ps` names no running
+    # keycloak container, which also covers docker not being installed. CI
+    # has no such escape: it starts a stack and then has no excuse.
+    - name: tests
+      run: pnpm test
+      skip:
+        - run: test -z "$(docker compose ps --status running --quiet keycloak 2>/dev/null)"
