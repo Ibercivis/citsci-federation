@@ -462,7 +462,9 @@ where it should live tomorrow.
 ## 8. Open questions
 
 The first two need the production host and are the user's to answer or delegate; this note did not
-contact any server.
+contact any server. **All of them are now tracked**: questions 1 and 2 as issue #37, question 5 as
+issue #38, and the pilot's own share of the dependency question as issue #39. The text below is kept
+as the reasoning behind each; the tickets carry the work.
 
 1. **What is in production's `django_migrations` table?** This is the one question that could change
    recommendation 3 into "do not merge yet". The database has existed since 2024, so it was almost
@@ -488,4 +490,11 @@ contact any server.
    §3's caveat. Its `federation` sits on `main`'s tip, which is also the newest commit in that
    repository, so the shape is not OpenRed's — but "production is on a branch GitHub has never seen"
    deserves its own look before the composition of ADR-0009 claims to mirror what is deployed.
-   *Answered by*: a read of that repository's production checkout, which again needs the host.
+
+   **Half answered on 12 November 2026, and it got worse rather than better.** That branch is not on
+   the remote at all: `gh api repos/Ibercivis/gdalface/branches` returns only `federation`,
+   `local-dev-environment`, `main` and five `dependabot/pip/*` branches. So either it was deleted
+   after deployment, leaving production on a commit GitHub no longer names, or the inventory that
+   records it is stale. The `federation` cut is unaffected either way — it is `main`'s tip — but
+   ADR-0009's mirror claim is not. Tracked as issue #38; *settled by* a read of that production
+   checkout, which still needs the host.
