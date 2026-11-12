@@ -129,9 +129,13 @@ Two deviations worth knowing about, both recorded in the application's `LOCAL-DE
 image is **not** `postgis/postgis`: OpenRed's raw SQL calls a server-side `h3` function for the H3
 aggregations and the PDF reports, h3-pg is not in those images, and it could not be added to the
 tags tried: they are Debian bullseye, and `apt.postgresql.org` no longer serves that suite, so
-`apt-get update` fails inside them before anything can be installed. And the map is the one screen
-that cannot show the seeded data: it reads an endpoint that exists only on an unmerged branch, left
-unmerged deliberately.
+`apt-get update` fails inside them before anything can be installed. And the map did not show the
+seeded data, for a reason that is **not yet established**: the `…/compact/` endpoint it reads is on
+`federation` (`measures/compact.py` is in that tree and `measures/urls.py` registers
+`radiation-measurements`), so the earlier explanation here — that the endpoint exists only on an
+unmerged branch — was written against an earlier base and is wrong. It is absent from `main` and
+from nowhere else. Whoever next starts this environment should find out what the map actually does
+and correct this line and the application's `LOCAL-DEV.md`, which still carries the wrong reason.
 
 ## Building one for a new application
 

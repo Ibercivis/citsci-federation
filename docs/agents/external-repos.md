@@ -29,12 +29,21 @@ If `federation` already exists in a repository, use it rather than recreating it
 
 `main`'s latest commit, in every repository but one.
 
-**OpenRed** (`Ibercivis/OpenRed`) is cut from `origin/feature/weather-cache-and-stats`. Its `main`
-stopped moving in July 2025 and the application's real line of work is that branch, eighteen commits
-ahead and unmerged; the local environment was built against it, and a `federation` cut from `main`
-would describe an application that has not been deployed in over a year. The deviation is
-deliberate, every pull request that targets that `federation` says so, and `main` is where the branch
-would be re-cut from the day that work merges.
+**OpenRed** (`Ibercivis/OpenRed`) is cut from `origin/feature/weather-cache-and-stats`, because
+**`main` predates a model rewrite: it has neither the data model nor the sign-in path the integration
+changes.** `main` holds only `Measurement` and `Track` in `measures/models.py` and one route,
+`/api/measurements/`, while the live React front end and the deployed devices call
+`/api/radiation-measurements/`, `/api/stations/`, `/api/stats/`, `/api/tracks/` and
+`/api/ingest/radiation/`; the whole sign-in surface ADR-0007 asks us to change exists only on the
+feature branch. A `federation` cut from `main` would not be a behind-the-times OpenRed, it would be a
+different application with nothing to integrate. The branch is eighteen commits ahead of `main` and
+two behind, and the local environment was built against it.
+
+The deviation is therefore not a tolerated staleness but the only cut that describes the
+application. Every pull request that targets that `federation` says so. `main` is where the branch
+would be re-cut from the day that work merges — see
+[`docs/notes/openred-live-branch.md`](../notes/openred-live-branch.md) for the evidence, for what
+that merge would cost, and for why it is the application owner's call and not ours.
 
 ## Commands
 
