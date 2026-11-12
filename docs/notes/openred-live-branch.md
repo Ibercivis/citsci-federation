@@ -26,7 +26,7 @@ committer and the only GitHub account with commits in either repository.
 that decides it); drafting the proposal to the maintainer (§2, §6, §7); wondering whether this is one
 repository's accident or how Ibercivis works (§3 — it is the accident, with one caveat); looking for
 what production follows (§4, and its open question); or chasing the "endpoint on an unmerged branch"
-sentence in `docs/local-development.md` (§5.3 — it needs correcting).
+sentence in `docs/local-development.md` (§5.3 — measured and settled; the endpoint is served).
 
 ## 1. The shape of the divergence
 
@@ -356,11 +356,26 @@ origin/local-dev-environment` → exit 0), `measures/compact.py` is in the tree 
 `origin/local-dev-environment`, and `measures/urls.py` there registers
 `radiation-measurements`, so `/api/radiation-measurements/compact/` **is** present in the local
 environment's backend. The likeliest explanation is that the text was written against an earlier base
-and not re-checked after the branch was cut from `e66a6c9` (9 November) on 11 November. **Not
-re-tested here** — the map may still be empty for another reason, the Mapbox token among them. Worth
-one run of the environment and a correction to both files either way; "deliberately not merged" is
-the right description of the pilot's stance towards `main`, not of the endpoint's absence from
-`federation`.
+and not re-checked after the branch was cut from `e66a6c9` (9 November) on 11 November.
+
+**Since measured, and settled.** Against the running local environment on 12 November 2026, both of
+the map's data paths answer `200` with seeded rows, for both measurement domains:
+
+```sh
+curl -s http://localhost:8020/api/radiation-measurements/compact/
+# {"fields":["id","lat","lon","dose_rate"],"rows":[[1,43.055538,-7.555707,0.10479], …
+curl -s http://localhost:8020/api/radiation-measurements/h3-aggregation/
+# {"resolution":8,"hexagons":[{"h3_index":"88397050adfffff","measurement_count":396, …
+```
+
+`…/light-pollution-measurements/` answers the same on both paths. Which one the map asks for depends
+on zoom: `openred-react/src/hooks/useMeasurementsByZoom.ts:322` calls `…/compact/` at zoom ≥ 15 and
+`getH3Aggregation` below it, so neither the H3 extension nor the compact endpoint is what empties the
+map. What remains blank is the Mapbox basemap, which needs a `pk.` token
+(`openred-react/src/components/StationMapPicker.tsx:9`) and is already documented above as expected
+and not a defect. `docs/local-development.md` is corrected; the application's `LOCAL-DEV.md` still
+carries the wrong reason. "Deliberately not merged" is the right description of the pilot's stance
+towards `main`, not of the endpoint's absence from `federation`.
 
 ### 5.4 What the merge would buy
 
@@ -424,7 +439,10 @@ Not "your repository is set up wrong".
    follow a merge by weeks, if at all. If it ever happens, `federation` is re-cut from `main` that
    day and the local environment is rebuilt — and by then it would be rebuilt against code that is
    identical to today's feature branch, so the cost is a rebase, not a rewrite.
-5. **Correct the two documents in §5.3** after one run of the local environment.
+5. ~~**Correct the two documents in §5.3** after one run of the local environment.~~ Done for
+   `docs/local-development.md` on 12 November 2026. The application's `LOCAL-DEV.md` is still to do,
+   and because it lives in an external repository it goes by a topic branch and a pull request with
+   `--base federation`, not by an edit.
 
 **The condition under which recommendation 1 flips:** `feature/weather-cache-and-stats` merges into
 `main` and the merge commit becomes an ancestor of `main`'s tip. On that day `main` is a superset of
@@ -462,9 +480,10 @@ contact any server.
 3. **Was `UserGroup` ever finished, deployed or wanted?** It is the only thing a decision not to merge
    would discard. *Answered by*: Alfredo Ferrer (`aferrer@kampal.com`), who wrote it, or Francisco
    Sanz. Not answerable from the repository: there is no PR, no issue and no tag.
-4. **Does the local environment's map actually stay empty, and if so why?** §5.3. *Answered by*: one
-   `docker compose up` and a look at `/api/radiation-measurements/compact/`. Cheap, and it corrects
-   two documents either way.
+4. ~~**Does the local environment's map actually stay empty, and if so why?**~~ **Answered on
+   12 November 2026**: both of its data paths serve the seeded rows, and only the Mapbox basemap is
+   blank, which was already expected. See §5.3. `docs/local-development.md` is corrected; the
+   application's `LOCAL-DEV.md` is not yet.
 5. **Is the other repository deployed from a server-only branch a problem for its `federation` cut?**
    §3's caveat. Its `federation` sits on `main`'s tip, which is also the newest commit in that
    repository, so the shape is not OpenRed's — but "production is on a branch GitHub has never seen"

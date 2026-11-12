@@ -125,17 +125,21 @@ does not compile, so **use `npm ci`** and leave the committed lockfile alone. Ma
 token; everything else works without one. The Flutter client was not exercised: it talks to the
 devices over BLE and needs hardware.
 
-Two deviations worth knowing about, both recorded in the application's `LOCAL-DEV.md`. The database
+One deviation worth knowing about, recorded in the application's `LOCAL-DEV.md`. The database
 image is **not** `postgis/postgis`: OpenRed's raw SQL calls a server-side `h3` function for the H3
 aggregations and the PDF reports, h3-pg is not in those images, and it could not be added to the
 tags tried: they are Debian bullseye, and `apt.postgresql.org` no longer serves that suite, so
-`apt-get update` fails inside them before anything can be installed. And the map did not show the
-seeded data, for a reason that is **not yet established**: the `…/compact/` endpoint it reads is on
-`federation` (`measures/compact.py` is in that tree and `measures/urls.py` registers
-`radiation-measurements`), so the earlier explanation here — that the endpoint exists only on an
-unmerged branch — was written against an earlier base and is wrong. It is absent from `main` and
-from nowhere else. Whoever next starts this environment should find out what the map actually does
-and correct this line and the application's `LOCAL-DEV.md`, which still carries the wrong reason.
+`apt-get update` fails inside them before anything can be installed.
+
+**The map's data is served; only its basemap is blank, for the Mapbox reason above.** An earlier
+version of this file said the map could not show the seeded data because it read an endpoint that
+existed only on an unmerged branch. That was wrong, and it was wrong twice over. Measured on
+12 November 2026 against the running environment, both of the map's data paths answer `200` with
+seeded rows: `…/h3-aggregation/`, which is what it calls below zoom 15, and `…/compact/`, which it
+calls at zoom 15 and above — for radiation and for light pollution alike. The endpoint is absent
+from OpenRed's `main` and from nowhere else, which is a fact about that branch and not about this
+environment; `docs/notes/openred-live-branch.md` says why that distinction matters. The application's
+own `LOCAL-DEV.md` still carries the wrong reason and is corrected on its `federation` branch.
 
 ## Building one for a new application
 
