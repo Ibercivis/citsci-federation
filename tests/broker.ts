@@ -1,5 +1,5 @@
 /**
- * The only two things a Federated App is allowed to know about the Broker: a
+ * The only two things a Brokered App is allowed to know about the Broker: a
  * discovery URL and a client id. This module holds no more than that, and it
  * reads the first of the two from configuration rather than spelling it out,
  * because the issuer differs per environment (ADR-0001).
@@ -14,7 +14,7 @@ const ENV_FILE = join(import.meta.dirname, "..", ".env");
  *
  * Read from the one place that declares it, and used as the whole string it
  * is: nothing here concatenates a hostname with a realm name to arrive at it,
- * and nothing persists it (ADR-0001). A Federated App validating a token does
+ * and nothing persists it (ADR-0001). A Brokered App validating a token does
  * exactly the same — it compares `iss` against the value it was configured
  * with, and needs nothing stored to do it.
  */
@@ -27,7 +27,7 @@ function readIssuer(): string {
     throw new Error(
       `No BROKER_ISSUER in the environment and none declared in ${ENV_FILE}. ` +
         "The issuer is configuration (ADR-0001); there is no default to fall " +
-        "back to, because a guessed issuer is the one thing a Federated App " +
+        "back to, because a guessed issuer is the one thing a Brokered App " +
         "cannot be lied to about.",
     );
   }

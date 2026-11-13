@@ -1,6 +1,6 @@
-# Local environments for the Federated Apps
+# Local environments for the Brokered Apps
 
-Every Federated App gets an environment that runs on a laptop with a sample of data. **One is
+Every Brokered App gets an environment that runs on a laptop with a sample of data. **One is
 built for each application, as it is integrated** — the pilot is a composition of applications
 (ADR-0009), and an application nobody can start is an application nobody can integrate.
 
