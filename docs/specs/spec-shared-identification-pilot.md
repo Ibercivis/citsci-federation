@@ -16,10 +16,10 @@ foundation wants to do across projects later.
 
 ## Solution
 
-One **Broker**: a single place where a **Person** proves who they are, which every **Federated App**
+One **Broker**: a single place where a **Person** proves who they are, which every **Brokered App**
 delegates to. A Person signs in through an **Identity Source** — Google, GitHub, or an email and a
-password the Broker holds for them — and every Federated App recognises them by a single **Person
-Identifier**. No Federated App stores a password for a Person who arrived this way, and no Federated App
+password the Broker holds for them — and every Brokered App recognises them by a single **Person
+Identifier**. No Brokered App stores a password for a Person who arrived this way, and no Brokered App
 learns which Identity Source was used.
 
 Two Identities belong to the same Person when they present the same **Verified Email**. That is the whole
@@ -97,19 +97,19 @@ discarded.
 31. As an existing account holder who signs in through the Broker instead, I want to be told at the point of choice that this creates a separate account, so that I am not surprised to find my old contributions missing.
 32. As a person new to an application, I want one place to get an account rather than two, so that I am not offered a choice whose consequences I cannot see.
 
-### A Federated App maintainer
+### A Brokered App maintainer
 
-33. As a Federated App maintainer, I want to integrate by delegating authentication, storing one identifier and removing my registration link, so that the change to my application is as small as it can be while still reducing anything.
-34. As a Federated App maintainer, I want to register my application by adding declared configuration to this repository, so that onboarding is a reviewed change and not a console session or a ticket to somebody else.
-35. As a Federated App maintainer, I want never to learn which Identity Source a Person used, so that adding or removing sources is not my problem.
-36. As a Federated App maintainer, I want one identifier per Person that never changes, so that I can key my own data on it with confidence.
-37. As a Federated App maintainer, I want the identifier to be available in the ID token, in userinfo, in introspection and in the access token, so that whichever part of my stack needs it can read it.
-38. As a Federated App maintainer, I want the Broker's address to be configuration in my application, so that moving the Broker does not mean a data migration in mine.
-39. As a Federated App maintainer, I want to keep my own roles and permissions, so that I do not have to adopt somebody else's authorisation model.
-40. As a Federated App maintainer running a server-rendered application, I want a flow that works for a confidential client, so that I can keep my secret on the server.
-41. As a Federated App maintainer running a single-page application, I want a flow that works for a public client with PKCE, so that I do not have to hold a secret in a browser.
-42. As a Federated App maintainer, I want to verify tokens against published keys, so that I do not have to trust the network between us.
-43. As a Federated App maintainer, I want the Broker to behave identically in local development and in production, so that integration problems surface on my laptop.
+33. As a Brokered App maintainer, I want to integrate by delegating authentication, storing one identifier and removing my registration link, so that the change to my application is as small as it can be while still reducing anything.
+34. As a Brokered App maintainer, I want to register my application by adding declared configuration to this repository, so that onboarding is a reviewed change and not a console session or a ticket to somebody else.
+35. As a Brokered App maintainer, I want never to learn which Identity Source a Person used, so that adding or removing sources is not my problem.
+36. As a Brokered App maintainer, I want one identifier per Person that never changes, so that I can key my own data on it with confidence.
+37. As a Brokered App maintainer, I want the identifier to be available in the ID token, in userinfo, in introspection and in the access token, so that whichever part of my stack needs it can read it.
+38. As a Brokered App maintainer, I want the Broker's address to be configuration in my application, so that moving the Broker does not mean a data migration in mine.
+39. As a Brokered App maintainer, I want to keep my own roles and permissions, so that I do not have to adopt somebody else's authorisation model.
+40. As a Brokered App maintainer running a server-rendered application, I want a flow that works for a confidential client, so that I can keep my secret on the server.
+41. As a Brokered App maintainer running a single-page application, I want a flow that works for a public client with PKCE, so that I do not have to hold a secret in a browser.
+42. As a Brokered App maintainer, I want to verify tokens against published keys, so that I do not have to trust the network between us.
+43. As a Brokered App maintainer, I want the Broker to behave identically in local development and in production, so that integration problems surface on my laptop.
 
 ### The Broker operator
 
@@ -139,7 +139,7 @@ discarded.
 61. As a developer on the pilot, I want a browser test that signs in to one application and arrives already signed in at another, so that the pilot's central claim is demonstrated rather than asserted.
 62. As a developer on the pilot, I want the same composition to run on a laptop now and at a public address later, so that where it is published stays a later decision.
 63. As a developer on the pilot, I want each application's container recipe to live on its `federation` branch, so that the integration stays reversible in a repository that is not ours.
-64. As somebody showing the pilot to the foundation, I want a running federation to click through, so that what is judged is what was built rather than a description of it.
+64. As somebody showing the pilot to the foundation, I want a running pilot to click through, so that what is judged is what was built rather than a description of it.
 
 ## Implementation Decisions
 
@@ -148,12 +148,12 @@ discarded.
 - The Broker is **Keycloak**, at a **pinned version**, run behind a **reverse proxy in every environment, including local**. The reason for the proxy is parity of form: cookie, TLS, redirect-URI and CORS failures that depend on deployment shape otherwise appear for the first time in production. The reason for pinning is ADR-0004: a security property of the design rests on how Keycloak treats a verified email, so the version is not allowed to move on its own.
 - The `issuer` differs per environment and is **read from configuration**. It is never persisted in any database and never reconstructed by concatenating parts (ADR-0001). `/realms/<name>` stays in the path; stripping it fights Keycloak's multi-realm design and, with ADR-0001 and ADR-0002 in place, protects nothing still at risk.
 - The Broker's own `compose` stack — Keycloak, the PostgreSQL it needs and an **SMTP endpoint** — is declared **in this repository**. Locally the SMTP endpoint is a mail catcher. Mail is no longer optional: ADR-0004 and ADR-0005 both depend on the Broker being able to confirm an address.
-- **This repository declares the pilot's composition, not any application's production infrastructure.** Alongside the Broker's own services, it declares how each integrated Federated App is run **for the pilot** — built from that application's `federation` branch (ADR-0009). How those applications are deployed for real is still not declared here, and containerising them in production is still not this pilot's work.
+- **This repository declares the pilot's composition, not any application's production infrastructure.** Alongside the Broker's own services, it declares how each integrated Brokered App is run **for the pilot** — built from that application's `federation` branch (ADR-0009). How those applications are deployed for real is still not declared here, and containerising them in production is still not this pilot's work.
 
 ### Identity
 
 - The Broker **mints one opaque UUID per Person**, scoped with the organisation's domain, in the form `<uuid>@ibercivis.es`. It is emitted in **both `sub` and `voperson_id`**, and is present in the **ID token, userinfo response, introspection response and access token**. It is never reassigned and never recycled (ADR-0002).
-- A Federated App stores **that identifier and nothing else** about how the Person arrived. The upstream Identity Source's own subject is never passed through.
+- A Brokered App stores **that identifier and nothing else** about how the Person arrived. The upstream Identity Source's own subject is never passed through.
 - **Identities join by Verified Email** (ADR-0004). An Identity arriving with a Verified Email already held becomes an Identity of that same Person; an Identity arriving with any other address becomes a new Person. The address is read **once**, when that Identity first arrives, and never consulted again — so changing an email at Google afterwards costs nothing, and can never cause a later join.
 - **An unverified email joins nothing.** Google and GitHub affirm the address themselves; `trustEmail` is set **per Identity Source**, never globally, and only where the source actually makes the affirmation.
 - **A source that hands over no verified address causes the Broker to ask for one and confirm it by mail.** One mechanism covers all three cases that need it: ORCID, which affirms no email at all; GitHub, when the primary address is not released; and registration with a Local Credential. This is also what ORCID's own integration guide instructs integrators to do.
@@ -172,8 +172,8 @@ discarded.
 ### Authorisation
 
 - Authorisation attaches to the **Person**. The Identity used to arrive does not change what a Person may do (ADR-0003).
-- The Broker emits **no role and no entitlement claims**. Roles stay local to each Federated App.
-- **Assurance is no longer uniform**: "Google affirms this address" and "somebody confirmed a link in that mailbox" are different things, and no Federated App can tell them apart. That is accepted for the pilot, and ADR-0003 leaves a per-action assurance check available later without changing the model.
+- The Broker emits **no role and no entitlement claims**. Roles stay local to each Brokered App.
+- **Assurance is no longer uniform**: "Google affirms this address" and "somebody confirmed a link in that mailbox" are different things, and no Brokered App can tell them apart. That is accepted for the pilot, and ADR-0003 leaves a per-action assurance check available later without changing the model.
 - No **Organization** entity exists in the pilot. It becomes an attribute of an Identity Source when a second organisation exists.
 
 ### Protocol
@@ -182,24 +182,24 @@ discarded.
 - The **implicit grant and any response type that returns an access token from the authorization endpoint are refused**, not merely unused.
 - Public clients for single-page applications, confidential clients for server-rendered backends.
 - **Consent is required on every client.** This is the mechanism behind stories 6 and 7: the consent screen is what names the application asking and lists what it will receive. Keycloak remembers a granted consent per client, so it is seen once per application rather than once per session, and story 14 is unaffected.
-- **OIDC Discovery** is published; Federated Apps verify tokens against the published JWKS.
+- **OIDC Discovery** is published; Brokered Apps verify tokens against the published JWKS.
 - **Token introspection** (RFC 7662) is available to confidential clients.
 
 ### Configuration
 
 - Realm, clients, Identity Sources and scopes are **declared as code in this repository** and applied reproducibly at start-up. The admin console is for looking, not for changing.
-- **Adding a Federated App is adding declared configuration here.** There is no console step and no manual registration UX, now or planned: the people who onboard applications are the people who send pull requests, so developer experience is where the effort goes.
+- **Adding a Brokered App is adding declared configuration here.** There is no console step and no manual registration UX, now or planned: the people who onboard applications are the people who send pull requests, so developer experience is where the effort goes.
 - **Real secrets are referenced, never declared.** The declared configuration names environment variables; an untracked file supplies the Google and GitHub client secrets locally; a `.env.example` carries the names and no values. Every credential in the declared development stack stays a development constant on purpose.
 
-### Integration with the Federated Apps
+### Integration with the Brokered Apps
 
-- Integration is **additive on the way in and subtractive in one place**: each Federated App gains delegated sign-in, keeps its existing sign-in for accounts that already exist with no sunset date, and **closes its own registration path** (ADR-0007).
+- Integration is **additive on the way in and subtractive in one place**: each Brokered App gains delegated sign-in, keeps its existing sign-in for accounts that already exist with no sunset date, and **closes its own registration path** (ADR-0007).
 - That registration link is a change **beyond** the authentication hook, and so is the container recipe the pilot needs. The promise to those repositories is now "the authentication hook, the registration link, and a Dockerfile on the `federation` branch" — not "nothing else" — and every part of it is asked for rather than assumed. All of it lands on the `federation` branch: `main` is never touched, and the way those applications are deployed today does not change (ADR-0009).
 - **The closure reaches the web front end, not the API endpoint.** Where a Flutter client shares an application's API, the registration endpoint stays alive while that client depends on it. Exposure therefore falls on the web and not on mobile, and ADR-0007 states that limit rather than implying otherwise.
 
 ### Deployment
 
-- **The pilot is one Docker composition and it runs wherever Docker runs** (ADR-0009): the Broker, its PostgreSQL, the mail catcher, the reverse proxy and every integrated Federated App, each built from its own `federation` branch, all up with one command. It starts on a laptop, so nothing in it waits on a machine being provisioned.
+- **The pilot is one Docker composition and it runs wherever Docker runs** (ADR-0009): the Broker, its PostgreSQL, the mail catcher, the reverse proxy and every integrated Brokered App, each built from its own `federation` branch, all up with one command. It starts on a laptop, so nothing in it waits on a machine being provisioned.
 - **Every service is reached through the proxy by hostname, never by a port on localhost.** This is the parity-of-form argument the Broker already makes, extended to the applications: redirect URIs, cookies and CORS take the shape they will have in production rather than a shape only localhost allows.
 - **Where the pilot is published, and whether it is published at all, is a later decision.** The current OVH infrastructure is not needed to make progress and nothing is built on it. When the question arrives, the answer costs a hostname and a certificate — ADR-0001 is what keeps it that cheap.
 - **Everything in the composition is fixtures.** The stories about accounts that existed before the pilot need an account that already exists, and the composition creates it. No production data and no personal data goes into it, which is also what would make a public address safe.
@@ -223,17 +223,17 @@ discarded.
 
 ### What makes a good test here
 
-A good test drives the Broker **over HTTP, exactly as a Federated App would**, and asserts only what such an app can observe: the discovery document, the redirects, the tokens, the userinfo and introspection responses, the errors. It never reads Keycloak's database, never calls its Admin API to assert, and never asserts the shape of its internal configuration as a proxy for behaviour.
+A good test drives the Broker **over HTTP, exactly as a Brokered App would**, and asserts only what such an app can observe: the discovery document, the redirects, the tokens, the userinfo and introspection responses, the errors. It never reads Keycloak's database, never calls its Admin API to assert, and never asserts the shape of its internal configuration as a proxy for behaviour.
 
 The test of a good test in this repository: **it would still be meaningful if Keycloak were replaced by another provider.** Anything that would have to be rewritten in that case is testing the product rather than the decision.
 
-That rule governs seams 1 and 2, which speak HTTP. Seam 3 drives a browser across two Federated Apps
+That rule governs seams 1 and 2, which speak HTTP. Seam 3 drives a browser across two Brokered Apps
 and asserts only what a **Person** can see, which is the one thing HTTP cannot show: that moving from
 one application to another asks for nothing.
 
-### Seam 1 — the Broker's OIDC surface, driven by a stand-in Federated App
+### Seam 1 — the Broker's OIDC surface, driven by a stand-in Brokered App
 
-The single seam for all behaviour. A test helper behaves like a real Federated App: generates a PKCE verifier and challenge, builds the authorization request, follows redirects while carrying cookies, submits the sign-in form, redeems the code, verifies the ID token against the JWKS fetched from discovery, and calls userinfo and introspection.
+The single seam for all behaviour. A test helper behaves like a real Brokered App: generates a PKCE verifier and challenge, builds the authorization request, follows redirects while carrying cookies, submits the sign-in form, redeems the code, verifies the ID token against the JWKS fetched from discovery, and calls userinfo and introspection.
 
 **Prior art**: this helper was ported, not reinvented. The earlier effort's harness already drove exactly this flow against a real Keycloak, including the typed representation of *how* the Broker refused an attempt.
 
@@ -243,7 +243,7 @@ What is asserted at this seam:
 - **ADR-0004, the negative direction, and it is the most important assertion in the repository** — an Identity presenting an **unverified** email **does not join** an existing Person. This single test is what separates automatic joining from account takeover. It is a first-class assertion, written first, and it is also where the reported `trustEmail` advisory gets checked against the pinned version.
 - **ADR-0004, the stated limit** — two different Verified Emails yield **two** Person Identifiers, and nothing in the responses offers to join them.
 - **ADR-0002** — the Person Identifier is present in `sub` and `voperson_id`; present in ID token, userinfo, introspection and access token; identical across two sign-ins; never changed by an email address changing afterwards.
-- **ADR-0001** — the `issuer` in the discovery document and in the tokens' `iss` equals the configured value; a Federated App needs nothing persisted to validate it.
+- **ADR-0001** — the `issuer` in the discovery document and in the tokens' `iss` equals the configured value; a Brokered App needs nothing persisted to validate it.
 - **ADR-0003, the half that is observable** — the same Person Identifier arrives regardless of Identity Source, which is the mechanical precondition of roles belonging to the Person; and **no token carries a role or entitlement claim**, which shows authorisation does not come from the Broker.
 - **ADR-0005** — a Local Credential signs in and yields a Person Identifier indistinguishable in shape and placement from one obtained through Google or GitHub; a registration whose address has not been confirmed grants nothing.
 - **Hardening** — PKCE is required and a request without it is refused; the implicit grant and access-token-returning response types are refused; confidential clients are required to authenticate.
@@ -254,7 +254,7 @@ What is asserted at this seam:
 
 Its only job is to catch drift: that the stack being exercised is the stack this repository declares, with no silent local override; that the Keycloak version running is the pinned one; that the password policy running is the declared one; and that no credential worth protecting is committed — including, now that they exist, the Google and GitHub client secrets. This is the only thing seam 1 cannot see. **Prior art**: `stack.test.ts`.
 
-### Seam 3 — the federation in a browser, across two applications
+### Seam 3 — single sign-on in a browser, across two applications
 
 A browser test drives the composition of ADR-0009 end to end, and it lives in **this** repository
 rather than in the applications' (ADR-0010), because the assertion it exists for spans two
@@ -262,7 +262,7 @@ applications and no single application's repository can host it.
 
 What is asserted at this seam:
 
-- **One sign-in, two applications** — a Person signs in at one Federated App through the Broker,
+- **One sign-in, two applications** — a Person signs in at one Brokered App through the Broker,
   goes to a second one and is **not** asked to sign in again (story 14), and both applications
   report the **same Person Identifier** where each already exposes it. This is the pilot's central
   claim, and this test is the only place it is demonstrated rather than inferred.
@@ -288,10 +288,10 @@ A guard over the realm **declaration** — the earlier effort's `realm-config.te
 
 One thing, and it is the consequence of a decision rather than an oversight:
 
-- That each Federated App actually attaches its roles to the Person (ADR-0003). The Broker emits no
+- That each Brokered App actually attaches its roles to the Person (ADR-0003). The Broker emits no
   roles, so nothing outside the application can see whether it did.
 
-The second item used to be that each Federated App actually closed its own registration path
+The second item used to be that each Brokered App actually closed its own registration path
 (ADR-0007). It is now asserted at seam 3 for every application in the pilot's composition: the Broker
 still cannot verify it, but a browser can (ADR-0010). For an application that is integrated and not in
 the composition it stays a check by hand, and it stays the part on which the pilot's claim to reduce

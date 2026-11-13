@@ -1,16 +1,16 @@
-# The pilot is one Docker composition, Broker and Federated Apps together
+# The pilot is one Docker composition, Broker and Brokered Apps together
 
 The pilot is a single composition of containers declared in this repository: the Broker — Keycloak,
-its PostgreSQL and the mail catcher — a reverse proxy in front of everything, and **every Federated
+its PostgreSQL and the mail catcher — a reverse proxy in front of everything, and **every Brokered
 App that has been integrated**, each built from its own `federation` branch. One command brings the
-whole federation up.
+whole of it up.
 
 It runs wherever Docker runs. It starts on a laptop, which is what keeps the pilot free of any wait
 for a machine to be provisioned. **Where it is published, and whether it is published at all, is a
 later decision** — the current OVH infrastructure is not needed to make progress, and nothing here
 is built on it.
 
-Each Federated App gains, on its `federation` branch and nowhere else, whatever it takes to build and
+Each Brokered App gains, on its `federation` branch and nowhere else, whatever it takes to build and
 run as a container: a Dockerfile, an entrypoint, the environment it needs. `main` never sees it. None
 of those applications is containerised in production and this decision does not propose that they
 should be.
@@ -44,7 +44,7 @@ now "the authentication hook, the registration link, and a container recipe on t
 branch". Every part of it still lands on a branch that is ours by convention, `main` is still never
 touched, and the way those applications are deployed for real still does not change.
 
-**It overturns the spec's "no Federated App's infrastructure is declared here".** What this repository
+**It overturns the spec's "no Brokered App's infrastructure is declared here".** What this repository
 declares is how an application runs **in the pilot**, which is not that application's infrastructure.
 The distinction is load-bearing: the day this composition becomes the way something is actually
 deployed, it has to meet standards it does not meet yet, and that is a decision to take knowingly

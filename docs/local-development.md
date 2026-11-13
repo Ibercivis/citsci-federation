@@ -1,6 +1,6 @@
-# Local environments for the Federated Apps
+# Local environments for the Brokered Apps
 
-Every Federated App gets an environment that runs on a laptop with a sample of data. **One is
+Every Brokered App gets an environment that runs on a laptop with a sample of data. **One is
 built for each application, as it is integrated** — the pilot is a composition of applications
 (ADR-0009), and an application nobody can start is an application nobody can integrate.
 
@@ -165,6 +165,10 @@ The order that worked three times:
 7. **Write `LOCAL-DEV.md`** on that application's `federation` branch, recording the defects found
    on the way — they reproduce without the tooling and are not yours to fix — and add three lines
    here.
+
+Everything these seven steps write lands in somebody else's repository, so it is named in that
+application's words and not in ours — `docs/agents/external-repos.md`, *Vocabulary*, says what that
+rules out and what to call things instead.
 
 Weaknesses found while reading the code go to `docs/private/security-findings.md` in the turn they
 are found, and to nothing public.

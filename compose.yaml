@@ -1,8 +1,8 @@
 # The Broker, and nothing else.
 #
-# Three services make up what a Federated App sees as one frontier: a reverse
+# Three services make up what a Brokered App sees as one frontier: a reverse
 # proxy, the OpenID provider behind it, and the provider's own database. No
-# Federated App's infrastructure is declared here: a Federated App's
+# Brokered App's infrastructure is declared here: a Brokered App's
 # development environment stays in its own repository, and what this file
 # knows about an application is nothing at all.
 #
@@ -29,7 +29,7 @@ services:
         aliases:
           # The other half of one issuer. `broker.localhost` is the loopback
           # address for a browser and this proxy for anything on this network,
-          # so the name a Federated App is told to trust resolves on both
+          # so the name a Brokered App is told to trust resolves on both
           # sides of the port mapping. Remove this and a containerised app
           # loses its issuer, with an error that names nothing.
           - broker.localhost
