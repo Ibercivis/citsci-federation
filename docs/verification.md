@@ -19,6 +19,11 @@ with itself. `CODING_STANDARDS.md` holds the two rules no tool enforces.
 `pnpm check` is the first three, and is the only definition of "checked": **1.3 seconds** on the
 whole tree. The suite is 12 cases in **1.6 seconds**, because every case reuses one running Broker.
 
+The runner is Vitest 5.1. Getting there crossed two majors from 3.2.7 and cost nothing: all three
+of the v5 changes that fail a passing test — `clearMocks` defaulting to `true`, unawaited
+`resolves`/`rejects`, strict locators — need mocks, unawaited async assertions or browser
+mode, and this suite has none of them. A one-line bump, 12 of 12 still green, the same 1.6 seconds.
+
 Lint runs `correctness` and `suspicious` only. Chosen by counting, not by taste: those two found 1
 finding here, `style` found 276. Type-aware rules are on, which needs the `oxlint-tsgolint`
 package and works on TypeScript 5.9 — TypeScript 7 is not a prerequisite.
@@ -48,8 +53,10 @@ when no Broker is running. CI has no such excuse — it starts one.
 
 ## Layer 2 — what we do not have, and what would buy it
 
-Each row has a trigger. None of them is due yet, and adding one before its trigger costs CI time
-for nothing.
+Each row carries the one condition that would make us adopt it, and what adopting it would cost.
+The two are a pair: the trigger is only worth waiting for because the cost is real, so a row whose
+cost measures out at zero needs no trigger. Vitest 5 left this table that way — Layer 0 says what
+it cost. The rows marked *Fired* are decided and not yet built; each carries an issue.
 
 | Gap | Candidate | Real cost | Trigger |
 |---|---|---|---|
@@ -61,7 +68,6 @@ for nothing.
 | **Faster hooks** | hk 2.12.0 — per-file read/write locks, so fixers can run concurrently; ships `ox-lint` and `oxfmt` builtins | Config is Pkl, and it is not on npm. Only published benchmark is the vendor's: ~1.2× ahead of lefthook on a small commit | When `pre-commit` stops feeling instant. 1.3s says not yet |
 | **Faster type check** | TypeScript 7 — `tsc` *is* the Go port, ~8–12× on full builds | No compiler API until 7.1 | When `tsc --noEmit` is the slow part of `pnpm check` |
 | ↳ and then three passes become two | `oxlint --type-check` — reports compiler errors from the same TypeScript program it lints with, and oxc documents it as replacing a separate `tsc --noEmit` in CI | Requires TypeScript 7, so it is the row above or nothing. Keep `tsc --noEmit` until both have run on this tree and the output has been compared | The row above. Neither alone |
-| **Newer runner** | Vitest 5.1 | Breaking: `clearMocks` defaults to `true`, unawaited `resolves`/`rejects` now fail, strict locators. Its own benchmark shows the common case gaining least | Nothing. We are on 3.2.7 and it answers in 1.6s |
 | **Coverage** | `@vitest/coverage-v8` | — | A number we would act on. We do not have one yet |
 | **Who bumps the pins** ([#49](https://github.com/Ibercivis/citsci-federation/issues/49)) | Dependabot, grouped and scheduled | Exact pins mean every bump is a pull request, so grouping is the whole design. The Keycloak image stays out of it: ADR-0004 rests on that version | Fired, for lack of a trigger. "A version nobody remembers choosing" is not something anyone notices, and that is the argument for a mechanism over a rule |
 
@@ -71,4 +77,4 @@ and its rules are Feature-Sliced Design whatever the billing says).
 
 There is no Rust-based mutation tester for JS/TS, and no Vitest-native one.
 
-_Versions and claims checked 12 November 2026._
+_Versions and claims checked 13 November 2026._
