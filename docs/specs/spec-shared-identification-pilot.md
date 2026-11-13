@@ -209,7 +209,7 @@ discarded.
 
 ### Reuse from the earlier effort
 
-- The `compose` stack and the test harness from `federation-proxy` are **ported into this repository**. They are the only demonstrated part of the earlier work: they drive a real OIDC code flow against a real Keycloak.
+- The `compose` stack and the test harness from the earlier `federation-proxy` repository were **ported into this repository**. They were the only demonstrated part of the earlier work: they drive a real OIDC code flow against a real Keycloak.
 - The earlier effort's **ADRs are not inherited**. Its three prohibitions — no protocol mappers, no provider-side user attributes, no Admin API — are **deliberately overturned** by ADR-0002, because minting the Person Identifier requires a mapper and provider-side storage. The guard that enforced those prohibitions must be rewritten against the rules in this repository's ADRs, or deleted.
 - Porting includes auditing every ported test against the decisions recorded here. Two kinds of test need attention rather than deletion: anything guarding the old prohibitions, and **anything asserting that linking by email does not happen**, which must be **inverted** rather than removed — the behaviour it names is now required, and the test that names it is the most valuable one in the harness. A test that passes for the wrong reason is worse than no test.
 
@@ -235,7 +235,7 @@ one application to another asks for nothing.
 
 The single seam for all behaviour. A test helper behaves like a real Federated App: generates a PKCE verifier and challenge, builds the authorization request, follows redirects while carrying cookies, submits the sign-in form, redeems the code, verifies the ID token against the JWKS fetched from discovery, and calls userinfo and introspection.
 
-**Prior art**: `tests/federated-app.ts` in `federation-proxy` already does exactly this against a real Keycloak, including the typed representation of *how* the Broker refused an attempt. It is ported, not reinvented.
+**Prior art**: this helper was ported, not reinvented. The earlier effort's harness already drove exactly this flow against a real Keycloak, including the typed representation of *how* the Broker refused an attempt.
 
 What is asserted at this seam:
 
@@ -380,6 +380,6 @@ the cheapest of them — a redirect URI and a worked example, with no change to 
 one whose value accrues to people who are not in the room: a team wiring up a mobile client in six
 months reads the example instead of rediscovering it.
 
-**Relationship to the earlier repositories.** `federation-proxy`, `federation` and `learn-federation-proxy`
-are kept as a consultable archive. Their demonstrated artefacts are reused; their ADRs and specifications
-are not inherited.
+**Relationship to the earlier repositories.** The earlier repositories are not an input to this work.
+Their demonstrated artefacts were ported here; their ADRs and specifications are not inherited.
+`federation-proxy` has since been deleted, so there is nothing left in it to consult.
