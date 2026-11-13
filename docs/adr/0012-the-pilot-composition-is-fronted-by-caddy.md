@@ -6,7 +6,7 @@ fronted by nginx, every virtual host of them, and this decision does not propose
 the Pilot Composition is ever published at a public address — the decision ADR-0009 defers — the
 front door there is nginx, and the fifteen lines of `proxy/Caddyfile` become a virtual host.
 
-**ADR-0001 asks for parity of form, not parity of software.** The form is the hostname a Federated
+**ADR-0001 asks for parity of form, not parity of software.** The form is the hostname a Brokered
 App is told to trust, the `X-Forwarded-*` headers the Broker is configured to read, the place TLS is
 terminated, and the absence of any route that reaches the Broker without passing through the proxy.
 That shape is identical under either tool, and the failures the ADR exists to surface early —

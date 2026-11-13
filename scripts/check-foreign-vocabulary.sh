@@ -20,7 +20,7 @@
 set -euo pipefail
 
 # Ours in any casing. Kept lowercase: the diff scan lowercases what it compares.
-LOOSE='pilot|federated app|federation proxy|broker'
+LOOSE='pilot|brokered app|federated app|federation proxy|broker'
 # The common noun is the application's; the capitalised term is ours.
 STRICT_GREP='\b(Person|Persons)\b'
 STRICT_AWK='(^|[^A-Za-z])(Person|Persons)([^A-Za-z]|$)'

@@ -48,7 +48,7 @@ stays in this repository. See `docs/agents/external-repos.md`.
 
 ### Local environments
 
-**Every Federated App gets one, built as it is integrated**, and **none of them takes data from
+**Every Brokered App gets one, built as it is integrated**, and **none of them takes data from
 production**: the realistic half of the dataset is rebuilt from a public source and the half that
 would carry personal data is invented, so there is nothing to anonymise. The environment and its
 seed command live on that application's `federation` branch, in a `LOCAL-DEV.md` at its root.
@@ -104,13 +104,13 @@ here in the first place.
 
 ### Security findings
 
-A weakness found in a Federated App's code is recorded in `docs/private/security-findings.md` in the
+A weakness found in a Brokered App's code is recorded in `docs/private/security-findings.md` in the
 turn it is found, and reaches nothing public — the Internal notes rule above covers it. Before
 recording one, or reporting one to its owner: `docs/agents/security-findings.md`.
 
 ### Migration requirements
 
-What an integrated Federated App's **existing** accounts would need to move onto the Broker is
+What an integrated Brokered App's **existing** accounts would need to move onto the Broker is
 recorded per app in `docs/migration/<app>.md`, as the integration turns it up. Migration is outside
 the pilot's committed scope and a record is not a commitment. Requirements are public, measurements
 taken from a production database are not: `docs/agents/migration-requirements.md`.

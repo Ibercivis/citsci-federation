@@ -1,7 +1,7 @@
 # External repositories: the `federation` branch
 
 Scope: every repository that is **not this one** — the Ibercivis application repositories that become
-Federated Apps, and anything else whose code the pilot has to change. Work inside
+Brokered Apps, and anything else whose code the pilot has to change. Work inside
 `citsci-federation` itself is unaffected.
 
 ## The rule
@@ -28,7 +28,7 @@ If `federation` already exists in a repository, use it rather than recreating it
 ## Vocabulary: the application's words, never ours
 
 **Everything we add to an external repository is named and explained in that application's own
-terms.** The words this project runs on — pilot, Broker, Federated App, Person, ADR-0009 — are
+terms.** The words this project runs on — pilot, Broker, Brokered App, Person, ADR-0009 — are
 defined in `citsci-federation` and resolve nowhere else. To the people who maintain the application
 they name nothing, and a name that explains nothing misleads instead: `requirements-pilot.txt` was
 the local container's dependency list, so it was jargon *and* wrong about what the file was. That
@@ -38,7 +38,7 @@ to change, and the reviewer was right on both counts.
 The defaults cover almost everything:
 
 - the local environment and its files — `local`, `local_dev/`, `LOCAL-DEV.md`
-- what exists only because of the federation — `federation`
+- what exists only because of the Broker — `federation`
 
 Where our context is genuinely needed — usually *why a file exists at all* — it goes **once**, in
 prose, in `LOCAL-DEV.md` or in the pull request body, with a link to the document that defines the
