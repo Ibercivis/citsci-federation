@@ -20,10 +20,14 @@ title=${1-}
 body=${2-}
 
 # GitHub appends " (#123)" to the subject it builds, so the cap is on the title
-# alone and the published subject runs about six characters longer. 80 is not a
-# taste: the longest title this repository has merged is 75, so the limit
-# refuses what nobody has written rather than the way everybody writes.
-readonly max_title=80
+# alone and the published subject runs about seven characters longer. Subjects
+# here are whole sentences, and they now open with the `[#12]` the issue
+# convention asks for, which spends seven more before the sentence starts.
+#
+# So this is a ceiling, not a target. It is here to refuse a title that has
+# turned into a paragraph, not to make anyone count characters; a limit set
+# close to what has already been written is one that fires on ordinary work.
+readonly max_title=100
 
 failures=()
 fail() { failures+=("$1"); }
