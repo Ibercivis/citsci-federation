@@ -44,20 +44,12 @@ message and stay editable after review, which is why CI re-reads them on every e
 
 ## Considered Options
 
-- **No required approval, CI as the only gate.** How this started, on the arithmetic of two
-  people: an approval would be a stall or a stamp. Reversed by the team the same day — with an
-  agent opening most pull requests, the second pair of eyes is the control that matters.
-- **Squash as the only method.** Enabled 13 November 2026 and reversed the same day. Pull request
-  #55 landed under it and stays as it is; the setting changed, not the history.
-- **Rebase merge.** Keeps the commits, but leaves nothing that stands for the pull request, so a
-  revert is a range somebody delimits by hand; it rewrites what it replays; and GitHub refuses it
-  when the branch carries a merge commit.
-- **Conventional Commits, enforced on the title.** Subjects here are sentences that say what the
-  change does. `feat:`/`docs:` would be a taxonomy imposed on fifty of them for a changelog nobody
-  asked for.
-- **Auto-merge.** On for an afternoon: it makes the merge a consequence of the checks, when the
-  checks are only the precondition.
-- **A merge queue.** Nothing to serialise with two aligned people. Revisit when two pull requests
-  a day collide in `main`.
-- **Required signed commits.** Deferred, not rejected: the right control for a public repository
-  where agents commit, but every checkout needs signing configured before it can commit at all.
+| | |
+|---|---|
+| **No required approval, CI as the only gate** | How this started, on the arithmetic of two people. Reversed by the team the same day: an agent opens most pull requests, and no check is a second pair of eyes |
+| **Squash as the only method** | On for a day, then reversed. #55 landed under it and stays as it is |
+| **Rebase merge** | Keeps the commits, but nothing stands for the pull request: a revert becomes a range, and GitHub refuses the rebase when the branch carries a merge commit |
+| **Conventional Commits on the title** | Subjects here are sentences, not a `feat:`/`docs:` taxonomy for a changelog nobody asked for |
+| **Auto-merge** | On for an afternoon: it makes the merge a consequence of the checks, when the checks are only the precondition |
+| **A merge queue** | Nothing to serialise with two aligned people. Revisit when two pull requests a day collide in `main` |
+| **Required signed commits** | Deferred, not rejected: every checkout would need signing configured before it could commit |
