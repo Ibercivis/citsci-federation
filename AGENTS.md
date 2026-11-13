@@ -14,6 +14,23 @@ English record of it, noting at the top when the original was sent in another la
 If you find Spanish in a document you are already editing, translate that document as part of the
 change rather than leaving it half-translated.
 
+## What goes in a document
+
+Every document here is read into an agent's context before a person ever opens it, so a line that
+changes no decision is not free: it spends budget on every future session, and it rots without
+anyone noticing. Leave out:
+
+- **Measurements of the present.** Wall-clock timings, test counts, pass rates, "all green". The
+  command is right there and answers faster than the document can be trusted to.
+- **A defence of something that works.** A dependency in use needs no argument for why adopting it
+  was safe. The day it breaks is the day that reasoning is worth writing down.
+- **Anything a config file already says.** The reason a rule is off belongs next to the rule. A rule
+  written in both places is a rule that will disagree with itself.
+
+Write what a reader cannot recover by running the code: a decision and what it rules out, a
+constraint, the condition that would change our mind, a dead end so nobody walks it twice. When a
+number really does carry the argument, it belongs in a dated note under `docs/notes/`.
+
 ## Agent skills
 
 ### Issue tracker

@@ -16,20 +16,12 @@ with itself. `CODING_STANDARDS.md` holds the two rules no tool enforces.
 | Does it type-check? | `tsc --noEmit` | `pnpm typecheck` | `tsconfig.json` |
 | Does a sign-in actually work? | Vitest against a real Broker | `pnpm broker:up && pnpm test` | `compose.yaml`, ADR-0010 |
 
-`pnpm check` is the first three, and is the only definition of "checked": **1.3 seconds** on the
-whole tree. The suite is 12 cases in **1.6 seconds**, because every case reuses one running Broker.
+`pnpm check` is the first three, and is the only definition of "checked". Every case in the suite
+reuses one running Broker instead of starting its own, which is why they cannot run in parallel.
 
-The runner is Vitest 5.1. Getting there crossed two majors from 3.2.7 and cost nothing: all three
-of the v5 changes that fail a passing test — `clearMocks` defaulting to `true`, unawaited
-`resolves`/`rejects`, strict locators — need mocks, unawaited async assertions or browser
-mode, and this suite has none of them. A one-line bump, 12 of 12 still green, the same 1.6 seconds.
-
-Lint runs `correctness` and `suspicious` only. Chosen by counting, not by taste: those two found 1
-finding here, `style` found 276. Type-aware rules are on, which needs the `oxlint-tsgolint`
-package and works on TypeScript 5.9 — TypeScript 7 is not a prerequisite.
-
-Every version in `package.json` is exact. A caret on a linter means a commit rejected by a diff
-that is not yours.
+Lint runs `correctness` and `suspicious` only; `.oxlintrc.json` carries the count that decided it.
+Type-aware rules are on, which needs the `oxlint-tsgolint` package and works on TypeScript 5.9 —
+TypeScript 7 is not a prerequisite.
 
 ## Layer 1 — where it runs
 
@@ -68,9 +60,7 @@ takes both as arguments, so it is still runnable by hand — `./scripts/check-pr
 ## Layer 2 — what we do not have, and what would buy it
 
 Each row carries the one condition that would make us adopt it, and what adopting it would cost.
-The two are a pair: the trigger is only worth waiting for because the cost is real, so a row whose
-cost measures out at zero needs no trigger. Vitest 5 left this table that way — Layer 0 says what
-it cost. The rows marked *Fired* are decided and not yet built; each carries an issue.
+A row marked *Fired* is decided and not yet built, and carries an issue.
 
 | Gap | Candidate | Real cost | Trigger |
 |---|---|---|---|
@@ -79,7 +69,7 @@ it cost. The rows marked *Fired* are decided and not yet built; each carries an 
 | **Our own CI and scripts** — nothing checks either ([#47](https://github.com/Ibercivis/citsci-federation/issues/47)) | `actionlint` for the workflow, `shellcheck` for `scripts/*.sh`, both in CI only | Two steps. Neither has a first-party npm build, which is why they stay out of `pnpm check` | Fired. The ticket carries the route and why the other two were refused |
 | **Dead code** — unused files and exports | knip 6.45 | A third pass, but it is the thing that actually rots in a feature-sliced tree | When nobody would notice an orphan |
 | **Mutation testing** | StrykerJS 10.1.1 + `@stryker-mutator/vitest-runner` | The runner forces `threads: true` and one worker, and ignores `coverageAnalysis`. Cost is controlled by `incremental: true`, **not** by `--since`, which does not exist in StrykerJS | One module of pure logic worth really trusting. Never on `pre-commit`, never on every PR |
-| **Faster hooks** | hk 2.12.0 — per-file read/write locks, so fixers can run concurrently; ships `ox-lint` and `oxfmt` builtins | Config is Pkl, and it is not on npm. Only published benchmark is the vendor's: ~1.2× ahead of lefthook on a small commit | When `pre-commit` stops feeling instant. 1.3s says not yet |
+| **Faster hooks** | hk 2.12.0 — per-file read/write locks, so fixers can run concurrently; ships `ox-lint` and `oxfmt` builtins | Config is Pkl, and it is not on npm. Only published benchmark is the vendor's: ~1.2× ahead of lefthook on a small commit | When `pre-commit` stops feeling instant |
 | **Faster type check** | TypeScript 7 — `tsc` *is* the Go port, ~8–12× on full builds | No compiler API until 7.1 | When `tsc --noEmit` is the slow part of `pnpm check` |
 | ↳ and then three passes become two | `oxlint --type-check` — reports compiler errors from the same TypeScript program it lints with, and oxc documents it as replacing a separate `tsc --noEmit` in CI | Requires TypeScript 7, so it is the row above or nothing. Keep `tsc --noEmit` until both have run on this tree and the output has been compared | The row above. Neither alone |
 | **Coverage** | `@vitest/coverage-v8` | — | A number we would act on. We do not have one yet |
