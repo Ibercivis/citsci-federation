@@ -22,8 +22,8 @@ GitHub Issues in `Ibercivis/citsci-federation`, via the `gh` CLI. See `docs/agen
 
 ### Review replies
 
-Replies to a reviewer's comments are drafted locally and posted by the human. Don't run
-`gh pr comment` or reply through the API unless asked for it in that turn.
+An agent never posts a reply to a review comment the user hasn't read. Draft them, show them, post
+only what the user approved in that turn — `gh` and the GitHub UI are the same thing here.
 
 ### Triage labels
 
