@@ -38,7 +38,8 @@ Pages are written in English, titles included (ADR-0008).
 
 Work on the Ibercivis application repositories never touches `main` or `master`. Each of them gets a
 branch named `federation`, cut from the latest commit of `main`: PRs target it and the pilot deploys
-from it. See `docs/agents/external-repos.md`.
+from it. **What we add there is named in that application's words, never in ours** — our vocabulary
+stays in this repository. See `docs/agents/external-repos.md`.
 
 ### Local environments
 

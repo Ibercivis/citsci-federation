@@ -25,6 +25,28 @@ repository. `federation` is the main branch of our prototype, and it is treated 
 If `federation` already exists in a repository, use it rather than recreating it. Refreshing it from
 `main` is a deliberate act: take `main`'s latest commit, and say in the pull request that you did it.
 
+## Vocabulary: the application's words, never ours
+
+**Everything we add to an external repository is named and explained in that application's own
+terms.** The words this project runs on — pilot, Broker, Federated App, Person, ADR-0009 — are
+defined in `citsci-federation` and resolve nowhere else. To the people who maintain the application
+they name nothing, and a name that explains nothing misleads instead: `requirements-pilot.txt` was
+the local container's dependency list, so it was jargon *and* wrong about what the file was. That
+is what [OpenRed#1](https://github.com/Ibercivis/OpenRed/pull/1#discussion_r4548674206) was asked
+to change, and the reviewer was right on both counts.
+
+The defaults cover almost everything:
+
+- the local environment and its files — `local`, `local_dev/`, `LOCAL-DEV.md`
+- what exists only because of the federation — `federation`
+
+Where our context is genuinely needed — usually *why a file exists at all* — it goes **once**, in
+prose, in `LOCAL-DEV.md` or in the pull request body, with a link to the document that defines the
+term. Never in a filename, never repeated comment by comment. Someone who does not follow that link
+still has to understand what the file does.
+
+This binds the pull request body and the replies to review comments exactly as it binds the code.
+
 ## Where `federation` is cut from
 
 `main`'s latest commit, in **every** repository. There is no exception left; there was one until
@@ -92,6 +114,9 @@ moves `HEAD` out from under anyone who is on `federation`.
 
 - `git branch --show-current` prints a **topic branch** — never `federation`, never `main`.
 - `gh pr create` carries `--base federation`.
+- `scripts/check-foreign-vocabulary.sh`, from this repository, run in the external clone, prints
+  nothing — or every line it printed has been read and kept deliberately. Give it the pull request
+  body as well, before `gh pr create` writes it.
 - `git log --oneline origin/main..<topic>` shows only pilot work, so the branch is still a
   descendant of `main` and nothing unrelated rode in. This now holds in every repository, OpenRed
   included: before 12 November 2026 the base of that range there was

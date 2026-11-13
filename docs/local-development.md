@@ -165,5 +165,9 @@ The order that worked three times:
    on the way — they reproduce without the tooling and are not yours to fix — and add three lines
    here.
 
+Everything these seven steps write lands in somebody else's repository, so it is named in that
+application's words and not in ours — `docs/agents/external-repos.md`, *Vocabulary*, says what that
+rules out and what to call things instead.
+
 Weaknesses found while reading the code go to `docs/private/security-findings.md` in the turn they
 are found, and to nothing public.
