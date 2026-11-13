@@ -22,9 +22,9 @@ Pages are written in English, titles included (ADR-0008).
 
 <https://claude.ai/artifact/8TFnxeY4E3rpXBUee1W5uQ>
 
-Four figures: the components inside the Broker and the boundary a Federated App can see; the
+Four figures: the components inside the Broker and the boundary a Brokered App can see; the
 eleven steps of a first sign-in, and where in them the Person Identifier is minted; two linked
-Identities against two that merely share an email address; and what changes in a Federated App.
+Identities against two that merely share an email address; and what changes in a Brokered App.
 
 _From_ `docs/specs/spec-shared-identification-pilot.md`, `GLOSSARY.md`, ADR-0001 to ADR-0003.
 Published 2026-11-09, translated into English 2026-11-10.
@@ -36,7 +36,7 @@ Published 2026-11-09, translated into English 2026-11-10.
 Orientation for anyone who has not used Keycloak before: that it is an OIDC server and an OIDC
 client at the same time, the pieces of a realm and the path a sign-in takes through them, the
 three defaults that have to be broken for the pilot, the translation between Keycloak's
-vocabulary and the glossary's, and the URLs a Federated App actually touches.
+vocabulary and the glossary's, and the URLs a Brokered App actually touches.
 
 _From_ the same sources, plus general Keycloak knowledge. Two details are flagged in the page
 itself as unverified against a pinned version: the exact name of the `sub` mapper, and the
