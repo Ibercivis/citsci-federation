@@ -48,10 +48,18 @@ a stall, and both are worse than what we do now, which is that the human reviews
 is a pull request at all. That review is real and it stays. It just is not the gate.
 
 A check is a gate that cannot be rubber-stamped. `check`, `tests` and `pr` either pass or they do
-not, nobody is waiting on anybody, and `allow_auto_merge` means a pull request can be queued behind
-its own result: the agent opens it, enables auto-merge, and the merge happens when CI says so or
-never. That is the arrangement this repository is built for, and it is what makes the three
-seconds `pnpm check` takes worth having.
+not, and for that part nobody is waiting on anybody.
+
+What a check is not is a decision to merge. **Auto-merge is off**, and that is the deliberate half
+of this decision rather than an omission from it: a green pull request does not land, it waits for
+a person who has read the diff to press the button. The checks say the change is well formed; only
+a human says it should exist. The absence of a required approval is not an absence of review — it
+is a refusal to ask GitHub to model a review that happens between us before the pull request is
+opened, and again at the merge button.
+
+An agent never presses that button. `AGENTS.md` carries it as a rule, and it has to be a rule:
+nothing in the repository's settings can tell an agent's `gh pr merge` from ours, which is the same
+reason the production-database rule is written there rather than enforced.
 
 There is no bypass actor, deliberately. An administrator bypass is an escape nobody records; the
 real escape is to edit the ruleset, which is a change with a name and a timestamp on it. The day
@@ -69,6 +77,11 @@ something urgent has to land past a red CI, we would rather it be visible.
   sentences that say what the change does, and `feat:`/`docs:` would be a taxonomy imposed on them
   for the sake of a changelog nobody has asked for. `pr` checks the shape those sentences already
   share — a capital letter, no trailing period, short enough for a subject line.
+- **Auto-merge, so that a green pull request lands on its own.** Enabled for an afternoon and
+  turned back off the same day. It is the natural companion to a CI gate and it is exactly what we
+  do not want: it makes the merge a consequence of the checks, when the checks are only the
+  precondition. Every merge here is somebody deciding, and with an agent opening most of the pull
+  requests that distinction is the whole safeguard rather than a formality.
 - **A merge queue.** Rejected on volume: it exists to serialise pull requests that pass alone and
   fail together, and with two aligned people there is nothing to serialise. The trigger would be
   two pull requests a day colliding in `main`.

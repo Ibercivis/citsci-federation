@@ -41,6 +41,13 @@ GitHub Issues in `Ibercivis/citsci-federation`, via the `gh` CLI. See `docs/agen
 
 The five canonical triage labels, unchanged. See `docs/agents/triage-labels.md`.
 
+### Merging
+
+An agent never merges a pull request — not with `gh`, not in the web UI, and not by asking for
+auto-merge, which is off at the repository and not an agent's to turn back on. Every merge is a
+human pressing the button after reading the diff. Green checks are the precondition, never the
+verdict. See ADR-0013.
+
 ### Domain docs
 
 Single-context: `GLOSSARY.md` and `docs/adr/` at the repo root. See `docs/agents/domain.md`.
