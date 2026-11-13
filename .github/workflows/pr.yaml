@@ -1,0 +1,36 @@
+name: Pull request
+
+# A workflow of its own rather than a job in `ci.yaml`, and `edited` is the
+# whole reason. A pull request's title and body are editable after the push,
+# so a check on them that does not re-run on an edit is a check you can only
+# satisfy with an empty commit. `ci.yaml` must *not* wake on an edit — nothing
+# it runs reads either string, and the suite costs minutes — so the two sets of
+# events cannot share a file.
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  # Named `pr` because the ruleset on `main` requires this context by name.
+  pr:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      # The two strings go through the environment, never into the command
+      # line: a pull request title is attacker-supplied on a public repository,
+      # and `run: ./script "${{ github.event.pull_request.title }}"` would hand
+      # the shell whatever it contains.
+      - name: The title and body a squash merge would publish
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: ./scripts/check-pr-metadata.sh "$PR_TITLE" "$PR_BODY"

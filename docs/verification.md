@@ -39,17 +39,31 @@ that is not yours.
 | `pre-commit` | format + lint, staged files only, **checks and never fixes** | `--no-verify` |
 | `pre-push` | `pnpm check`; the suite too, when a Broker is up | `--no-verify` |
 | CI | `pnpm check`, then its own Broker and the suite | none for the developer |
+| the merge button | the ruleset on `main`: a pull request, `check`, `tests` and `pr` green, squash only | none; the ruleset has no bypass actor |
 
-CI cannot be skipped the way a hook can, but **a red CI does not stop a merge**: `main` carries no
-branch protection and no rulesets, so the workflow reports and nothing acts on the report.
+CI cannot be skipped the way a hook can, and since 13 November 2026 **a red CI stops the merge**: a
+ruleset on `main` requires a pull request, requires those three contexts to be green, and offers no
+merge method but squash. Nobody can bypass it, the author included — the way out is to edit the
+ruleset, which is a change anyone can see, rather than a flag nobody sees. ADR-0013 holds the
+reasoning, and says why the ruleset asks for no approving review.
+
+`pr` is the third context and the newest. It checks the pull request's **title and body**, because
+under squash those two strings *are* the commit that lands: the subject and the message. It asks
+for a title short enough for a subject line and a body that says something, and for an issue
+reference in one of them or the words `No ticket`. The rules live in
+`scripts/check-pr-metadata.sh`, each next to the reason it exists.
 
 One definition, three callers. A new check is added to `pnpm check`, never to the hook or the
 workflow alone: a check that lives only in CI is one nobody can run before pushing, and a check
 that lives only in the hook is one `--no-verify` deletes.
 
-The suite is the single exception, because it is the one check with a precondition. A hook that
-fails for environmental reasons is a hook people pass `--no-verify` to by habit, so it steps aside
-when no Broker is running. CI has no such excuse — it starts one.
+Two checks stay out of `pnpm check`, and both for the same kind of reason: neither has an input
+that exists on your machine. The suite needs a Broker answering, so a hook would fail for
+environmental reasons — and a hook that does that is a hook people pass `--no-verify` to by habit.
+It steps aside when no Broker is running; CI has no such excuse, and starts one. The pull request
+check needs a pull request: there is no title and no body to read until one exists. Its script
+takes both as arguments, so it is still runnable by hand — `./scripts/check-pr-metadata.sh "$title"
+"$body"` — which is what keeps it from being a rule that only CI knows.
 
 ## Layer 2 — what we do not have, and what would buy it
 
