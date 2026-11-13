@@ -20,6 +20,11 @@ change rather than leaving it half-translated.
 
 GitHub Issues in `Ibercivis/citsci-federation`, via the `gh` CLI. See `docs/agents/issue-tracker.md`.
 
+### Review replies
+
+Replies to a reviewer's comments are drafted locally and posted by the human. Don't run
+`gh pr comment` or reply through the API unless asked for it in that turn.
+
 ### Triage labels
 
 The five canonical triage labels, unchanged. See `docs/agents/triage-labels.md`.
