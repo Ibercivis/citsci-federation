@@ -1,12 +1,12 @@
-# The gate on `main` is CI, and a merge keeps the branch's commits
+# The gate on `main`, and what a merge keeps
 
 `main` takes a merge commit per pull request and publishes every commit the branch carries. The
 merge commit is the only method the repository offers; squash and rebase are off.
 `merge_commit_title` is `PR_TITLE` and `merge_commit_message` is `PR_BODY`, so that commit carries
 the pull request's own summary rather than `Merge pull request #56 from ...`. A ruleset on `main`
-requires a pull request, requires `check`, `tests` and `pr` to be green, requires the branch to be
-up to date, forbids force-pushes and deletion, and names no bypass actor — not the author, not an
-administrator. It requires **no approving review**.
+requires a pull request, **one approving review**, `check`, `tests` and `pr` green, and the branch
+up to date. It forbids force-pushes and deletion, and names no bypass actor — not the author, not
+an administrator.
 
 The decision has two halves, and the second only makes sense after the first.
 
@@ -34,40 +34,28 @@ branch onto `main` rather than merging `main` into it keeps the bubble to one co
 The `pr` check was built for squash, where those two strings *were* the commit. It survives on a
 smaller argument: they are still published, and still editable after review.
 
-## The gate is a check, not an approval
+## The gate is a check and a review
 
-The ruleset asks for zero approving reviews, which reads like a weaker rule than it is.
+The ruleset requires one approving review, agreed by the team on 13 November 2026. GitHub does not
+let anyone approve their own pull request, so nothing lands without a second pair of eyes — which
+is the point, and the cost: when the other person is away, nothing merges.
 
-We are two people. GitHub does not let anyone approve their own pull request, so one required
-approval means every change either waits for the other person or does not land — on a repository
-where most pull requests are opened by one of us working with an agent, and several land in a day.
-A required approval under those conditions does not produce review; it produces a rubber stamp, or
-a stall, and both are worse than what we do now, which is that the human reviews the work before it
-is a pull request at all. That review is real and it stays. It just is not the gate.
+There is still no bypass actor. The way out of a stall is to edit the ruleset, which takes an
+administrator two clicks and leaves a record with a name and a timestamp on it; a bypass is an
+escape nobody reads. The day something has to land past a red CI or an absent reviewer, we would
+rather it be visible.
 
-A check is a gate that cannot be rubber-stamped. `check`, `tests` and `pr` either pass or they do
-not, and for that part nobody is waiting on anybody.
-
-What a check is not is a decision to merge. **Auto-merge is off**, and that is the deliberate half
-of this decision rather than an omission from it: a green pull request does not land, it waits for
-a person who has read the diff to press the button. The checks say the change is well formed; only
-a human says it should exist. The absence of a required approval is not an absence of review — it
-is a refusal to ask GitHub to model a review that happens between us before the pull request is
-opened, and again at the merge button.
-
-An agent never presses that button. `AGENTS.md` carries it as a rule, and it has to be a rule:
-nothing in the repository's settings can tell an agent's `gh pr merge` from ours, which is the same
-reason the production-database rule is written there rather than enforced.
-
-There is no bypass actor, deliberately. An administrator bypass is an escape nobody records; the
-real escape is to edit the ruleset, which is a change with a name and a timestamp on it. The day
-something urgent has to land past a red CI, we would rather it be visible.
+**Auto-merge is off.** A green pull request waits for a person who has read the diff: the checks
+say the change is well formed, a human says it should exist. An agent never presses that button —
+`AGENTS.md` carries that as a rule, because nothing in the settings can tell an agent's
+`gh pr merge` from ours.
 
 ## Considered Options
 
-- **One required approval.** Rejected for the arithmetic above: with two people it is a stall, and
-  the day a third person joins the stall becomes a stamp. Revisit when more than one person pushes
-  daily — the rule is cheap to turn on and the ruleset is the only thing that changes.
+- **No required approval, CI as the only gate.** How this started, on the arithmetic of a
+  two-person team: a required approval would be a stall or a stamp, and the real review happened
+  before the pull request existed. Reversed by the team the same day — with an agent opening most
+  pull requests, the second pair of eyes is the control that matters, and no check supplies it.
 - **Squash, as the only merge method.** Enabled on 13 November 2026 and reversed the same day, for
   the reason above. Pull request #55 landed under it and stays as it is; the setting is what
   changed, not the history.

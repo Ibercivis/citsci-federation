@@ -1,11 +1,7 @@
 name: Pull request
 
-# A workflow of its own rather than a job in `ci.yaml`, and `edited` is the
-# whole reason. A pull request's title and body are editable after the push,
-# so a check on them that does not re-run on an edit is a check you can only
-# satisfy with an empty commit. `ci.yaml` must *not* wake on an edit — nothing
-# it runs reads either string, and the suite costs minutes — so the two sets of
-# events cannot share a file.
+# Its own workflow because of `edited`: the title and body change after the
+# push, and `ci.yaml` must not wake on an edit — the suite costs minutes.
 on:
   pull_request:
     types: [opened, edited, synchronize, reopened]
@@ -25,10 +21,8 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      # The two strings go through the environment, never into the command
-      # line: a pull request title is attacker-supplied on a public repository,
-      # and `run: ./script "${{ github.event.pull_request.title }}"` would hand
-      # the shell whatever it contains.
+      # Through the environment, never the command line: a title on a public
+      # repository is attacker-supplied.
       - name: The title and body the merge commit would publish
         env:
           PR_TITLE: ${{ github.event.pull_request.title }}

@@ -34,13 +34,13 @@ TypeScript 7 is not a prerequisite.
 | `pre-commit` | format + lint, staged files only, **checks and never fixes** | `--no-verify` |
 | `pre-push` | `pnpm check`; the suite too, when a Broker is up | `--no-verify` |
 | CI | `pnpm check`, then its own Broker and the suite | none for the developer |
-| the merge button | the ruleset on `main`: a pull request, `check`, `tests` and `pr` green, merge commits only | none; the ruleset has no bypass actor |
+| the merge button | the ruleset on `main`: a pull request, one approving review, `check`, `tests` and `pr` green, merge commits only | none; the ruleset has no bypass actor |
 
 CI cannot be skipped the way a hook can, and since 13 November 2026 **a red CI stops the merge**: a
-ruleset on `main` requires a pull request, requires those three contexts to be green, and offers no
-merge method but the merge commit. Nobody can bypass it, the author included — the way out is to edit the
-ruleset, which is a change anyone can see, rather than a flag nobody sees. ADR-0014 holds the
-reasoning, and says why the ruleset asks for no approving review.
+ruleset on `main` requires a pull request, one approving review, and those three contexts green,
+and offers no merge method but the merge commit. Nobody can bypass it, the author included — the
+way out is to edit the ruleset, which is a change anyone can see, rather than a flag nobody sees.
+ADR-0014 holds the reasoning.
 
 `pr` is the third context and the newest. It checks the pull request's **title and body**, because
 those two strings are published as the merge commit's subject and message, and unlike a commit
