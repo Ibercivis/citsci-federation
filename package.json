@@ -1,6 +1,7 @@
 {
   "name": "citsci-federation",
   "private": true,
+  "license": "EUPL-1.2",
   "type": "module",
   "scripts": {
     "broker:up": "docker compose up -d --wait",
@@ -12,7 +13,8 @@
     "lint": "oxlint",
     "lint:fix": "oxlint --fix",
     "typecheck": "tsc --noEmit",
-    "check": "pnpm format:check && pnpm lint && pnpm typecheck",
+    "reuse:lint": "docker run --rm --user \"$(id -u):$(id -g)\" --volume \"$PWD:/data\" fsfe/reuse:6.3.0@sha256:2748d04c2adeb747c9a44831bc99a9cbfd7bf7ff6fc371a4b63204944e3e47b6 lint",
+    "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm reuse:lint",
     "check:fix": "pnpm format && pnpm lint:fix",
     "test": "vitest run",
     "prepare": "lefthook install"

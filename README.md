@@ -11,7 +11,7 @@ Identifier**, without holding a password of its own.
 
 ## Running the Broker
 
-Requires Docker, and Node with pnpm for the test suite.
+Requires Docker, and Node with pnpm for the checks and the test suite.
 
 ```sh
 pnpm install
@@ -55,3 +55,14 @@ another provider.**
 
 The suite never skips when the Broker is down. A silent skip reports green for
 behaviour that was never exercised.
+
+## Licence
+
+The code is licensed under the [EUPL-1.2](LICENSE), and the documentation —
+the ADRs, the spec, the glossary, the notes and every Markdown file — under
+[CC BY 4.0](LICENSES/CC-BY-4.0.txt). [`REUSE.toml`](REUSE.toml) says which
+covers each file, and `pnpm check` runs `reuse lint` against it.
+
+The OpenID Federation plugin for Keycloak, once it exists, is licensed under
+Apache-2.0 and carries its own licence in its own directory, so that it can
+become a project of its own (ADR-0013).
