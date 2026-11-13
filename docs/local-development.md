@@ -131,16 +131,11 @@ aggregations and the PDF reports, h3-pg is not in those images, and it could not
 tags tried: they are Debian bullseye, and `apt.postgresql.org` no longer serves that suite, so
 `apt-get update` fails inside them before anything can be installed.
 
-**The map's data is served; only its basemap is blank, for the Mapbox reason above.** An earlier
-version of this file said the map could not show the seeded data because it read an endpoint that
-existed only on an unmerged branch. That was wrong, and it was wrong twice over. Measured on
-12 November 2026 against the running environment, both of the map's data paths answer `200` with
-seeded rows: `…/h3-aggregation/`, which is what it calls below zoom 15, and `…/compact/`, which it
-calls at zoom 15 and above — for radiation and for light pollution alike. The endpoint used to be
-absent from OpenRed's `main`, and that fact about a branch nobody was running is what produced the
-wrong claim; since `main` was re-pointed to the deployed commit on 12 November 2026 it is not absent
-from anywhere. The wrong reason is corrected in OpenRed's own `LOCAL-DEV.md` and in
-openred-react's, both on their `local-dev-environment` branches awaiting review.
+**The map's data is served; only its basemap is blank, for the Mapbox reason above.** Both of the
+map's data paths answer with seeded rows: `…/h3-aggregation/`, which it calls below zoom 15, and
+`…/compact/`, which it calls at zoom 15 and above — for radiation and for light pollution alike.
+OpenRed's own `LOCAL-DEV.md` and openred-react's still give a missing endpoint as the reason the map
+is blank; both are corrected on their `local-dev-environment` branches, awaiting review.
 
 ## Building one for a new application
 
