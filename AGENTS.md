@@ -81,10 +81,11 @@ citation, not the authority.
   gets a vocabulary, or for what EOSC onboarding really costs.
 - **Veridas** (`veridas-technical-questions.md`) — frozen; five questions sent 10 Nov 2026, awaiting
   a reply. It predates the current identity model and contradicts it in places, deliberately.
-- **OpenRed's live branch** (`openred-live-branch.md`) — its `main` predates a model rewrite, so the
-  `federation` cut from `feature/weather-cache-and-stats` stays where it is. Open it to defend that
-  cut, to draft the merge proposal to the application's owner, or before assuming another Ibercivis
-  repository has the same split — it is the exception.
+- **OpenRed's live branch** (`openred-live-branch.md`) — **spent as advice.** Its `main` predated a
+  model rewrite, so `federation` was cut from `feature/weather-cache-and-stats`; on 12 November 2026
+  `main` was re-pointed to the deployed commit, and `federation` is now cut from `main` like
+  everywhere else. The rule has no exception left — it lives in `docs/agents/external-repos.md`.
+  Open the note for the measurements that argued for the move, not for its recommendations.
 
 ### Internal notes
 

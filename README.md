@@ -8,6 +8,8 @@ Identifier**, without holding a password of its own.
 - What it is for, and what it does not do: [`docs/specs/spec-shared-identification-pilot.md`](docs/specs/spec-shared-identification-pilot.md)
 - The decisions, and what they cost: [`docs/adr/`](docs/adr/)
 - The words, used in one sense each: [`GLOSSARY.md`](GLOSSARY.md)
+- What checks the code, and what does not yet: [`docs/verification.md`](docs/verification.md),
+  and the two rules no tool enforces in [`CODING_STANDARDS.md`](CODING_STANDARDS.md)
 
 ## Running the Broker
 

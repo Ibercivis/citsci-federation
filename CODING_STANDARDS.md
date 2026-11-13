@@ -6,8 +6,10 @@ would: `.oxlintrc.json` carries the lint policy and the reason behind every
 rule that is switched off, `.oxfmtrc.json` the formatting, `lefthook.yml` what
 happens on commit and on push, `tsconfig.json` what TypeScript is allowed to
 let through, `REUSE.toml` which licence covers which file, and
-`.github/workflows/ci.yaml` what runs where no `--no-verify` reaches. Read those before this file; a rule written in both places is a rule
-that will disagree with itself.
+`.github/workflows/ci.yaml` what runs where no `--no-verify` reaches. Read
+those before this file; a rule written in both places is a rule that will
+disagree with itself. `docs/verification.md` indexes them, and says what we
+would add next and what would trigger it.
 
 What is left here is what no tool checks and a reviewer would not notice.
 
