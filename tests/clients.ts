@@ -1,16 +1,16 @@
 /**
  * The clients the realm registers. With the discovery URL, this is the whole
- * of what a Federated App may know about the Broker.
+ * of what a Brokered App may know about the Broker.
  *
  * A **client** here is the registration the Broker knows an application by,
- * never the application itself: the glossary keeps "Federated App" for that,
+ * never the application itself: the glossary keeps "Brokered App" for that,
  * and these constants are named for the registration so the two do not blur.
  *
- * Two of them, because the pilot has to serve both shapes a Federated App
+ * Two of them, because the pilot has to serve both shapes a Brokered App
  * comes in: a single-page application that cannot hold a secret, and a
  * server-rendered backend that can. They are stand-ins — the real
  * applications register their own, with their own redirect URIs, when they
- * are integrated. No Federated App's infrastructure is declared here or in
+ * are integrated. No Brokered App's infrastructure is declared here or in
  * `compose.yaml`.
  */
 
@@ -26,8 +26,8 @@ export interface Client {
 
 /** The public shape: a browser application, with PKCE S256 and no secret. */
 export const PUBLIC_CLIENT: Client = {
-  id: "federated-app-public",
-  name: "Federated App (public)",
+  id: "brokered-app-public",
+  name: "Brokered App (public)",
   redirectUri: "http://localhost:3000/auth/callback",
 };
 
@@ -35,9 +35,9 @@ export const PUBLIC_CLIENT: Client = {
  *  callback is the shape django-allauth serves, which is what the Django
  *  applications of the pilot use. */
 export const CONFIDENTIAL_CLIENT: Client = {
-  id: "federated-app-confidential",
-  name: "Federated App (confidential)",
-  secret: "federated-app-confidential-development-secret",
+  id: "brokered-app-confidential",
+  name: "Brokered App (confidential)",
+  secret: "brokered-app-confidential-development-secret",
   redirectUri: "http://localhost:8000/accounts/oidc/broker/login/callback/",
 };
 

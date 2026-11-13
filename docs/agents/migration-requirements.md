@@ -1,6 +1,6 @@
 # Migration Requirements
 
-What a Federated App's **existing** accounts would need in order to move onto the Broker, recorded
+What a Brokered App's **existing** accounts would need in order to move onto the Broker, recorded
 one file per app in `docs/migration/<app>.md`.
 
 Migration is **outside the pilot's committed scope**. These records exist so that it is cheap if
@@ -8,7 +8,7 @@ time allows, and so that its cost is known rather than guessed. **A record is no
 
 ## When this applies
 
-While integrating a Federated App you learn things about its existing accounts that the integration
+While integrating a Brokered App you learn things about its existing accounts that the integration
 itself does not need. That is the material. Start the app's record the first time you read its
 authentication code, and update it whenever an answer changes.
 
