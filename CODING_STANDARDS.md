@@ -5,23 +5,28 @@ enforced by something that runs, and what runs says it better than a document
 would: `.oxlintrc.json` carries the lint policy and the reason behind every
 rule that is switched off, `.oxfmtrc.json` the formatting, `lefthook.yml` what
 happens on commit and on push, `tsconfig.json` what TypeScript is allowed to
-let through, and `.github/workflows/ci.yaml` what runs where no `--no-verify`
-reaches. Read those before this file; a rule written in both places is a rule
-that will disagree with itself. `docs/verification.md` indexes them, and says
-what we would add next and what would trigger it.
+let through, `REUSE.toml` which licence covers which file, and
+`.github/workflows/ci.yaml` what runs where no `--no-verify` reaches. Read
+those before this file; a rule written in both places is a rule that will
+disagree with itself. `docs/verification.md` indexes them, and says what we
+would add next and what would trigger it.
 
 What is left here is what no tool checks and a reviewer would not notice.
 
 ## `pnpm check` is the definition of a check
 
-Three things run against this repository: the formatter, the linter and the
-type checker. `pnpm check` runs all three, the `pre-push` hook runs
-`pnpm check`, and CI runs `pnpm check`. There is one definition and three
-callers.
+Four things run against this repository: the formatter, the linter, the type
+checker and `reuse lint`, which fails when a file's licence cannot be
+established from `REUSE.toml` or its text is missing from `LICENSES/`
+(ADR-0013). `pnpm check` runs all four, the `pre-push` hook runs `pnpm check`,
+and CI runs `pnpm check`. There is one definition and three callers.
 
 So a new check is added to `pnpm check`, never to the hook or the workflow
 alone. A check that lives only in CI is one nobody can run before pushing, and
 a check that lives only in the hook is one `--no-verify` deletes.
+
+`reuse lint` runs from a container, so `pnpm check` needs Docker running;
+ADR-0013 says why.
 
 The end-to-end suite stays out of it, because it has a precondition: it needs
 a Broker answering. `pre-push` runs it when one is up

@@ -14,10 +14,13 @@ with itself. `CODING_STANDARDS.md` holds the two rules no tool enforces.
 | Is it formatted? | oxfmt | `pnpm format:check` | `.oxfmtrc.json` |
 | Is it wrong? | oxlint, type-aware | `pnpm lint` | `.oxlintrc.json` |
 | Does it type-check? | `tsc --noEmit` | `pnpm typecheck` | `tsconfig.json` |
+| Is every file's licence declared? | `reuse lint`, from a container | `pnpm reuse:lint` | `REUSE.toml`, ADR-0013 |
 | Does a sign-in actually work? | Vitest against a real Broker | `pnpm broker:up && pnpm test` | `compose.yaml`, ADR-0010 |
 
-`pnpm check` is the first three, and is the only definition of "checked". Every case in the suite
-reuses one running Broker instead of starting its own, which is why they cannot run in parallel.
+`pnpm check` is the first four, and is the only definition of "checked". The licence check is the
+one that needs Docker running, which makes `pnpm check` need it too; ADR-0013 says why it is worth
+that. Every case in the suite reuses one running Broker instead of starting its own, which is why
+they cannot run in parallel.
 
 Lint runs `correctness` and `suspicious` only; `.oxlintrc.json` carries the count that decided it.
 Type-aware rules are on, which needs the `oxlint-tsgolint` package and works on TypeScript 5.9 —
@@ -36,7 +39,7 @@ TypeScript 7 is not a prerequisite.
 CI cannot be skipped the way a hook can, and since 13 November 2026 **a red CI stops the merge**: a
 ruleset on `main` requires a pull request, requires those three contexts to be green, and offers no
 merge method but squash. Nobody can bypass it, the author included — the way out is to edit the
-ruleset, which is a change anyone can see, rather than a flag nobody sees. ADR-0013 holds the
+ruleset, which is a change anyone can see, rather than a flag nobody sees. ADR-0014 holds the
 reasoning, and says why the ruleset asks for no approving review.
 
 `pr` is the third context and the newest. It checks the pull request's **title and body**, because
