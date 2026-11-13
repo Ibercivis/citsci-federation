@@ -1,6 +1,6 @@
-# Federated Apps close their own registration and keep their own sign-in
+# Brokered Apps close their own registration and keep their own sign-in
 
-Each Federated App removes its own registration path and sends new people to the Broker, while
+Each Brokered App removes its own registration path and sends new people to the Broker, while
 keeping its existing sign-in working **indefinitely** for accounts that already exist. There is no
 sunset date, and the pilot does not promise to remove it.
 

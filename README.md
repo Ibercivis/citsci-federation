@@ -1,7 +1,7 @@
 # Citizen Science Federation
 
 The **Broker**: one place where a **Person** proves who they are, which every
-**Federated App** delegates to. A Person signs in through an **Identity
+**Brokered App** delegates to. A Person signs in through an **Identity
 Source** and every application recognises them by a single **Person
 Identifier**, without holding a password of its own.
 
@@ -32,7 +32,7 @@ front **in every environment, including local** — the reason is parity of
 form, since the cookie, TLS, redirect-URI and CORS failures that depend on
 deployment shape otherwise appear for the first time in production (ADR-0001).
 
-No Federated App's infrastructure is declared here. A Federated App's
+No Brokered App's infrastructure is declared here. A Brokered App's
 development environment lives in its own repository, and what this one holds
 about an application is the client the Broker knows it by.
 
@@ -42,8 +42,8 @@ on its own.
 
 ## How this is tested
 
-Over HTTP, exactly as a Federated App would: a stand-in app in
-[`tests/federated-app.ts`](tests/federated-app.ts) generates a PKCE pair,
+Over HTTP, exactly as a Brokered App would: a stand-in app in
+[`tests/brokered-app.ts`](tests/brokered-app.ts) generates a PKCE pair,
 builds the authorization request, carries cookies through the Broker's own
 pages, signs in, grants consent, redeems the code and verifies the ID token
 against keys fetched from discovery.

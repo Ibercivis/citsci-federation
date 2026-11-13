@@ -53,7 +53,7 @@ The realm is JSON and JSON carries no comments, so the reasons live here. The
 ones worth trusting are the cases in `tests/`, which demonstrate the behaviour
 rather than reading the declaration back.
 
-### Two clients, one for each shape a Federated App comes in
+### Two clients, one for each shape a Brokered App comes in
 
 A public client for a single-page application, which cannot hold a secret, and
 a confidential one for a server-rendered backend, which can. Both are
@@ -62,7 +62,7 @@ URIs, when they are integrated. The redirect URIs here are development
 guesses, and the confidential one follows the callback shape django-allauth
 serves, because the applications of the pilot are Django.
 
-No Federated App's infrastructure is declared anywhere in this repository —
+No Brokered App's infrastructure is declared anywhere in this repository —
 only the clients the Broker knows them by.
 
 ### PKCE S256, per client
