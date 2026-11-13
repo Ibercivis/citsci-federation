@@ -5,8 +5,12 @@ merge commit is the only method the repository offers; squash and rebase are off
 `merge_commit_title` is `PR_TITLE` and `merge_commit_message` is `PR_BODY`, so that commit carries
 the pull request's own summary rather than `Merge pull request #56 from ...`. A ruleset on `main`
 requires a pull request, **one approving review**, `check`, `tests` and `pr` green, and the branch
-up to date. It forbids force-pushes and deletion, and names no bypass actor — not the author, not
-an administrator.
+up to date. It forbids force-pushes and deletion. Three people — `agorer`, `frasanz`, `agualis` —
+may bypass it on a pull request; nobody may push to `main` directly.
+
+The method is set in the repository's settings, next to the `merge_commit_title` and
+`merge_commit_message` it feeds. The ruleset leaves `allowed_merge_methods` open rather than
+restating it: two homes for one setting is two answers the day they disagree.
 
 The decision has two halves, and the second only makes sense after the first.
 
@@ -40,10 +44,11 @@ The ruleset requires one approving review, agreed by the team on 13 November 202
 let anyone approve their own pull request, so nothing lands without a second pair of eyes — which
 is the point, and the cost: when the other person is away, nothing merges.
 
-There is still no bypass actor. The way out of a stall is to edit the ruleset, which takes an
-administrator two clicks and leaves a record with a name and a timestamp on it; a bypass is an
-escape nobody reads. The day something has to land past a red CI or an absent reviewer, we would
-rather it be visible.
+The three bypass actors are the way out when the reviewer is away. They are named one by one
+rather than granted through the repository's admin role: this repository has ten admins, most of
+them there for other work in the organisation, and the escape belongs to the people accountable
+for the pilot. `bypass_mode` is `pull_request`, so it is a merge somebody chose, never a push to
+`main`, and GitHub records each use.
 
 **Auto-merge is off.** A green pull request waits for a person who has read the diff: the checks
 say the change is well formed, a human says it should exist. An agent never presses that button —
