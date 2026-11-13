@@ -58,6 +58,10 @@ auto-merge, which is off at the repository and not an agent's to turn back on. E
 human pressing the button after reading the diff. Green checks are the precondition, never the
 verdict. See ADR-0014.
 
+Bring a branch up to date by rebasing it onto `main`, never by merging `main` into it, so the only
+merge commit in its history is the one that lands it. Not once somebody else has pulled the branch:
+rewriting it under them is worse than the merge commit it saves.
+
 ### Domain docs
 
 Single-context: `GLOSSARY.md` and `docs/adr/` at the repo root. See `docs/agents/domain.md`.
