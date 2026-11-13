@@ -45,12 +45,11 @@ pre-push:
     - name: check
       run: pnpm check
 
-    # The suite itself is cheap (12 cases in 1.6 seconds, measured the day this
-    # landed, because every case reuses one already-running Broker). What is
-    # not cheap is its precondition: each case drives a real authorization code
-    # flow, so with the stack down the whole suite fails for a reason that has
-    # nothing to do with the push, and a hook that fails for environmental
-    # reasons is a hook people pass `--no-verify` to by habit.
+    # The suite itself is cheap, because every case reuses one already-running
+    # Broker. What is not cheap is its precondition: each case drives a real
+    # authorization code flow, so with the stack down the whole suite fails for
+    # a reason that has nothing to do with the push, and a hook that fails for
+    # environmental reasons is a hook people pass `--no-verify` to by habit.
     #
     # So it runs when a Broker is up and steps aside when none is. The skip
     # exits 0 (and so skips) when `docker compose ps` names no running
