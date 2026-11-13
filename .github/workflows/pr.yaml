@@ -29,7 +29,7 @@ jobs:
       # line: a pull request title is attacker-supplied on a public repository,
       # and `run: ./script "${{ github.event.pull_request.title }}"` would hand
       # the shell whatever it contains.
-      - name: The title and body a squash merge would publish
+      - name: The title and body the merge commit would publish
         env:
           PR_TITLE: ${{ github.event.pull_request.title }}
           PR_BODY: ${{ github.event.pull_request.body }}

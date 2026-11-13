@@ -1,13 +1,11 @@
 #!/usr/bin/env bash
 #
-# Check the two strings a squash merge publishes.
+# Check the two strings a merge publishes.
 #
-# `main` takes one commit per pull request, and GitHub builds that commit from
-# the pull request itself: `PR_TITLE` becomes the subject, `PR_BODY` the body.
-# The branch's own commit messages are never published, so they are drafts and
-# nothing here reads them. What is left to check is this pair of strings, and
-# unlike a commit message they are editable after the fact — which is the only
-# reason a check on them is worth running at all.
+# `merge_commit_title` is `PR_TITLE` and `merge_commit_message` is `PR_BODY`,
+# so this pair is the message of the commit `main` records for the pull
+# request. Unlike a commit message it stays editable after review, which is
+# why a check on it is worth running.
 #
 # Usage: scripts/check-pr-metadata.sh "<title>" "<body>"
 #
@@ -54,15 +52,16 @@ if [[ -n ${title//[[:space:]]/} && ! $title =~ ^(\[#[0-9]+\][[:space:]]+)?[A-Z] 
   fail "The title should start with a capital letter, or with [#12] and then one."
 fi
 
-# A body is what the commit says beyond its subject, and with `PR_BODY` it is
-# the only place left to say it. The floor is low on purpose: this refuses an
+# A body is what the merge commit says beyond its subject, and `PR_BODY` is
+# where it comes from. The floor is low on purpose: this refuses an
 # empty box, not a short explanation.
 body_text=${body//[[:space:]]/}
 if ((${#body_text} < 20)); then
   fail "The body is too short to say anything. It becomes the commit message."
 fi
 
-# The tracking the squash would otherwise lose. Either half may carry it —
+# The issue this serves, named where the merge commit will carry it. Either
+# half may do —
 # `[#52]` in the title counts — because both halves land in the same commit.
 # `No ticket` is the way out for a change no issue asked for, and spelling it
 # out is the point: it makes an unticketed change a sentence somebody wrote.
@@ -77,4 +76,4 @@ if ((${#failures[@]} > 0)); then
   exit 1
 fi
 
-echo "Title and body check out; they are what the squash will publish."
+echo "Title and body check out; they are what the merge will publish."

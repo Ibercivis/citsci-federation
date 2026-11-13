@@ -1,40 +1,38 @@
-# The gate on `main` is CI, and the commit is the pull request
+# The gate on `main` is CI, and a merge keeps the branch's commits
 
-`main` takes one commit per pull request, built by GitHub from the pull request's own title and
-body. Squash is the only merge method the repository offers; merge commits and rebase merges are
-off. A ruleset on `main` requires a pull request, requires `check`, `tests` and `pr` to be green,
-requires the branch to be up to date, forbids force-pushes and deletion, and names no bypass actor
-— not the author, not an administrator. It requires **no approving review**.
+`main` takes a merge commit per pull request and publishes every commit the branch carries. The
+merge commit is the only method the repository offers; squash and rebase are off.
+`merge_commit_title` is `PR_TITLE` and `merge_commit_message` is `PR_BODY`, so that commit carries
+the pull request's own summary rather than `Merge pull request #56 from ...`. A ruleset on `main`
+requires a pull request, requires `check`, `tests` and `pr` to be green, requires the branch to be
+up to date, forbids force-pushes and deletion, and names no bypass actor — not the author, not an
+administrator. It requires **no approving review**.
 
 The decision has two halves, and the second only makes sense after the first.
 
-## The branch's commits are drafts; the pull request is the commit
+## The branch's commits are the record; the merge commit is its summary
 
-Before this, nothing distinguished the two: a merge commit published every commit on the branch, so
-each one had to be worth publishing. That was a reasonable thing to ask of a human writing six
-commits. It is not a reasonable thing to ask of a working session that writes forty, half of them
-corrections of the other half, which is what this repository's history will increasingly be made
-of. The choice is between policing forty messages nobody will read and publishing one that somebody
-will.
+Squash was enabled on 13 November 2026 and reversed the same day. Its argument was that a working
+session writes forty commits where a human writes six, half of them corrections of the other half.
 
-So the branch is scratch space, and the pull request carries the whole weight.
-`squash_merge_commit_title` is `PR_TITLE` and `squash_merge_commit_message` is `PR_BODY` — both
-fixed, neither derived from the branch. `COMMIT_OR_PR_TITLE`, the default we were on, takes the
-single commit's subject when the branch has one commit and the pull request's title when it has
-more: the same work lands under a different subject depending on how many times you committed, and
-a rule that reads the count is not a rule.
+What it missed is what the forty contain: an agent writes down why each step was taken, and that is
+the part a reader cannot reconstruct from the diff. Squash is the right trade where commits are
+noise. Here they are the record.
 
-What this costs is granularity in `main`, and it is a real cost: `git blame` on anything in the
-pull request answers with the squash commit, `git bisect` cannot tell two tickets in one branch
-apart, and reverting one of them is no longer `git revert <sha>`. The answer is not to keep merge
-commits — it is that a pull request should be one ticket. Where it genuinely cannot be, the detail
-survives on the pull request page, which GitHub keeps in `refs/pull/N/head` after the branch is
-gone.
+So `main` keeps both views, and neither is paid for by the other:
 
-What this also costs is the issue references that used to ride in the commit messages, since
-`PR_BODY` does not carry them. That is why `pr` exists: it refuses a pull request whose title and
-body together name no issue and do not say `No ticket`. The check is the price of the setting, and
-it was added in the same change.
+    git log --oneline                  every step, with the reasoning for it
+    git log --first-parent --oneline   one line per pull request
+
+`merge_commit_title` and `merge_commit_message` are what make the second readable; GitHub's
+default would fill it with branch names.
+
+The costs: `main` is no longer linear, and the branch's commits stop being drafts — their subjects
+are what `main` shows, which is what the commit-subject rule in `AGENTS.md` is for. Rebasing a
+branch onto `main` rather than merging `main` into it keeps the bubble to one commit.
+
+The `pr` check was built for squash, where those two strings *were* the commit. It survives on a
+smaller argument: they are still published, and still editable after review.
 
 ## The gate is a check, not an approval
 
@@ -70,9 +68,14 @@ something urgent has to land past a red CI, we would rather it be visible.
 - **One required approval.** Rejected for the arithmetic above: with two people it is a stall, and
   the day a third person joins the stall becomes a stamp. Revisit when more than one person pushes
   daily — the rule is cheap to turn on and the ruleset is the only thing that changes.
-- **Rebase merge, kept alongside squash.** Rejected because it publishes the branch's commits
-  unamended, which is the thing this decision is here to stop. Leaving it enabled would mean the
-  shape of `main` depends on which button somebody clicks.
+- **Squash, as the only merge method.** Enabled on 13 November 2026 and reversed the same day, for
+  the reason above. Pull request #55 landed under it and stays as it is; the setting is what
+  changed, not the history.
+- **Rebase merge.** Rejected although it keeps the commits. It leaves nothing that stands for the
+  pull request, so reverting one means reverting a range somebody has to delimit by hand rather
+  than `git revert -m 1`; it rewrites the commits it replays, so the ones in a local branch stop
+  matching the ones in `main`; and GitHub refuses it outright when the branch carries a merge
+  commit, which a long-lived branch generally does.
 - **Conventional Commits, enforced on the title.** Rejected. Fifty merged subjects here are
   sentences that say what the change does, and `feat:`/`docs:` would be a taxonomy imposed on them
   for the sake of a changelog nobody has asked for. `pr` checks the shape those sentences already
