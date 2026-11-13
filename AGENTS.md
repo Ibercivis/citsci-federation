@@ -20,6 +20,11 @@ change rather than leaving it half-translated.
 
 GitHub Issues in `Ibercivis/citsci-federation`, via the `gh` CLI. See `docs/agents/issue-tracker.md`.
 
+A commit in this repository opens its subject with the issue it serves, as `[#51] Rename Federated
+App to Brokered App`, so its origin shows in `git log --oneline`; a commit no issue asked for opens
+with its subject alone. Only this repository's commits: an application repository has issues of
+its own, and `docs/private/` is committed by its script.
+
 ### Review replies
 
 Replies to a reviewer's comments are drafted locally and posted by the human. Don't run
