@@ -45,17 +45,8 @@ for a title short enough for a subject line and a body that says something, and 
 reference in one of them or the words `No ticket`. The rules live in
 `scripts/check-pr-metadata.sh`, each next to the reason it exists.
 
-One definition, three callers. A new check is added to `pnpm check`, never to the hook or the
-workflow alone: a check that lives only in CI is one nobody can run before pushing, and a check
-that lives only in the hook is one `--no-verify` deletes.
-
-Two checks stay out of `pnpm check`, and both for the same kind of reason: neither has an input
-that exists on your machine. The suite needs a Broker answering, so a hook would fail for
-environmental reasons — and a hook that does that is a hook people pass `--no-verify` to by habit.
-It steps aside when no Broker is running; CI has no such excuse, and starts one. The pull request
-check needs a pull request: there is no title and no body to read until one exists. Its script
-takes both as arguments, so it is still runnable by hand — `./scripts/check-pr-metadata.sh "$title"
-"$body"` — which is what keeps it from being a rule that only CI knows.
+Which row a new check joins is not a free choice, and the rule is not here: `CODING_STANDARDS.md`
+holds it, along with the reason the suite and `pr` are the two that stay out of `pnpm check`.
 
 ## Layer 2 — what we do not have, and what would buy it
 
