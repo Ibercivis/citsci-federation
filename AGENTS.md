@@ -25,6 +25,13 @@ App to Brokered App`, so its origin shows in `git log --oneline`; a commit no is
 with its subject alone. Only this repository's commits: an application repository has issues of
 its own, and `docs/private/` is committed by its script.
 
+**That prefix is traceability; the pull request body is what closes the ticket.** GitHub acts only
+on `Closes #<n>` in the body, and only on a merge into the default branch — #55 merged without one
+and left #52 open. A pull request that finishes a ticket carries that line; one that merely advances
+it says `Part of #<n>`. Two hooks hold this up rather than trusting anyone to remember it: one
+refuses a pull request that says neither, the other assigns the issue the moment work lands on an
+`issue-<n>` branch, which is what this repository means by a claim.
+
 ### Review replies
 
 An agent never posts a reply to a review comment the user hasn't read. Draft them, show them, post

@@ -13,10 +13,30 @@ Issues and specs for this repo live as GitHub issues. Use the `gh` CLI for all o
 - **Comment on an issue**: `gh issue comment <number> --body "..."`
 - **Apply / remove labels**: `gh issue edit <number> --add-label "..."` / `--remove-label "..."`
 - **Close**: post the explanation with `gh issue comment <number> --body "..."`, then `gh issue close <number>`. On an already-closed issue, `gh issue close --comment` drops the comment and still exits 0.
+- **Claim**: `gh issue edit <n> --add-assignee @me`. An unassigned open issue reads as free, so a claim is what stops two sessions picking up the same one. On an `issue-<n>` branch a hook does this for you; see **Hooks** below.
+- **Link a pull request to its issue**: put `Closes #<n>` in the PR **body** when the PR finishes the issue, or `Part of #<n>` when it only advances one. The `[#<n>]` our commits carry in the subject is traceability and closes nothing: GitHub acts on the keyword in the body, and only for a pull request merged into the default branch.
 
 Infer the repo from `git remote -v`; `gh` does this automatically when run inside a clone.
 
 File issues only into the user's own repo. Never file into `mattpocock/skills` (the repo these skills come from) unless the user owns it. In a fork, `gh` can default to the upstream parent, so before the first `gh issue create` of a session, check the target with `gh repo view --json nameWithOwner` and confirm it with the user if it is not their repo.
+
+## Hooks
+
+Two of the conventions above are enforced by a script rather than by memory, because both were
+forgotten once: #55 merged and left #52 open. Neither hook reaches a pull request opened in a
+browser — they bind this harness, not GitHub.
+
+| Script | When | What it does |
+| --- | --- | --- |
+| `scripts/require-issue-link.sh` | `PreToolUse` on Bash | Refuses to open a pull request whose branch is `issue-<n>`, or whose title carries `[#<n>]`, unless the body says `Closes #<n>` or `Part of #<n>`. |
+| `scripts/claim-issue.sh` | `PostToolUse` on Bash, and `SessionStart` | On an `issue-<n>` branch, assigns that issue if it is open and unassigned. |
+
+The claim is attempted **once per branch per clone**, recorded in the git directory, which is never
+committed. One attempt rather than one success: a hook that retries a failing network call on every
+command is a hook somebody switches off. A failed attempt says so rather than passing in silence.
+
+`Part of #<n>` is an answer, not a way round the refusal. A pull request that finishes a ticket and
+claims otherwise leaves the ticket open, which is the thing being fixed.
 
 ## Pull requests as a triage surface
 
@@ -46,5 +66,5 @@ Used by `/wayfinder`. The **map** is a single issue with **child** issues as tic
 - **Child ticket**: an issue linked to the map as a GitHub sub-issue (see **Make an issue a sub-issue of a parent**). Where sub-issues aren't enabled, add the child to a task list in the map body and put `Part of #<map>` at the top of the child body. Labels: `research`, `prototype`, `grilling` or `task` (this repo's existing labels, unprefixed). Once claimed, the ticket is assigned to the driving dev.
 - **Blocking**: see **Blocking** under Conventions.
 - **Frontier query**: list the map's open children (`gh issue list --state open`, scoped to the map's sub-issues / task list), drop any with an open blocker (see **Count open blockers**, or an open issue in the `Blocked by` line) or an assignee; first in map order wins.
-- **Claim**: `gh issue edit <n> --add-assignee @me`, the session's first write.
+- **Claim**: see **Claim** under Conventions. On an `issue-<n>` branch the hook has already made it.
 - **Resolve**: `gh issue comment <n> --body "<answer>"`, then `gh issue close <n>`, then append a context pointer (gist + link) to the map's Decisions-so-far.
