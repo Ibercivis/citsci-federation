@@ -1,87 +1,63 @@
 # The gate on `main`, and what a merge keeps
 
-`main` takes a merge commit per pull request and publishes every commit the branch carries. The
-merge commit is the only method the repository offers; squash and rebase are off.
-`merge_commit_title` is `PR_TITLE` and `merge_commit_message` is `PR_BODY`, so that commit carries
-the pull request's own summary rather than `Merge pull request #56 from ...`. A ruleset on `main`
-requires a pull request, **one approving review**, `check`, `tests` and `pr` green, and the branch
-up to date. It forbids force-pushes and deletion. Three people — `agorer`, `frasanz`, `agualis` —
-may bypass it on a pull request; nobody may push to `main` directly.
+| | |
+|---|---|
+| **Merge commit, and only that** | Squash and rebase off: the branch's commits are published |
+| **The pull request is the merge commit** | `merge_commit_title: PR_TITLE`, `merge_commit_message: PR_BODY` |
+| **The method is set in one place** | The repository's settings, beside the message format it feeds. The ruleset leaves `allowed_merge_methods` open rather than restating it |
+| **One approving review** | GitHub forbids self-approval, so nothing lands on one pair of eyes |
+| **`check`, `tests`, `pr` green, branch up to date** | A check is a gate nobody can rubber-stamp |
+| **No force-push, no deletion** | On `main` |
+| **Bypass: `agorer`, `frasanz`, `agualis`** | `bypass_mode: pull_request` — a merge somebody chose, never a push. GitHub records each use |
+| **Auto-merge off** | Green is the precondition; a human presses the button, and never an agent |
 
-The method is set in the repository's settings, next to the `merge_commit_title` and
-`merge_commit_message` it feeds. The ruleset leaves `allowed_merge_methods` open rather than
-restating it: two homes for one setting is two answers the day they disagree.
+## Why the branch's commits survive
 
-The decision has two halves, and the second only makes sense after the first.
+An agent writes down why each step was taken, and that is the part of a change a reader cannot
+reconstruct from the diff. Squash discards exactly that. It is the right trade where commits are
+noise; here they are the record.
 
-## The branch's commits are the record; the merge commit is its summary
-
-Squash was enabled on 13 November 2026 and reversed the same day. Its argument was that a working
-session writes forty commits where a human writes six, half of them corrections of the other half.
-
-What it missed is what the forty contain: an agent writes down why each step was taken, and that is
-the part a reader cannot reconstruct from the diff. Squash is the right trade where commits are
-noise. Here they are the record.
-
-So `main` keeps both views, and neither is paid for by the other:
+So `main` keeps both views:
 
     git log --oneline                  every step, with the reasoning for it
     git log --first-parent --oneline   one line per pull request
 
-`merge_commit_title` and `merge_commit_message` are what make the second readable; GitHub's
-default would fill it with branch names.
+The second reads well only because the merge commit carries the pull request's own title and body;
+GitHub's default would fill it with branch names.
 
-The costs: `main` is no longer linear, and the branch's commits stop being drafts — their subjects
-are what `main` shows, which is what the commit-subject rule in `AGENTS.md` is for. Rebasing a
-branch onto `main` rather than merging `main` into it keeps the bubble to one commit.
+What it costs: `main` is no longer linear, and the branch's commits stop being drafts — their
+subjects are what `main` shows, which is what the commit-subject rule in `AGENTS.md` is for, and
+why a branch is brought up to date by rebasing onto `main` rather than merging `main` into it.
 
-The `pr` check was built for squash, where those two strings *were* the commit. It survives on a
-smaller argument: they are still published, and still editable after review.
+## Why a review and not only a check
 
-## The gate is a check and a review
-
-The ruleset requires one approving review, agreed by the team on 13 November 2026. GitHub does not
-let anyone approve their own pull request, so nothing lands without a second pair of eyes — which
-is the point, and the cost: when the other person is away, nothing merges.
+Checks say a change is well formed; only a person says it should exist. The approval is required
+because an agent opens most pull requests here, and no check supplies a second pair of eyes.
 
 The three bypass actors are the way out when the reviewer is away. They are named one by one
-rather than granted through the repository's admin role: this repository has ten admins, most of
-them there for other work in the organisation, and the escape belongs to the people accountable
-for the pilot. `bypass_mode` is `pull_request`, so it is a merge somebody chose, never a push to
-`main`, and GitHub records each use.
+rather than granted through the repository's admin role: there are ten admins, most of them there
+for other work in the organisation, and the escape belongs to the people accountable for the
+pilot.
 
-**Auto-merge is off.** A green pull request waits for a person who has read the diff: the checks
-say the change is well formed, a human says it should exist. An agent never presses that button —
-`AGENTS.md` carries that as a rule, because nothing in the settings can tell an agent's
-`gh pr merge` from ours.
+`pr` is the check on the pull request's title and body. They are published as the merge commit's
+message and stay editable after review, which is why CI re-reads them on every edit.
 
 ## Considered Options
 
-- **No required approval, CI as the only gate.** How this started, on the arithmetic of a
-  two-person team: a required approval would be a stall or a stamp, and the real review happened
-  before the pull request existed. Reversed by the team the same day — with an agent opening most
-  pull requests, the second pair of eyes is the control that matters, and no check supplies it.
-- **Squash, as the only merge method.** Enabled on 13 November 2026 and reversed the same day, for
-  the reason above. Pull request #55 landed under it and stays as it is; the setting is what
-  changed, not the history.
-- **Rebase merge.** Rejected although it keeps the commits. It leaves nothing that stands for the
-  pull request, so reverting one means reverting a range somebody has to delimit by hand rather
-  than `git revert -m 1`; it rewrites the commits it replays, so the ones in a local branch stop
-  matching the ones in `main`; and GitHub refuses it outright when the branch carries a merge
-  commit, which a long-lived branch generally does.
-- **Conventional Commits, enforced on the title.** Rejected. Fifty merged subjects here are
-  sentences that say what the change does, and `feat:`/`docs:` would be a taxonomy imposed on them
-  for the sake of a changelog nobody has asked for. `pr` checks the shape those sentences already
-  share — a capital letter, no trailing period, short enough for a subject line.
-- **Auto-merge, so that a green pull request lands on its own.** Enabled for an afternoon and
-  turned back off the same day. It is the natural companion to a CI gate and it is exactly what we
-  do not want: it makes the merge a consequence of the checks, when the checks are only the
-  precondition. Every merge here is somebody deciding, and with an agent opening most of the pull
-  requests that distinction is the whole safeguard rather than a formality.
-- **A merge queue.** Rejected on volume: it exists to serialise pull requests that pass alone and
-  fail together, and with two aligned people there is nothing to serialise. The trigger would be
-  two pull requests a day colliding in `main`.
-- **Required signed commits.** Deferred, not rejected. It is the right control for a public
-  repository where agents commit, and the cost is that every checkout needs signing configured
-  before it can commit at all. It belongs in a change of its own, after the Broker's own
-  deployment is settled.
+- **No required approval, CI as the only gate.** How this started, on the arithmetic of two
+  people: an approval would be a stall or a stamp. Reversed by the team the same day — with an
+  agent opening most pull requests, the second pair of eyes is the control that matters.
+- **Squash as the only method.** Enabled 13 November 2026 and reversed the same day. Pull request
+  #55 landed under it and stays as it is; the setting changed, not the history.
+- **Rebase merge.** Keeps the commits, but leaves nothing that stands for the pull request, so a
+  revert is a range somebody delimits by hand; it rewrites what it replays; and GitHub refuses it
+  when the branch carries a merge commit.
+- **Conventional Commits, enforced on the title.** Subjects here are sentences that say what the
+  change does. `feat:`/`docs:` would be a taxonomy imposed on fifty of them for a changelog nobody
+  asked for.
+- **Auto-merge.** On for an afternoon: it makes the merge a consequence of the checks, when the
+  checks are only the precondition.
+- **A merge queue.** Nothing to serialise with two aligned people. Revisit when two pull requests
+  a day collide in `main`.
+- **Required signed commits.** Deferred, not rejected: the right control for a public repository
+  where agents commit, but every checkout needs signing configured before it can commit at all.
