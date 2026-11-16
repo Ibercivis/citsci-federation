@@ -17,21 +17,14 @@ with itself. `CODING_STANDARDS.md` holds the two rules no tool enforces.
 | Is every file's licence declared? | `reuse lint`, from a container | `pnpm reuse:lint` | `REUSE.toml`, ADR-0013 |
 | Does a sign-in actually work? | Vitest against a real Broker | `pnpm broker:up && pnpm test` | `compose.yaml`, ADR-0010 |
 
-`pnpm check` is the first four, and is the only definition of "checked". The licence check is
-the one that needs Docker running, which makes `pnpm check` need it too; ADR-0013 says why it is
-worth that. The suite is 12 cases in **1.6 seconds**, because every case reuses one running Broker.
+`pnpm check` is the first four, and is the only definition of "checked". The licence check is the
+one that needs Docker running, which makes `pnpm check` need it too; ADR-0013 says why it is worth
+that. Every case in the suite reuses one running Broker instead of starting its own, which is why
+they cannot run in parallel.
 
-The runner is Vitest 5.1. Getting there crossed two majors from 3.2.7 and cost nothing: all three
-of the v5 changes that fail a passing test — `clearMocks` defaulting to `true`, unawaited
-`resolves`/`rejects`, strict locators — need mocks, unawaited async assertions or browser
-mode, and this suite has none of them. A one-line bump, 12 of 12 still green, the same 1.6 seconds.
-
-Lint runs `correctness` and `suspicious` only. Chosen by counting, not by taste: those two found 1
-finding here, `style` found 276. Type-aware rules are on, which needs the `oxlint-tsgolint`
-package and works on TypeScript 5.9 — TypeScript 7 is not a prerequisite.
-
-Every version in `package.json` is exact. A caret on a linter means a commit rejected by a diff
-that is not yours.
+Lint runs `correctness` and `suspicious` only; `.oxlintrc.json` carries the count that decided it.
+Type-aware rules are on, which needs the `oxlint-tsgolint` package and works on TypeScript 5.9 —
+TypeScript 7 is not a prerequisite.
 
 ## Layer 1 — where it runs
 
@@ -41,24 +34,28 @@ that is not yours.
 | `pre-commit` | format + lint, staged files only, **checks and never fixes** | `--no-verify` |
 | `pre-push` | `pnpm check`; the suite too, when a Broker is up | `--no-verify` |
 | CI | `pnpm check`, then its own Broker and the suite | none for the developer |
+| the merge button | the ruleset on `main`: a pull request, one approving review, `check`, `tests` and `pr` green | three named people, on a pull request only |
 
-CI cannot be skipped the way a hook can, but **a red CI does not stop a merge**: `main` carries no
-branch protection and no rulesets, so the workflow reports and nothing acts on the report.
+CI cannot be skipped the way a hook can, and since 13 November 2026 **a red CI stops the merge**: a
+ruleset on `main` requires a pull request, one approving review, and those three contexts green.
+`agorer`, `frasanz` and `agualis` can bypass it to merge a pull request, which GitHub records;
+nobody can push to `main`. The merge method is not here — it is a repository setting, which
+ADR-0014 explains along with the rest.
 
-One definition, three callers. A new check is added to `pnpm check`, never to the hook or the
-workflow alone: a check that lives only in CI is one nobody can run before pushing, and a check
-that lives only in the hook is one `--no-verify` deletes.
+`pr` is the third context and the newest. It checks the pull request's **title and body**, because
+those two strings are published as the merge commit's subject and message, and unlike a commit
+message they stay editable after review. It asks
+for a title short enough for a subject line and a body that says something, and for an issue
+reference in one of them or the words `No ticket`. The rules live in
+`scripts/check-pr-metadata.sh`, each next to the reason it exists.
 
-The suite is the single exception, because it is the one check with a precondition. A hook that
-fails for environmental reasons is a hook people pass `--no-verify` to by habit, so it steps aside
-when no Broker is running. CI has no such excuse — it starts one.
+Which row a new check joins is not a free choice, and the rule is not here: `CODING_STANDARDS.md`
+holds it, along with the reason the suite and `pr` are the two that stay out of `pnpm check`.
 
 ## Layer 2 — what we do not have, and what would buy it
 
 Each row carries the one condition that would make us adopt it, and what adopting it would cost.
-The two are a pair: the trigger is only worth waiting for because the cost is real, so a row whose
-cost measures out at zero needs no trigger. Vitest 5 left this table that way — Layer 0 says what
-it cost. The rows marked *Fired* are decided and not yet built; each carries an issue.
+A row marked *Fired* is decided and not yet built, and carries an issue.
 
 | Gap | Candidate | Real cost | Trigger |
 |---|---|---|---|
@@ -67,7 +64,7 @@ it cost. The rows marked *Fired* are decided and not yet built; each carries an 
 | **Our own CI and scripts** — nothing checks either ([#47](https://github.com/Ibercivis/citsci-federation/issues/47)) | `actionlint` for the workflow, `shellcheck` for `scripts/*.sh`, both in CI only | Two steps. Neither has a first-party npm build, which is why they stay out of `pnpm check` | Fired. The ticket carries the route and why the other two were refused |
 | **Dead code** — unused files and exports | knip 6.45 | A third pass, but it is the thing that actually rots in a feature-sliced tree | When nobody would notice an orphan |
 | **Mutation testing** | StrykerJS 10.1.1 + `@stryker-mutator/vitest-runner` | The runner forces `threads: true` and one worker, and ignores `coverageAnalysis`. Cost is controlled by `incremental: true`, **not** by `--since`, which does not exist in StrykerJS | One module of pure logic worth really trusting. Never on `pre-commit`, never on every PR |
-| **Faster hooks** | hk 2.12.0 — per-file read/write locks, so fixers can run concurrently; ships `ox-lint` and `oxfmt` builtins | Config is Pkl, and it is not on npm. Only published benchmark is the vendor's: ~1.2× ahead of lefthook on a small commit | When `pre-commit` stops feeling instant. 1.3s says not yet |
+| **Faster hooks** | hk 2.12.0 — per-file read/write locks, so fixers can run concurrently; ships `ox-lint` and `oxfmt` builtins | Config is Pkl, and it is not on npm. Only published benchmark is the vendor's: ~1.2× ahead of lefthook on a small commit | When `pre-commit` stops feeling instant |
 | **Faster type check** | TypeScript 7 — `tsc` *is* the Go port, ~8–12× on full builds | No compiler API until 7.1 | When `tsc --noEmit` is the slow part of `pnpm check` |
 | ↳ and then three passes become two | `oxlint --type-check` — reports compiler errors from the same TypeScript program it lints with, and oxc documents it as replacing a separate `tsc --noEmit` in CI | Requires TypeScript 7, so it is the row above or nothing. Keep `tsc --noEmit` until both have run on this tree and the output has been compared | The row above. Neither alone |
 | **Coverage** | `@vitest/coverage-v8` | — | A number we would act on. We do not have one yet |
