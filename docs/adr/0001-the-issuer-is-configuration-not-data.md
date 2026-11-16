@@ -3,7 +3,7 @@
 The Broker's `issuer` differs per environment and its final production hostname is not chosen yet, so
 the `issuer` is read from configuration, is never persisted in any database, and is never
 reconstructed by concatenating parts. This keeps the hostname choice deferrable: changing it later
-costs a coordinated configuration change across the Federated Apps and one forced re-login, not a
+costs a coordinated configuration change across the Brokered Apps and one forced re-login, not a
 data migration.
 
 ## Considered Options

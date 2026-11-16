@@ -1,5 +1,5 @@
 /**
- * A stand-in Federated App: the smallest thing that can drive a real
+ * A stand-in Brokered App: the smallest thing that can drive a real
  * authorization code flow against the Broker.
  *
  * Everything it knows about the Broker it reads from the discovery document
@@ -289,7 +289,7 @@ async function follow(browser: Browser, response: Response): Promise<Landing> {
 /**
  * A page of its own the Broker put in front of the Person, and what it said.
  *
- * A Federated App never sees these — it sees a redirect and then tokens — but
+ * A Brokered App never sees these — it sees a redirect and then tokens — but
  * a Person does, and whether the Broker asks for consent at all is a property
  * of the Broker that only its dialogue shows.
  */
@@ -404,7 +404,7 @@ async function issuerKeys(): Promise<ReturnType<typeof createRemoteJWKSet>> {
 }
 
 /**
- * Verifies an id_token the way a Federated App would: against keys fetched
+ * Verifies an id_token the way a Brokered App would: against keys fetched
  * from the issuer's own discovery document, and against the issuer string it
  * was configured with. Nothing is persisted to do it (ADR-0001), and an
  * unverifiable token is not evidence of anything.
@@ -525,7 +525,7 @@ function refusedAtAuthorization(location: string): Attempt {
   return { outcome: "redirected-without-error", location };
 }
 
-/** The happy path, as a Federated App runs it. Throws on any refusal, because
+/** The happy path, as a Brokered App runs it. Throws on any refusal, because
  *  a case that wanted one should be using `attempt`. */
 export async function authenticate(
   client: Client,

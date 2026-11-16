@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { ALL_CLIENTS } from "./clients.ts";
-import { authenticate } from "./federated-app.ts";
+import { authenticate } from "./brokered-app.ts";
 
 /**
  * Consent is required on every client, and this is where that is shown rather
@@ -18,7 +18,7 @@ import { authenticate } from "./federated-app.ts";
  * requires consent.
  */
 describe.each(ALL_CLIENTS)(
-  "the Broker asks a Person to consent before a %s Federated App receives anything",
+  "the Broker asks a Person to consent before a %s Brokered App receives anything",
   (_shape, client) => {
     it("shows a consent page naming the application, and completes once accepted", async () => {
       const { asked, claims } = await authenticate(client, {

@@ -24,7 +24,7 @@
 
 	handle {
 		# `/realms/<name>` stays in the path (ADR-0001): nothing is stripped
-		# or rewritten here, so what a Federated App is told by discovery is
+		# or rewritten here, so what a Brokered App is told by discovery is
 		# what it can call. Caddy adds the X-Forwarded-* headers Keycloak is
 		# configured to trust.
 		reverse_proxy keycloak:8080

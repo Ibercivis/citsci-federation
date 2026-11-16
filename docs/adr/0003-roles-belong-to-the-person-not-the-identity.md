@@ -10,11 +10,11 @@ arrive does not change what the Person may do.
 it again. It has no good answer to what happens when a Person links a second Identity: inheriting the
 union of roles makes per-Identity roles meaningless, and starting the new Identity empty silently
 downgrades the Person. It also pushes a second identifier and a per-Identity permission check into
-every Federated App, against the requirement that apps change as little as possible.
+every Brokered App, against the requirement that apps change as little as possible.
 
 ## Consequences
 
-Roles stay local to each Federated App in the pilot; nothing about roles crosses the Broker.
+Roles stay local to each Brokered App in the pilot; nothing about roles crosses the Broker.
 
 That a broker can decline to carry authorisation data and still be useful is not only our
 expectation. AARC-style research AAIs typically do carry group and entitlement claims, but AUTHENIX —

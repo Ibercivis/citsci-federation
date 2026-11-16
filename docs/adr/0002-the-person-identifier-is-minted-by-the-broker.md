@@ -3,7 +3,7 @@
 A Person may arrive through several Identity Sources, and will one day arrive from another
 organisation's broker. The Broker therefore mints one opaque UUID per Person, scoped with the
 organisation's domain (`<uuid>@ibercivis.es`), emitted in both `sub` and `voperson_id`, never
-reassigned and never recycled. A Federated App stores that identifier and nothing else about how the
+reassigned and never recycled. A Brokered App stores that identifier and nothing else about how the
 Person arrived, so adding an Identity Source, linking two accounts, or federating with another
 organisation changes nothing in any app.
 

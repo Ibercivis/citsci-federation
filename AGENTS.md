@@ -14,15 +14,60 @@ English record of it, noting at the top when the original was sent in another la
 If you find Spanish in a document you are already editing, translate that document as part of the
 change rather than leaving it half-translated.
 
+## What goes in a document
+
+Every document here is read into an agent's context before a person ever opens it, so a line that
+changes no decision is not free: it spends budget on every future session, and it rots without
+anyone noticing. Leave out:
+
+- **Measurements of the present.** Wall-clock timings, test counts, pass rates, "all green". The
+  command is right there and answers faster than the document can be trusted to.
+- **A defence of something that works.** A dependency in use needs no argument for why adopting it
+  was safe. The day it breaks is the day that reasoning is worth writing down.
+- **Anything a config file already says.** The reason a rule is off belongs next to the rule. A rule
+  written in both places is a rule that will disagree with itself.
+
+Write what a reader cannot recover by running the code: a decision and what it rules out, a
+constraint, the condition that would change our mind, a dead end so nobody walks it twice. When a
+number really does carry the argument, it belongs in a dated note under `docs/notes/`.
+
 ## Agent skills
 
 ### Issue tracker
 
 GitHub Issues in `Ibercivis/citsci-federation`, via the `gh` CLI. See `docs/agents/issue-tracker.md`.
 
+A commit in this repository opens its subject with the issue it serves, as `[#51] Rename Federated
+App to Brokered App`, so its origin shows in `git log --oneline`; a commit no issue asked for opens
+with its subject alone. Only this repository's commits: an application repository has issues of
+its own, and `docs/private/` is committed by its script.
+
+**That prefix is traceability; the pull request body is what closes the ticket.** GitHub acts only
+on `Closes #<n>` in the body, and only on a merge into the default branch — #55 merged without one
+and left #52 open. A pull request that finishes a ticket carries that line; one that merely advances
+it says `Part of #<n>`. Two hooks hold this up rather than trusting anyone to remember it: one
+refuses a pull request that says neither, the other assigns the issue the moment work lands on an
+`issue-<n>` branch, which is what this repository means by a claim.
+
+### Review replies
+
+An agent never posts a reply to a review comment the user hasn't read. Draft them, show them, post
+only what the user approved in that turn — `gh` and the GitHub UI are the same thing here.
+
 ### Triage labels
 
 The five canonical triage labels, unchanged. See `docs/agents/triage-labels.md`.
+
+### Merging
+
+An agent never merges a pull request — not with `gh`, not in the web UI, and not by asking for
+auto-merge, which is off at the repository and not an agent's to turn back on. Every merge is a
+human pressing the button after reading the diff. Green checks are the precondition, never the
+verdict. See ADR-0014.
+
+Bring a branch up to date by rebasing it onto `main`, never by merging `main` into it, so the only
+merge commit in its history is the one that lands it. Not once somebody else has pulled the branch:
+rewriting it under them is worse than the merge commit it saves.
 
 ### Domain docs
 
@@ -38,21 +83,12 @@ Pages are written in English, titles included (ADR-0008).
 
 Work on the Ibercivis application repositories never touches `main` or `master`. Each of them gets a
 branch named `federation`, cut from the latest commit of `main`: PRs target it and the pilot deploys
-from it. See `docs/agents/external-repos.md`.
-
-### Reference repositories
-
-`federation-proxy` is an old repository kept only for reference. It has no remote, nothing deploys
-from it, and no pilot work goes into it. **Don't open it unless the request names it.**
-
-It is not merely stale, it competes: it carries its own `CLAUDE.md`, `AGENTS.md` and `GLOSSARY.md`,
-and that glossary calls the Broker a proxy — a term `GLOSSARY.md` here lists under _Avoid_. Reading
-it to answer a question about this project reintroduces vocabulary, and decisions, we have already
-moved past.
+from it. **What we add there is named in that application's words, never in ours** — our vocabulary
+stays in this repository. See `docs/agents/external-repos.md`.
 
 ### Local environments
 
-**Every Federated App gets one, built as it is integrated**, and **none of them takes data from
+**Every Brokered App gets one, built as it is integrated**, and **none of them takes data from
 production**: the realistic half of the dataset is rebuilt from a public source and the half that
 would carry personal data is invented, so there is nothing to anonymise. The environment and its
 seed command live on that application's `federation` branch, in a `LOCAL-DEV.md` at its root.
@@ -80,10 +116,11 @@ citation, not the authority.
   gets a vocabulary, or for what EOSC onboarding really costs.
 - **Veridas** (`veridas-technical-questions.md`) — frozen; five questions sent 10 Nov 2026, awaiting
   a reply. It predates the current identity model and contradicts it in places, deliberately.
-- **OpenRed's live branch** (`openred-live-branch.md`) — its `main` predates a model rewrite, so the
-  `federation` cut from `feature/weather-cache-and-stats` stays where it is. Open it to defend that
-  cut, to draft the merge proposal to the application's owner, or before assuming another Ibercivis
-  repository has the same split — it is the exception.
+- **OpenRed's live branch** (`openred-live-branch.md`) — **spent as advice.** Its `main` predated a
+  model rewrite, so `federation` was cut from `feature/weather-cache-and-stats`; on 12 November 2026
+  `main` was re-pointed to the deployed commit, and `federation` is now cut from `main` like
+  everywhere else. The rule has no exception left — it lives in `docs/agents/external-repos.md`.
+  Open the note for the measurements that argued for the move, not for its recommendations.
 
 ### Internal notes
 
@@ -108,13 +145,13 @@ here in the first place.
 
 ### Security findings
 
-A weakness found in a Federated App's code is recorded in `docs/private/security-findings.md` in the
+A weakness found in a Brokered App's code is recorded in `docs/private/security-findings.md` in the
 turn it is found, and reaches nothing public — the Internal notes rule above covers it. Before
 recording one, or reporting one to its owner: `docs/agents/security-findings.md`.
 
 ### Migration requirements
 
-What an integrated Federated App's **existing** accounts would need to move onto the Broker is
+What an integrated Brokered App's **existing** accounts would need to move onto the Broker is
 recorded per app in `docs/migration/<app>.md`, as the integration turns it up. Migration is outside
 the pilot's committed scope and a record is not a commitment. Requirements are public, measurements
 taken from a production database are not: `docs/agents/migration-requirements.md`.

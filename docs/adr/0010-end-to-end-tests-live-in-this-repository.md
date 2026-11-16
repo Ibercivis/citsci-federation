@@ -1,6 +1,6 @@
-# The end-to-end tests of the federation live in this repository
+# The end-to-end tests of the pilot live in this repository
 
-Tests that drive a real browser across the whole pilot live here, not in the Federated Apps'
+Tests that drive a real browser across the whole pilot live here, not in the Brokered Apps'
 repositories. They run against the composition of ADR-0009, and they exist for one assertion no
 single application repository can make: **one sign-in, two applications, the same Person
 Identifier**.
@@ -24,7 +24,7 @@ click through first.
 
 ## Consequences
 
-**This repository now runs code it does not own.** A Federated App's `federation` branch can move and
+**This repository now runs code it does not own.** A Brokered App's `federation` branch can move and
 break a test here. That is accepted, and it is most of the value: a red test here is the earliest
 signal that an integration has drifted.
 

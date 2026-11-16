@@ -1,0 +1,23 @@
+# Which licence covers which file, in the REUSE format: https://reuse.software
+# `pnpm reuse:lint` checks it against every tracked file and against
+# `LICENSES/` (ADR-0013).
+#
+# When several annotations match a file, the last one wins, so the catch-all
+# comes first and the narrower rules follow it.
+#
+# The Keycloak plugin is absent on purpose. It will carry a `REUSE.toml` and a
+# `LICENSE` of its own, Apache-2.0, in its own directory from its first commit,
+# so that it can be extracted with its licensing intact.
+version = 1
+
+# The code, and anything else no rule below claims.
+[[annotations]]
+path = "**"
+SPDX-FileCopyrightText = "2026 Fundación Ibercivis"
+SPDX-License-Identifier = "EUPL-1.2"
+
+# The documentation: ADRs, specs, notes, the glossary and every Markdown file.
+[[annotations]]
+path = ["docs/**", "**/*.md"]
+SPDX-FileCopyrightText = "2026 Fundación Ibercivis"
+SPDX-License-Identifier = "CC-BY-4.0"

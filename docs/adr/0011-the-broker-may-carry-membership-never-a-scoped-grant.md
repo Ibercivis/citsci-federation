@@ -6,12 +6,12 @@ fast the answer changes:
 | | Authority | Where it lives | Changes |
 |---|---|---|---|
 | **Identity** — this is that Person | the Broker | the Broker | never |
-| **Membership or qualification** — one of the foundation's people, holds an accredited identifier | the organisation, or an external body | **may** federate | months |
+| **Membership or qualification** — one of the foundation's people, holds an accredited identifier | the organisation, or an external body | **may** move to the Broker | months |
 | **Scoped grant** — researcher *on this project*, may see *this dataset* | the project | only where the scope lives | weeks, per scope |
 
 The Broker carries the first and may one day carry the second. **It never carries the third.** The
 discriminator is one question: *can the grant be stated without naming an object that lives inside a
-Federated App?* "Is one of the foundation's people" can. "Coordinates that light-pollution campaign"
+Brokered App?* "Is one of the foundation's people" can. "Coordinates that light-pollution campaign"
 cannot, because the campaign is an entity in some application's own domain, and for the Broker to
 carry it the Broker would have to mirror that domain.
 
@@ -22,7 +22,7 @@ carry a hundred claims so that almost none of them is read. **Carry what changes
 changes fast.**
 
 **The pilot implements none of this.** ADR-0003 stands exactly as written: roles stay local to each
-Federated App, the Broker emits no role and no entitlement claim, and nothing about authorisation
+Brokered App, the Broker emits no role and no entitlement claim, and nothing about authorisation
 crosses it. This ADR adds no scope to the pilot. It exists because the options that a later
 implementation will reach for first are the wrong ones, and the reasons are not obvious enough to
 re-derive under deadline.
@@ -40,9 +40,9 @@ application is an object inside that application** — not one of them crosses a
   evidence rather than on principle: the one role-like flag these applications already share does not
   mean the same thing in any two of them, so a common claim would need an authorisation vocabulary
   spanning every application, maintained by nobody. It also fails in the wrong direction — each new
-  application makes a shared vocabulary harder, so the cost grows exactly where the federation is
-  supposed to get cheaper.
-- **A federation-level registry of projects**, so that a scope can span applications. Rejected
+  application makes a shared vocabulary harder, so the cost grows exactly where sharing the Broker
+  is supposed to get cheaper.
+- **A Broker-level registry of projects**, so that a scope can span applications. Rejected
   **now**, on the evidence that no scope in any of the five crosses an application today. Kept as the
   named answer if one ever does, with the note that it would be a shared *domain* service and not an
   authorisation one: the Broker would stay identity-only either way.
@@ -64,7 +64,7 @@ application is an object inside that application** — not one of them crosses a
 that promise to "the authentication hook and the registration link", and this decision does not add a
 third item to it. What follows is what we would want to be true when an implementation is eventually
 written — for our own applications as they gain an intermediate role, and as advice to whoever
-implements the federated half. It is not an ask inside the pilot.
+implements the Broker's half. It is not an ask inside the pilot.
 
 **The cheap thing to get right is where a local grant is written down.** A grant indexed by Person
 Identifier — already the only identifier an application gets — and kept as versioned configuration
@@ -76,19 +76,19 @@ foundation" answerable by reading files, which is the question local roles canno
 most worth keeping: a coarse membership claim can be consumed by an application whose authorisation
 model we have never seen, because the application maps it to whatever it already has. A role claim
 cannot — it would require them to adopt our vocabulary, which is precisely the friction the
-federation exists to remove. External applications will have their own notions of scope and
+Broker exists to remove. External applications will have their own notions of scope and
 membership, and the design asks nothing of them: we do not model theirs, we emit something coarse
 enough that they can map it, and they keep their own.
 
 **So the flexibility is bought by emitting less, not by building more.** Named here so it is not
 mistaken for a licence: a policy engine, a permission ontology, a group hierarchy mirroring the
-domain and an entitlements API are all refused. The federation stays adaptable because the claim is
+domain and an entitlements API are all refused. The Broker stays adaptable because the claim is
 small, and a small claim is also the only version of this that can ship.
 
-**Conditions attached to the deferred option.** If membership is ever federated, two things stop
-being optional. ADR-0004 knowingly accepts that whoever controls a mailbox can become a Person, which
-is tolerable for a contributor and not for someone holding authority in several applications — so the
-per-action assurance check that ADR-0003 reserves becomes a requirement for whoever holds the
+**Conditions attached to the deferred option.** If membership ever moves to the Broker, two things
+stop being optional. ADR-0004 knowingly accepts that whoever controls a mailbox can become a Person,
+which is tolerable for a contributor and not for someone holding authority in several applications —
+so the per-action assurance check that ADR-0003 reserves becomes a requirement for whoever holds the
 membership. And no `Organization` entity exists in the pilot, as the spec records; membership would
 be the first thing to need one.
 
@@ -98,5 +98,5 @@ authorisation rather than identity; or an offboarding missed in an application, 
 local grants cannot prevent and the strongest argument for central membership.
 
 **A naming hazard, recorded now because it is cheap now.** Three of the applications already have an
-entity called `Project`, and the three are unrelated to each other. Whatever a federated scope is
-ever called, it cannot be that.
+entity called `Project`, and the three are unrelated to each other. Whatever a scope shared
+across applications is ever called, it cannot be that.

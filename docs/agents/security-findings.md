@@ -1,6 +1,6 @@
 # Security Findings
 
-How to record a weakness found in a Federated App while integrating it with the Broker.
+How to record a weakness found in a Brokered App while integrating it with the Broker.
 
 **This file is tracked in a public repository. No finding goes in it** — not as an example, not
 paraphrased. The findings live in `docs/private/security-findings.md`, which is gitignored. This
@@ -8,7 +8,7 @@ file holds only the procedure.
 
 ## When this applies
 
-Reading a Federated App's code for an integration turns up defects that are not the integration's
+Reading a Brokered App's code for an integration turns up defects that are not the integration's
 work: a secret committed to the repository, an endpoint with no permission class, a shell command
 built by string concatenation. They belong to that application, not to this one.
 

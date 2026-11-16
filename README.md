@@ -1,17 +1,19 @@
 # Citizen Science Federation
 
 The **Broker**: one place where a **Person** proves who they are, which every
-**Federated App** delegates to. A Person signs in through an **Identity
+**Brokered App** delegates to. A Person signs in through an **Identity
 Source** and every application recognises them by a single **Person
 Identifier**, without holding a password of its own.
 
 - What it is for, and what it does not do: [`docs/specs/spec-shared-identification-pilot.md`](docs/specs/spec-shared-identification-pilot.md)
 - The decisions, and what they cost: [`docs/adr/`](docs/adr/)
 - The words, used in one sense each: [`GLOSSARY.md`](GLOSSARY.md)
+- What checks the code, and what does not yet: [`docs/verification.md`](docs/verification.md),
+  and the two rules no tool enforces in [`CODING_STANDARDS.md`](CODING_STANDARDS.md)
 
 ## Running the Broker
 
-Requires Docker, and Node with pnpm for the test suite.
+Requires Docker, and Node with pnpm for the checks and the test suite.
 
 ```sh
 pnpm install
@@ -32,7 +34,7 @@ front **in every environment, including local** — the reason is parity of
 form, since the cookie, TLS, redirect-URI and CORS failures that depend on
 deployment shape otherwise appear for the first time in production (ADR-0001).
 
-No Federated App's infrastructure is declared here. A Federated App's
+No Brokered App's infrastructure is declared here. A Brokered App's
 development environment lives in its own repository, and what this one holds
 about an application is the client the Broker knows it by.
 
@@ -42,8 +44,8 @@ on its own.
 
 ## How this is tested
 
-Over HTTP, exactly as a Federated App would: a stand-in app in
-[`tests/federated-app.ts`](tests/federated-app.ts) generates a PKCE pair,
+Over HTTP, exactly as a Brokered App would: a stand-in app in
+[`tests/brokered-app.ts`](tests/brokered-app.ts) generates a PKCE pair,
 builds the authorization request, carries cookies through the Broker's own
 pages, signs in, grants consent, redeems the code and verifies the ID token
 against keys fetched from discovery.
@@ -55,3 +57,14 @@ another provider.**
 
 The suite never skips when the Broker is down. A silent skip reports green for
 behaviour that was never exercised.
+
+## Licence
+
+The code is licensed under the [EUPL-1.2](LICENSE), and the documentation —
+the ADRs, the spec, the glossary, the notes and every Markdown file — under
+[CC BY 4.0](LICENSES/CC-BY-4.0.txt). [`REUSE.toml`](REUSE.toml) says which
+covers each file, and `pnpm check` runs `reuse lint` against it.
+
+The OpenID Federation plugin for Keycloak, once it exists, is licensed under
+Apache-2.0 and carries its own licence in its own directory, so that it can
+become a project of its own (ADR-0013).

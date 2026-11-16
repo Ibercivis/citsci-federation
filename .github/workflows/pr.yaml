@@ -1,0 +1,30 @@
+name: Pull request
+
+# Its own workflow because of `edited`: the title and body change after the
+# push, and `ci.yaml` must not wake on an edit — the suite costs minutes.
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  # Named `pr` because the ruleset on `main` requires this context by name.
+  pr:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      # Through the environment, never the command line: a title on a public
+      # repository is attacker-supplied.
+      - name: The title and body the merge commit would publish
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: ./scripts/check-pr-metadata.sh "$PR_TITLE" "$PR_BODY"

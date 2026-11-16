@@ -16,8 +16,8 @@
   ],
   "clients": [
     {
-      "clientId": "federated-app-public",
-      "name": "Federated App (public)",
+      "clientId": "brokered-app-public",
+      "name": "Brokered App (public)",
       "description": "A single-page application. The consent screen names it.",
       "enabled": true,
       "protocol": "openid-connect",
@@ -36,8 +36,8 @@
       "optionalClientScopes": []
     },
     {
-      "clientId": "federated-app-confidential",
-      "name": "Federated App (confidential)",
+      "clientId": "brokered-app-confidential",
+      "name": "Brokered App (confidential)",
       "description": "A server-rendered backend. The consent screen names it.",
       "enabled": true,
       "protocol": "openid-connect",
@@ -55,7 +55,7 @@
       "defaultClientScopes": ["acr", "basic", "email", "web-origins"],
       "optionalClientScopes": [],
       "clientAuthenticatorType": "client-secret",
-      "secret": "federated-app-confidential-development-secret"
+      "secret": "brokered-app-confidential-development-secret"
     }
   ],
   "users": [
