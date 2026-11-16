@@ -42,6 +42,8 @@ export interface Discovery {
   authorization_endpoint: string;
   token_endpoint: string;
   jwks_uri: string;
+  userinfo_endpoint: string;
+  introspection_endpoint: string;
 }
 
 const NOT_RUNNING = [
