@@ -22,6 +22,7 @@ set -u
 
 root="${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}"
 private="$root/docs/private"
+scanner="$root/scripts/check-no-credentials.sh"
 
 [ -d "$private/.git" ] || exit 0
 
@@ -63,10 +64,56 @@ case "${1:-}" in
 
     if [ -n "$(git_private status --porcelain)" ]; then
       git_private add -A
-      changed=$(git_private diff --cached --name-only | paste -sd ', ' -)
-      git_private commit --no-verify --quiet -m "Update ${changed}" -m \
-        "Recorded in a Claude Code session and synced automatically." ||
-        echo "internal notes: commit failed in docs/private/" >&2
+
+      # Scan before committing, and hold back what looks like a credential.
+      #
+      # This is the one place in the project where a commit happens with nobody
+      # reading it: `add -A` takes whatever the turn left behind, `--no-verify`
+      # means a pre-commit hook in there cannot intervene, and the push follows
+      # at once. A file dropped here by mistake is therefore published before it
+      # can be reconsidered, and the one class of file that cannot survive that
+      # is a live credential — a private repository keeps it in the history just
+      # as faithfully as a public one would.
+      #
+      # Held back rather than refused: the rest of the turn's notes are worth
+      # committing, and a sync that stops dead because one file is wrong is a
+      # sync somebody switches off. The file stays in the working tree, named in
+      # a warning, until a person deals with it.
+      withheld=
+      if [ -x "$scanner" ]; then
+        oldifs=$IFS
+        IFS='
+'
+        for staged_file in $(git_private diff --cached --name-only --diff-filter=ACMR); do
+          "$scanner" "$private/$staged_file" || {
+            git_private restore --staged -- "$staged_file" 2>/dev/null ||
+              git_private rm --cached --quiet -- "$staged_file" 2>/dev/null
+            withheld="$withheld$staged_file
+"
+          }
+        done
+        IFS=$oldifs
+      else
+        # Warn and carry on rather than block. The scanner lives in the public
+        # repository beside this script, so it goes missing only in a half-made
+        # checkout, and a guard that stops all note-taking over a chmod is a
+        # guard with a short life.
+        echo "internal notes: credential scanner missing or not executable; committing unchecked." >&2
+        echo "  expected at: scripts/check-no-credentials.sh" >&2
+      fi
+
+      if [ -n "$withheld" ]; then
+        echo "internal notes: NOT committed, held back in docs/private/ — the lines above are shaped like live credentials:" >&2
+        printf '    %s\n' $withheld >&2
+        echo "  nothing was published. Move the value to the shared vault and reference the entry." >&2
+      fi
+
+      if [ -n "$(git_private diff --cached --name-only)" ]; then
+        changed=$(git_private diff --cached --name-only | paste -sd ', ' -)
+        git_private commit --no-verify --quiet -m "Update ${changed}" -m \
+          "Recorded in a Claude Code session and synced automatically." ||
+          echo "internal notes: commit failed in docs/private/" >&2
+      fi
     fi
 
     has_remote || exit 0

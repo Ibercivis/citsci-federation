@@ -26,6 +26,12 @@ pre-commit:
     - name: internal notes stay out of this public repository
       run: ./scripts/guard-private.sh
 
+    # Content, not paths: guard-private.sh above stops the private notes from
+    # entering this repository, and this stops a credential pasted straight into
+    # a tracked file. No glob, because a secret is not choosy about extensions.
+    - name: no credential reaches a commit
+      run: ./scripts/check-no-credentials.sh {staged_files}
+
     # Markdown is absent from the glob because `.oxfmtrc.json` does not format
     # prose, and `--no-error-on-unmatched-pattern` is here because a commit of
     # nothing but documents hands this job a file list the glob has already

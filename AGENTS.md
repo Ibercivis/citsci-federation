@@ -143,6 +143,14 @@ straight to `main` — there are no pull requests on it. A `pre-commit` job refu
 stages `docs/private/` into *this* repository, and the nested repository makes its files unstageable
 here in the first place.
 
+**A credential is the one thing that private path does not protect**, because its history
+keeps a secret exactly as long as a public one would. Live values go to the shared vault and
+the notes reference the entry. Two checks hold this up rather than trusting anyone mid-paste:
+the usual filenames are gitignored in that repository, and `scripts/check-no-credentials.sh`
+reads content — `private-sync.sh` **holds back** a file that matches, leaving it uncommitted
+in the working tree and naming it, and the same scanner refuses a commit here at `pre-commit`.
+It matches credential shapes, not the words: a note discussing passwords still commits.
+
 ### Security findings
 
 A weakness found in a Brokered App's code is recorded in `docs/private/security-findings.md` in the
