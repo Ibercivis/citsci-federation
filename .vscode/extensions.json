@@ -1,0 +1,14 @@
+{
+  // A recommendation, and deliberately nothing more. VS Code offers it once and
+  // installs nothing on its own.
+  //
+  // The extension runs this project's own oxlint binary, which `package.json`
+  // pins exactly, so an editor and a `pre-commit` hook cannot disagree about
+  // what is wrong. Type-aware rules need the editor setting `oxc.typeAware`;
+  // `oxlint-tsgolint` is already a devDependency, so nothing else is needed.
+  //
+  // What does not belong here, or in a `.vscode/settings.json` beside it:
+  // `editor.formatOnSave` and a default formatter. Which tool the repository
+  // uses is the repository's call; when it runs over your keystrokes is yours.
+  "recommendations": ["oxc.oxc-vscode"]
+}
