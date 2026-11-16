@@ -52,4 +52,5 @@ message and stay editable after review, which is why CI re-reads them on every e
 | **Conventional Commits on the title** | Subjects here are sentences, not a `feat:`/`docs:` taxonomy for a changelog nobody asked for |
 | **Auto-merge** | On for an afternoon: it makes the merge a consequence of the checks, when the checks are only the precondition |
 | **A merge queue** | Nothing to serialise with two aligned people. Revisit when two pull requests a day collide in `main` |
+| **Dismissing an approval when the branch moves** | `dismiss_stale_reviews_on_push` and `require_last_push_approval`, both off: an approval survives the pushes that follow it. Two people who trust each other, deliberately, and not GitHub's default left unread. The first would fire on every rebase onto `main`, which is how a branch is brought up to date here; the second can deadlock a pull request, because the newest push needs an approval from somebody who did not make it and the author cannot approve |
 | **Required signed commits** | Deferred, not rejected: every checkout would need signing configured before it could commit |
