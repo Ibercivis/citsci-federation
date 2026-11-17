@@ -2,34 +2,35 @@
 
 ## Language
 
-**Write every document in English**, including the gitignored notes under `docs/private/`: ADRs,
-`GLOSSARY.md`, specs, agent docs, orientation docs, issue and PR bodies, commit messages. This
-holds whatever language the request was made in — a Spanish prompt still produces English documents.
-Reply to the user in their language; write the files in English. See ADR-0008.
+**Write every document in English**: ADRs, `GLOSSARY.md`, specs, agent docs, orientation docs,
+issue and PR bodies, commit messages, and the gitignored notes under `docs/private/`. A Spanish
+prompt still produces English documents. Reply to the user in their language. See ADR-0008.
 
-Documents, not conversations: text addressed to someone outside the project (a mail to a supplier,
-a message to a partner) is drafted in the language that person reads, and what the repo keeps is the
-English record of it, noting at the top when the original was sent in another language.
+Text addressed outside the project — a mail to a supplier, a message to a partner — is drafted in
+the language that person reads. The repo keeps the English record, noting at the top when the
+original went out in another language.
 
-If you find Spanish in a document you are already editing, translate that document as part of the
-change rather than leaving it half-translated.
+Translate any Spanish you find in a document you are already editing, as part of the change.
 
 ## What goes in a document
 
-Every document here is read into an agent's context before a person ever opens it, so a line that
-changes no decision is not free: it spends budget on every future session, and it rots without
-anyone noticing. Leave out:
+A document here lands in an agent's context before a person opens it. A line that changes no
+decision is paid for in every future session, and it rots unseen.
 
-- **Measurements of the present.** Wall-clock timings, test counts, pass rates, "all green". The
-  command is right there and answers faster than the document can be trusted to.
-- **A defence of something that works.** A dependency in use needs no argument for why adopting it
-  was safe. The day it breaks is the day that reasoning is worth writing down.
-- **Anything a config file already says.** The reason a rule is off belongs next to the rule. A rule
-  written in both places is a rule that will disagree with itself.
+Write only what a reader cannot get by running the code: a decision and what it rules out, a
+constraint, the condition that would change our mind, a dead end nobody should walk twice. When a
+number carries the argument, it goes in a dated note under `docs/notes/`.
 
-Write what a reader cannot recover by running the code: a decision and what it rules out, a
-constraint, the condition that would change our mind, a dead end so nobody walks it twice. When a
-number really does carry the argument, it belongs in a dated note under `docs/notes/`.
+Leave out:
+
+- **Measurements of the present.** Timings, test counts, pass rates, "all green". The command
+  answers faster.
+- **A defence of something that works.** The day it breaks is the day that reasoning is worth
+  writing down.
+- **Anything a config file already says.** A rule written in two places will disagree with itself.
+
+Say it plainly: short sentences, one point each, no preamble and no summing up. An agent copies the
+register of whatever it reads, which is why this file is written the way it is.
 
 ## Agent skills
 
@@ -37,22 +38,30 @@ number really does carry the argument, it belongs in a dated note under `docs/no
 
 GitHub Issues in `Ibercivis/citsci-federation`, via the `gh` CLI. See `docs/agents/issue-tracker.md`.
 
-A commit in this repository opens its subject with the issue it serves, as `[#51] Rename Federated
-App to Brokered App`, so its origin shows in `git log --oneline`; a commit no issue asked for opens
-with its subject alone. Only this repository's commits: an application repository has issues of
-its own, and `docs/private/` is committed by its script.
+A commit subject opens with the issue it serves: `[#51] Rename Federated App to Brokered App`. A
+commit no issue asked for opens with its subject alone. This repository only — an application
+repository has its own issues, and `docs/private/` is committed by its script.
 
-**That prefix is traceability; the pull request body is what closes the ticket.** GitHub acts only
-on `Closes #<n>` in the body, and only on a merge into the default branch — #55 merged without one
-and left #52 open. A pull request that finishes a ticket carries that line; one that merely advances
-it says `Part of #<n>`. Two hooks hold this up rather than trusting anyone to remember it: one
-refuses a pull request that says neither, the other assigns the issue the moment work lands on an
-`issue-<n>` branch, which is what this repository means by a claim.
+**The prefix is traceability. The pull request body closes the ticket.** GitHub acts only on
+`Closes #<n>` in the body, and only on a merge into the default branch; #55 merged without one and
+left #52 open. A pull request that finishes a ticket carries that line; one that advances it says
+`Part of #<n>`.
+
+Two hooks hold this up: one refuses a pull request that says neither, the other assigns the issue
+when work lands on an `issue-<n>` branch, which is what a claim means here.
+
+### Pull request bodies
+
+`mattpocock-skills:pr` holds the template — Summary, Evidence, Merge Danger — and it stays as it is.
+
+One thing on top of it: say what the pull request does in two or three sentences, early, so a
+reviewer knows what they are looking at before scrolling. Below that, go as deep as the change
+needs — nothing limits the total length.
 
 ### Review replies
 
-An agent never posts a reply to a review comment the user hasn't read. Draft them, show them, post
-only what the user approved in that turn — `gh` and the GitHub UI are the same thing here.
+An agent never posts a reply to a review comment the user has not read. Draft it, show it, post
+only what the user approved in that turn. `gh` and the GitHub UI are the same thing here.
 
 ### Triage labels
 
@@ -60,13 +69,13 @@ The five canonical triage labels, unchanged. See `docs/agents/triage-labels.md`.
 
 ### Merging
 
-An agent never merges a pull request — not with `gh`, not in the web UI, and not by asking for
+An agent never merges a pull request: not with `gh`, not in the web UI, not by asking for
 auto-merge, which is off at the repository and not an agent's to turn back on. Every merge is a
 human pressing the button after reading the diff. Green checks are the precondition, never the
 verdict. See ADR-0014.
 
 Bring a branch up to date by rebasing it onto `main`, never by merging `main` into it, so the only
-merge commit in its history is the one that lands it. Not once somebody else has pulled the branch:
+merge commit in its history is the one that lands it. Stop once somebody else has pulled the branch:
 rewriting it under them is worse than the merge commit it saves.
 
 ### Domain docs
@@ -75,45 +84,41 @@ Single-context: `GLOSSARY.md` and `docs/adr/` at the repo root. See `docs/agents
 
 ### Orientation docs
 
-`docs/orientation/` holds short explainers of the spec and the ADRs, for a human or an agent meeting
-the pilot for the first time. They decide nothing — the spec, `GLOSSARY.md` and `docs/adr/` are the
-source of truth, and an explainer that disagrees with them is the thing that is wrong. Keep them
-**short**: they are read into a context window, so they point at the source instead of restating it,
-and a file is deleted once what it explains is understood. They are written in English, titles
-included (ADR-0008).
+`docs/orientation/` holds short explainers of the spec and the ADRs, for whoever meets the pilot
+first. They decide nothing: the spec, `GLOSSARY.md` and `docs/adr/` are the source of truth, and an
+explainer that disagrees with them is the thing that is wrong. Keep them **short** — they point at
+the source instead of restating it, and a file is deleted once what it explains is understood.
+English, titles included (ADR-0008).
 
-**Nothing is published as a Claude artifact** (ADR-0015). A document belongs in this repository,
-under version control and readable by anyone who can read the repo; a published page is none of
-those things — no diff, no review, and a sharing state nobody audits. The `Artifact` tools are
-denied in `.claude/settings.json`. The two pages published before this decision were distilled into
-`docs/orientation/` and deleted.
+**Nothing is published as a Claude artifact.** ADR-0015 holds the reasoning. The `Artifact` tools
+are denied in `.claude/settings.json`.
 
 ### External repositories
 
-Work on the Ibercivis application repositories never touches `main` or `master`. Each of them gets a
-branch named `federation`, cut from the latest commit of `main`: PRs target it and the pilot deploys
-from it. **What we add there is named in that application's words, never in ours** — our vocabulary
-stays in this repository. See `docs/agents/external-repos.md`.
+Work on the Ibercivis application repositories never touches `main` or `master`. Each gets a branch
+named `federation`, cut from the latest commit of `main`: PRs target it and the pilot deploys from
+it. **What we add there is named in that application's words, never in ours** — our vocabulary stays
+in this repository. See `docs/agents/external-repos.md`.
 
 ### Local environments
 
-**Every Brokered App gets one, built as it is integrated**, and **none of them takes data from
-production**: the realistic half of the dataset is rebuilt from a public source and the half that
-would carry personal data is invented, so there is nothing to anonymise. The environment and its
-seed command live on that application's `federation` branch, in a `LOCAL-DEV.md` at its root.
+**Every Brokered App gets one, built as it is integrated**, and **none takes data from production**:
+the realistic half of the dataset is rebuilt from a public source, the half that would carry
+personal data is invented, so there is nothing to anonymise. The environment and its seed command
+live on that application's `federation` branch, in a `LOCAL-DEV.md` at its root.
 
 What has to work is **signing in and the profile that follows the Person** (ADR-0009). Everything
-else is scenery, so a blank map is not a defect: these applications need a Mapbox token nobody has
-locally, and hunting for one is wasted time. Record what is blank and move on.
+else is scenery. A blank map is not a defect: these applications need a Mapbox token nobody has
+locally. Record what is blank and move on.
 
-The index, and the order that worked for the ones already built, is `docs/local-development.md`.
+`docs/local-development.md` is the index, and the order that worked for the ones already built.
 Read it before building the next one; an application missing from it has no local environment.
 
 ### Research notes
 
 `docs/notes/` holds dated evidence, never decisions. Each note opens with its verdict and a "read on
-only if" line, so take the verdict from here and open a note only when one of its branches is yours.
-When a finding changes a decision, move it into the ADR or spec that owns it: the note keeps the
+only if" line. Take the verdict from here; open a note only when one of its branches is yours. When
+a finding changes a decision, move it into the ADR or spec that owns it — the note keeps the
 citation, not the authority.
 
 - **AUTHENIX** (`authenix-research.md`) — rejected as our Broker: it mints the subject identifier
@@ -125,11 +130,10 @@ citation, not the authority.
   gets a vocabulary, or for what EOSC onboarding really costs.
 - **Veridas** (`veridas-technical-questions.md`) — frozen; five questions sent 10 Nov 2026, awaiting
   a reply. It predates the current identity model and contradicts it in places, deliberately.
-- **OpenRed's live branch** (`openred-live-branch.md`) — **spent as advice.** Its `main` predated a
-  model rewrite, so `federation` was cut from `feature/weather-cache-and-stats`; on 12 November 2026
-  `main` was re-pointed to the deployed commit, and `federation` is now cut from `main` like
-  everywhere else. The rule has no exception left — it lives in `docs/agents/external-repos.md`.
-  Open the note for the measurements that argued for the move, not for its recommendations.
+- **OpenRed's live branch** (`openred-live-branch.md`) — **spent as advice.** Its `main` once
+  predated a model rewrite; `main` was re-pointed on 12 November 2026 and `federation` is cut from
+  it like everywhere else. The rule has no exception left: `docs/agents/external-repos.md`. Open the
+  note for the measurements, not for its recommendations.
 
 ### Internal notes
 
@@ -174,14 +178,14 @@ taken from a production database are not: `docs/agents/migration-requirements.md
 
 ### Production databases
 
-Do not modify a production database. No `INSERT`, `UPDATE`, `DELETE`, `TRUNCATE`, `ALTER`, `DROP`, no
-`manage.py migrate`, no write from a Django or `psql` shell on a production host — unless the user
-asks for that specific change, in that turn, in so many words. Having access is not permission, and
-neither is a write being the obvious next step in the task. Read-only diagnosis needs no permission.
-When a write looks necessary, stop, say exactly what you would run, and let the user decide.
+Do not modify a production database. No `INSERT`, `UPDATE`, `DELETE`, `TRUNCATE`, `ALTER`, `DROP`,
+no `manage.py migrate`, no write from a Django or `psql` shell on a production host — unless the
+user asks for that specific change, in that turn, in so many words. Having access is not permission;
+neither is a write being the obvious next step. Read-only diagnosis needs no permission. When a
+write looks necessary, stop, say exactly what you would run, and let the user decide.
 
-This rule enforces nothing on its own: it is cooperation, deliberately chosen over a real boundary
-for now. See `docs/notes/deferred/preventing-agent-writes-to-production-databases.md`.
+This rule enforces nothing on its own: it is cooperation, chosen over a real boundary for now. See
+`docs/notes/deferred/preventing-agent-writes-to-production-databases.md`.
 
 ### Deferred notes
 
