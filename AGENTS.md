@@ -16,20 +16,23 @@ change rather than leaving it half-translated.
 
 ## What goes in a document
 
-Every document here is read into an agent's context before a person ever opens it, so a line that
-changes no decision is not free: it spends budget on every future session, and it rots without
-anyone noticing. Leave out:
+A document here lands in an agent's context before a person opens it. A line that changes no
+decision is paid for in every future session, and it rots unseen.
 
-- **Measurements of the present.** Wall-clock timings, test counts, pass rates, "all green". The
-  command is right there and answers faster than the document can be trusted to.
-- **A defence of something that works.** A dependency in use needs no argument for why adopting it
-  was safe. The day it breaks is the day that reasoning is worth writing down.
-- **Anything a config file already says.** The reason a rule is off belongs next to the rule. A rule
-  written in both places is a rule that will disagree with itself.
+Write only what a reader cannot get by running the code: a decision and what it rules out, a
+constraint, the condition that would change our mind, a dead end nobody should walk twice. When a
+number carries the argument, it goes in a dated note under `docs/notes/`.
 
-Write what a reader cannot recover by running the code: a decision and what it rules out, a
-constraint, the condition that would change our mind, a dead end so nobody walks it twice. When a
-number really does carry the argument, it belongs in a dated note under `docs/notes/`.
+Leave out:
+
+- **Measurements of the present.** Timings, test counts, pass rates, "all green". The command
+  answers faster.
+- **A defence of something that works.** The day it breaks is the day that reasoning is worth
+  writing down.
+- **Anything a config file already says.** A rule written in two places will disagree with itself.
+
+Say it plainly: short sentences, one point each, no preamble and no summing up. An agent copies the
+register of whatever it reads, which is why this file is written the way it is.
 
 ## Agent skills
 
