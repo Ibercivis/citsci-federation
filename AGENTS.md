@@ -50,6 +50,14 @@ left #52 open. A pull request that finishes a ticket carries that line; one that
 Two hooks hold this up: one refuses a pull request that says neither, the other assigns the issue
 when work lands on an `issue-<n>` branch, which is what a claim means here.
 
+### Pull request bodies
+
+`mattpocock-skills:pr` holds the template — Summary, Evidence, Merge Danger — and it stays as it is.
+
+One thing on top of it: say what the pull request does in two or three sentences, early, so a
+reviewer knows what they are looking at before scrolling. Below that, go as deep as the change
+needs — nothing limits the total length.
+
 ### Review replies
 
 An agent never posts a reply to a review comment the user has not read. Draft it, show it, post
