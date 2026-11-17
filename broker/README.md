@@ -118,21 +118,24 @@ stand-ins: the real applications register their own, with their own redirect
 URIs, when they are integrated. The redirect URIs here are development
 guesses, and the confidential one follows the callback shape django-allauth
 serves, because the applications of the pilot are Django.
+A third, `misconfigured-client`, is a testing fixture and not a Brokered
+App: `tests/clients.ts` says why.
 
 No Brokered App's infrastructure is declared anywhere in this repository —
 only the clients the Broker knows them by.
 
-### PKCE S256, per client
+### Code flow only, for every client
 
-PKCE is what makes a leaked authorization code worthless, and `plain` sends
-the secret in the very request the code leaks from — a ceremony with no
-protection. `pkce.code.challenge.method: S256` on each client is what rejects
-both `plain` and a request carrying no challenge at all.
+One client policy holds every client in the realm to the code flow, whatever
+its own settings say: PKCE with S256 and nothing else, no response type that
+hands a token to the browser in a URL, and a `nonce` on every OpenID Connect
+request. A setting has to be remembered on every client registered from now
+on; a policy does not.
 
-It has to be per client, because the realm's discovery document advertises
-`plain` in `code_challenge_methods_supported` and that list cannot be trimmed.
-So the discovery document is not evidence of what this Broker allows; the
-cases that drive a flow and get turned away are.
+The PKCE setting on each client stays anyway. The realm's discovery document
+advertises `plain` in `code_challenge_methods_supported` and that list cannot
+be trimmed, so discovery is not evidence of what this Broker allows; the cases
+in `tests/hardening.test.ts` that drive a flow and get turned away are.
 
 ### Consent required on both clients
 
