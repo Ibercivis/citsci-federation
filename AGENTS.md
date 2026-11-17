@@ -156,12 +156,8 @@ straight to `main` — there are no pull requests on it. A `pre-commit` job refu
 stages `docs/private/` into *this* repository, and the nested repository makes its files unstageable
 here in the first place.
 
-**A credential is the one thing private does not protect**: that history keeps a secret as long as
-a public one. Live values go to the shared vault and a note references the entry; the usual
-filenames are gitignored there. `scripts/check-no-credentials.sh` reads content, not paths —
-`private-sync.sh` **holds back** a file that matches, leaving it uncommitted and named, and
-`pre-commit` refuses one here. It matches credential shapes, not the words, so a note discussing
-passwords still commits.
+**A credential belongs in no repository**, not even that one, whose history keeps a secret as long
+as a public one would. Live values go to the shared vault and a note references the entry.
 
 ### Security findings
 

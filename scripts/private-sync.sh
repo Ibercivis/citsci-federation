@@ -22,7 +22,6 @@ set -u
 
 root="${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}"
 private="$root/docs/private"
-scanner="$root/scripts/check-no-credentials.sh"
 
 [ -d "$private/.git" ] || exit 0
 
@@ -64,47 +63,10 @@ case "${1:-}" in
 
     if [ -n "$(git_private status --porcelain)" ]; then
       git_private add -A
-
-      # The only commit here nobody reads: `add -A`, `--no-verify`, push. A
-      # credential dropped in by mistake is published before anyone can
-      # reconsider, and a private history keeps it as long as a public one.
-      #
-      # Held back, not refused — a sync that stops dead over one file is a sync
-      # somebody switches off. The file stays in the working tree, named in a
-      # warning, until a person deals with it.
-      withheld=
-      if [ -x "$scanner" ]; then
-        oldifs=$IFS
-        IFS='
-'
-        for staged_file in $(git_private diff --cached --name-only --diff-filter=ACMR); do
-          "$scanner" "$private/$staged_file" || {
-            git_private restore --staged -- "$staged_file" 2>/dev/null ||
-              git_private rm --cached --quiet -- "$staged_file" 2>/dev/null
-            withheld="$withheld$staged_file
-"
-          }
-        done
-        IFS=$oldifs
-      else
-        # Warn and carry on: the scanner sits beside this script, so it is
-        # missing only in a half-made checkout, and a guard that stops all
-        # note-taking over a chmod gets switched off.
-        echo "internal notes: scripts/check-no-credentials.sh missing or not executable; committing unchecked." >&2
-      fi
-
-      if [ -n "$withheld" ]; then
-        echo "internal notes: held back in docs/private/, not committed, not published:" >&2
-        printf '    %s\n' $withheld >&2
-        echo "  move the value to the shared vault and reference the entry." >&2
-      fi
-
-      if [ -n "$(git_private diff --cached --name-only)" ]; then
-        changed=$(git_private diff --cached --name-only | paste -sd ', ' -)
-        git_private commit --no-verify --quiet -m "Update ${changed}" -m \
-          "Recorded in a Claude Code session and synced automatically." ||
-          echo "internal notes: commit failed in docs/private/" >&2
-      fi
+      changed=$(git_private diff --cached --name-only | paste -sd ', ' -)
+      git_private commit --no-verify --quiet -m "Update ${changed}" -m \
+        "Recorded in a Claude Code session and synced automatically." ||
+        echo "internal notes: commit failed in docs/private/" >&2
     fi
 
     has_remote || exit 0

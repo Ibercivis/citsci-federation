@@ -3,13 +3,14 @@
 #
 #   check-no-credentials.sh FILE...        exit 0 clean, exit 1 something matched
 #
-# Called at pre-commit over the staged files, and by private-sync.sh before its
-# unattended commit.
+# Called at pre-commit over the staged files. What it guards is the tracked
+# `.env`: the first real secret here will be a Google or GitHub client secret,
+# and the file holding those names is in a public repository.
 #
-# Shapes, not words: `security-findings.md` discusses passwords and tokens in
-# prose and has to keep committing. The first refusal of an ordinary note is the
-# last time anyone leaves this switched on, so a pattern matches only what an
-# issuer produces, or an environment assignment with a long value.
+# Shapes, not words: the documents here discuss passwords and tokens in prose
+# and have to keep committing. The first refusal of an ordinary note is the last
+# time anyone leaves this switched on, so a pattern matches only what an issuer
+# produces, or an environment assignment with a long value.
 #
 # It never prints what it matched — a guard that echoes a secret into a log has
 # moved it, not stopped it. File, line and pattern name are enough.
