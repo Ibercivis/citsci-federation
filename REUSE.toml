@@ -5,9 +5,11 @@
 # When several annotations match a file, the last one wins, so the catch-all
 # comes first and the narrower rules follow it.
 #
-# The Keycloak plugin is absent on purpose. It will carry a `REUSE.toml` and a
-# `LICENSE` of its own, Apache-2.0, in its own directory from its first commit,
-# so that it can be extracted with its licensing intact.
+# The OpenID Federation plugin for Keycloak is absent on purpose. It will carry
+# a `REUSE.toml` and a `LICENSE` of its own, Apache-2.0, in its own directory
+# from its first commit, so that it can be extracted with its licensing intact.
+# The Person Identifier mapper in `broker/person-identifier/` is not that
+# plugin: it is this repository's code, and the catch-all covers it.
 version = 1
 
 # The code, and anything else no rule below claims.

@@ -421,6 +421,69 @@ export async function verifyIdToken(
 }
 
 /**
+ * Verifies an access token the way a Brokered App's own API would before
+ * trusting it: the issuer's keys, the configured issuer, and this client in
+ * its audience. The last is what lets the client introspect it as well.
+ */
+export async function verifyAccessToken(
+  accessToken: string,
+  client: Client,
+): Promise<Record<string, unknown>> {
+  const { payload } = await jwtVerify(accessToken, await issuerKeys(), {
+    issuer: ISSUER,
+    audience: client.id,
+  });
+  return payload;
+}
+
+export interface JsonResponse {
+  status: number;
+  body: Record<string, unknown>;
+}
+
+/** Asks the userinfo endpoint who the bearer of this access token is. */
+export async function userinfo(accessToken: string): Promise<JsonResponse> {
+  const { userinfo_endpoint } = await fetchDiscovery();
+  const response = await fetch(userinfo_endpoint, {
+    headers: { authorization: `Bearer ${accessToken}` },
+  });
+  return {
+    status: response.status,
+    body: (await response.json()) as Record<string, unknown>,
+  };
+}
+
+/**
+ * Introspects a token (RFC 7662) as a confidential client, authenticating
+ * with its secret. A client with no secret has no way to ask, which is why
+ * introspection is a confidential client's capability and not a public one's.
+ */
+export async function introspect(
+  client: Client,
+  token: string,
+): Promise<JsonResponse> {
+  if (!client.secret) {
+    throw new Error(
+      `${client.id} holds no secret, so it cannot authenticate to introspect.`,
+    );
+  }
+  const { introspection_endpoint } = await fetchDiscovery();
+  const response = await fetch(introspection_endpoint, {
+    method: "POST",
+    headers: { "content-type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      token,
+      client_id: client.id,
+      client_secret: client.secret,
+    }).toString(),
+  });
+  return {
+    status: response.status,
+    body: (await response.json()) as Record<string, unknown>,
+  };
+}
+
+/**
  * Where the Broker refused, and why. A request turned away at the
  * authorization endpoint never reached a login screen, while one turned away
  * at the token endpoint got a code that proved worthless.

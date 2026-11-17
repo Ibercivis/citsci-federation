@@ -3,7 +3,7 @@
 ## Language
 
 **Write every document in English**, including the gitignored notes under `docs/private/`: ADRs,
-`GLOSSARY.md`, specs, agent docs, learning artifacts, issue and PR bodies, commit messages. This
+`GLOSSARY.md`, specs, agent docs, orientation docs, issue and PR bodies, commit messages. This
 holds whatever language the request was made in — a Spanish prompt still produces English documents.
 Reply to the user in their language; write the files in English. See ADR-0008.
 
@@ -73,11 +73,20 @@ rewriting it under them is worse than the merge commit it saves.
 
 Single-context: `GLOSSARY.md` and `docs/adr/` at the repo root. See `docs/agents/domain.md`.
 
-### Learning artifacts
+### Orientation docs
 
-Published pages that explain the specs and ADRs, indexed in `docs/learn-artifacts.md`.
-After publishing one, ask whether to add it to the index. Don't add it unasked.
-Pages are written in English, titles included (ADR-0008).
+`docs/orientation/` holds short explainers of the spec and the ADRs, for a human or an agent meeting
+the pilot for the first time. They decide nothing — the spec, `GLOSSARY.md` and `docs/adr/` are the
+source of truth, and an explainer that disagrees with them is the thing that is wrong. Keep them
+**short**: they are read into a context window, so they point at the source instead of restating it,
+and a file is deleted once what it explains is understood. They are written in English, titles
+included (ADR-0008).
+
+**Nothing is published as a Claude artifact** (ADR-0015). A document belongs in this repository,
+under version control and readable by anyone who can read the repo; a published page is none of
+those things — no diff, no review, and a sharing state nobody audits. The `Artifact` tools are
+denied in `.claude/settings.json`. The two pages published before this decision were distilled into
+`docs/orientation/` and deleted.
 
 ### External repositories
 
@@ -127,7 +136,7 @@ citation, not the authority.
 `docs/private/` is gitignored operational material: server inventory, access notes, and the security
 findings register described below.
 This repo is **public**. Never quote its contents — IPs, SSH users, software versions,
-database users, known weaknesses — into issues, PRs, commit messages, learning artifacts
+database users, known weaknesses — into issues, PRs, commit messages, orientation docs
 or any other published surface. Read it to do the work; describe conclusions without the detail.
 Never `git add -f` anything under it.
 

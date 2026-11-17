@@ -45,10 +45,9 @@ services:
       retries: 20
 
   keycloak:
-    # Pinned, and pinned because a security property of the design rests on
-    # how this version treats a verified email address (ADR-0004). It is not
-    # allowed to move on its own.
-    image: quay.io/keycloak/keycloak:26.8.1
+    # Keycloak at a pinned version plus the Person Identifier mapper, built
+    # from broker/Dockerfile, which is where the version is pinned and why.
+    build: ./broker
     environment:
       # The issuer, read from the one place that declares it (ADR-0001). What
       # Keycloak is told is derived from that string by dropping the realm

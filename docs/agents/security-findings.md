@@ -52,7 +52,7 @@ into the entry — otherwise the next reader cannot tell a held finding from a f
 
 ## Keep the boundary
 
-A published surface — an issue, a PR, a commit message, a learning artifact — may say that an
+A published surface — an issue, a PR, a commit message, an orientation doc — may say that an
 integration is blocked on a security fix in that repository, reported privately. It may not say
 which weakness, where, or how. That holds until the owner has fixed it or has said it is public.
 
