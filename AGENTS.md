@@ -76,45 +76,41 @@ Single-context: `GLOSSARY.md` and `docs/adr/` at the repo root. See `docs/agents
 
 ### Orientation docs
 
-`docs/orientation/` holds short explainers of the spec and the ADRs, for a human or an agent meeting
-the pilot for the first time. They decide nothing — the spec, `GLOSSARY.md` and `docs/adr/` are the
-source of truth, and an explainer that disagrees with them is the thing that is wrong. Keep them
-**short**: they are read into a context window, so they point at the source instead of restating it,
-and a file is deleted once what it explains is understood. They are written in English, titles
-included (ADR-0008).
+`docs/orientation/` holds short explainers of the spec and the ADRs, for whoever meets the pilot
+first. They decide nothing: the spec, `GLOSSARY.md` and `docs/adr/` are the source of truth, and an
+explainer that disagrees with them is the thing that is wrong. Keep them **short** — they point at
+the source instead of restating it, and a file is deleted once what it explains is understood.
+English, titles included (ADR-0008).
 
-**Nothing is published as a Claude artifact** (ADR-0015). A document belongs in this repository,
-under version control and readable by anyone who can read the repo; a published page is none of
-those things — no diff, no review, and a sharing state nobody audits. The `Artifact` tools are
-denied in `.claude/settings.json`. The two pages published before this decision were distilled into
-`docs/orientation/` and deleted.
+**Nothing is published as a Claude artifact.** ADR-0015 holds the reasoning. The `Artifact` tools
+are denied in `.claude/settings.json`.
 
 ### External repositories
 
-Work on the Ibercivis application repositories never touches `main` or `master`. Each of them gets a
-branch named `federation`, cut from the latest commit of `main`: PRs target it and the pilot deploys
-from it. **What we add there is named in that application's words, never in ours** — our vocabulary
-stays in this repository. See `docs/agents/external-repos.md`.
+Work on the Ibercivis application repositories never touches `main` or `master`. Each gets a branch
+named `federation`, cut from the latest commit of `main`: PRs target it and the pilot deploys from
+it. **What we add there is named in that application's words, never in ours** — our vocabulary stays
+in this repository. See `docs/agents/external-repos.md`.
 
 ### Local environments
 
-**Every Brokered App gets one, built as it is integrated**, and **none of them takes data from
-production**: the realistic half of the dataset is rebuilt from a public source and the half that
-would carry personal data is invented, so there is nothing to anonymise. The environment and its
-seed command live on that application's `federation` branch, in a `LOCAL-DEV.md` at its root.
+**Every Brokered App gets one, built as it is integrated**, and **none takes data from production**:
+the realistic half of the dataset is rebuilt from a public source, the half that would carry
+personal data is invented, so there is nothing to anonymise. The environment and its seed command
+live on that application's `federation` branch, in a `LOCAL-DEV.md` at its root.
 
 What has to work is **signing in and the profile that follows the Person** (ADR-0009). Everything
-else is scenery, so a blank map is not a defect: these applications need a Mapbox token nobody has
-locally, and hunting for one is wasted time. Record what is blank and move on.
+else is scenery. A blank map is not a defect: these applications need a Mapbox token nobody has
+locally. Record what is blank and move on.
 
-The index, and the order that worked for the ones already built, is `docs/local-development.md`.
+`docs/local-development.md` is the index, and the order that worked for the ones already built.
 Read it before building the next one; an application missing from it has no local environment.
 
 ### Research notes
 
 `docs/notes/` holds dated evidence, never decisions. Each note opens with its verdict and a "read on
-only if" line, so take the verdict from here and open a note only when one of its branches is yours.
-When a finding changes a decision, move it into the ADR or spec that owns it: the note keeps the
+only if" line. Take the verdict from here; open a note only when one of its branches is yours. When
+a finding changes a decision, move it into the ADR or spec that owns it — the note keeps the
 citation, not the authority.
 
 - **AUTHENIX** (`authenix-research.md`) — rejected as our Broker: it mints the subject identifier
@@ -126,11 +122,10 @@ citation, not the authority.
   gets a vocabulary, or for what EOSC onboarding really costs.
 - **Veridas** (`veridas-technical-questions.md`) — frozen; five questions sent 10 Nov 2026, awaiting
   a reply. It predates the current identity model and contradicts it in places, deliberately.
-- **OpenRed's live branch** (`openred-live-branch.md`) — **spent as advice.** Its `main` predated a
-  model rewrite, so `federation` was cut from `feature/weather-cache-and-stats`; on 12 November 2026
-  `main` was re-pointed to the deployed commit, and `federation` is now cut from `main` like
-  everywhere else. The rule has no exception left — it lives in `docs/agents/external-repos.md`.
-  Open the note for the measurements that argued for the move, not for its recommendations.
+- **OpenRed's live branch** (`openred-live-branch.md`) — **spent as advice.** Its `main` once
+  predated a model rewrite; `main` was re-pointed on 12 November 2026 and `federation` is cut from
+  it like everywhere else. The rule has no exception left: `docs/agents/external-repos.md`. Open the
+  note for the measurements, not for its recommendations.
 
 ### Internal notes
 
@@ -168,14 +163,14 @@ taken from a production database are not: `docs/agents/migration-requirements.md
 
 ### Production databases
 
-Do not modify a production database. No `INSERT`, `UPDATE`, `DELETE`, `TRUNCATE`, `ALTER`, `DROP`, no
-`manage.py migrate`, no write from a Django or `psql` shell on a production host — unless the user
-asks for that specific change, in that turn, in so many words. Having access is not permission, and
-neither is a write being the obvious next step in the task. Read-only diagnosis needs no permission.
-When a write looks necessary, stop, say exactly what you would run, and let the user decide.
+Do not modify a production database. No `INSERT`, `UPDATE`, `DELETE`, `TRUNCATE`, `ALTER`, `DROP`,
+no `manage.py migrate`, no write from a Django or `psql` shell on a production host — unless the
+user asks for that specific change, in that turn, in so many words. Having access is not permission;
+neither is a write being the obvious next step. Read-only diagnosis needs no permission. When a
+write looks necessary, stop, say exactly what you would run, and let the user decide.
 
-This rule enforces nothing on its own: it is cooperation, deliberately chosen over a real boundary
-for now. See `docs/notes/deferred/preventing-agent-writes-to-production-databases.md`.
+This rule enforces nothing on its own: it is cooperation, chosen over a real boundary for now. See
+`docs/notes/deferred/preventing-agent-writes-to-production-databases.md`.
 
 ### Deferred notes
 
