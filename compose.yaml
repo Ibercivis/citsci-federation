@@ -48,6 +48,22 @@ services:
     # Keycloak at a pinned version plus the Person Identifier mapper, built
     # from broker/Dockerfile, which is where the version is pinned and why.
     build: ./broker
+    # The channel for a value that must not be typed into a tracked file. It
+    # is absent on most machines, and absent is not an error: nothing in this
+    # stack needs a live credential yet.
+    #
+    # What reads it is the realm import. A `${NAME}` in
+    # broker/realm-citsci.json is replaced from this container's environment,
+    # on the version pinned in broker/Dockerfile; `${env.NAME}` is not, and
+    # survives the import as a literal. So the first client secret is
+    # referenced in the realm and valued here.
+    #
+    # Only for names the `environment:` block below does not also declare:
+    # that block wins, and an override from here is dropped without a word.
+    # BROKER_ISSUER is declared there, so it cannot be changed from this file.
+    env_file:
+      - path: .env.local
+        required: false
     environment:
       # The issuer, read from the one place that declares it (ADR-0001). What
       # Keycloak is told is derived from that string by dropping the realm
