@@ -166,6 +166,15 @@ Keycloak will not let a Person finish signing in until their first and last
 name are filled, because it assumes it owns their Profile. It does not, so the
 required action is disabled rather than the Identity being given a name.
 
+### Names are optional
+
+Keycloak's default user profile requires a first and a last name, and stops a
+Person arriving through an Identity Source for the first time on a page asking
+for them. A name is **Profile**, so the realm declares the user profile with
+both attributes optional. They are kept rather than removed: whether the
+Broker should hold a name a source sends at all is a question for the first
+source that sends one (#28).
+
 ### Development credentials in the file
 
 Every credential here is a development constant on purpose. This stack is
