@@ -38,7 +38,7 @@ The pull request check stays out for the same kind of reason: its input is a
 pull request's title and body, which do not exist until there is a pull
 request. `.github/workflows/pr.yaml` runs it and
 `scripts/check-pr-metadata.sh` is the check itself, runnable by hand with a
-title and a body as its two arguments.
+title and a body as its first two arguments.
 
 ## Dependency versions are exact
 
