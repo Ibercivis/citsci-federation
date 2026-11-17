@@ -8,14 +8,14 @@ import {
   verifyAccessToken,
 } from "./brokered-app.ts";
 import {
-  LABORATORY_IDENTITIES,
-  LABORATORY_SOURCE,
-  type LaboratoryIdentity,
-  signInAtLaboratory,
-} from "./laboratory-source.ts";
+  MOCK_IDENTITIES,
+  MOCK_SOURCE,
+  type MockIdentity,
+  signInAtMock,
+} from "./mock-source.ts";
 
 /**
- * The Laboratory Identity Source: an Identity Source this repository declares
+ * The Mock Identity Source: an Identity Source this repository declares
  * and runs itself, so that what a source says about an address can be decided
  * by hand. Google and GitHub cannot be driven from a test, and the cases that
  * hold ADR-0004 up need an Identity to arrive later, through another source,
@@ -30,19 +30,19 @@ import {
 const PERSON_IDENTIFIER =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}@ibercivis\.es$/;
 
-const arrivingAs = (identity: LaboratoryIdentity) => ({
+const arrivingAs = (identity: MockIdentity) => ({
   as: {
-    through: LABORATORY_SOURCE.name,
+    through: MOCK_SOURCE.name,
     username: identity,
-    password: LABORATORY_IDENTITIES[identity].password,
+    password: MOCK_IDENTITIES[identity].password,
   },
 });
 
-describe("a Person arriving through the Laboratory Identity Source", () => {
+describe("a Person arriving through the Mock Identity Source", () => {
   it("reaches a Brokered App with valid tokens and a Person Identifier", async () => {
     const { claims } = await authenticate(
       CONFIDENTIAL_CLIENT,
-      arrivingAs("lab-verified"),
+      arrivingAs("mock-verified"),
     );
 
     expect(claims.sub).toMatch(PERSON_IDENTIFIER);
@@ -54,11 +54,11 @@ describe("a Person arriving through the Laboratory Identity Source", () => {
     // nothing carries over between the arrivals but the Identity.
     const first = await authenticate(
       CONFIDENTIAL_CLIENT,
-      arrivingAs("lab-verified"),
+      arrivingAs("mock-verified"),
     );
     const second = await authenticate(
       CONFIDENTIAL_CLIENT,
-      arrivingAs("lab-verified"),
+      arrivingAs("mock-verified"),
     );
 
     expect(second.claims.sub).toBe(first.claims.sub);
@@ -68,7 +68,7 @@ describe("a Person arriving through the Laboratory Identity Source", () => {
     // The source knows this Identity as its username; a Brokered App must
     // never see that, anywhere, or it would key data against one Identity
     // instead of against the Person (ADR-0002).
-    const sourceSub = "lab-verified";
+    const sourceSub = "mock-verified";
     const { claims, accessToken } = await authenticate(
       CONFIDENTIAL_CLIENT,
       arrivingAs(sourceSub),
@@ -92,13 +92,13 @@ describe("a Person arriving through the Laboratory Identity Source", () => {
   });
 });
 
-describe("the Laboratory Identity Source on the Broker's sign-in page", () => {
+describe("the Mock Identity Source on the Broker's sign-in page", () => {
   it("tells a Person it is not a launch source", async () => {
     const { asked } = await authenticate(CONFIDENTIAL_CLIENT);
     const signInPage = asked.find((page) => page.kind === "sign-in");
 
     const offered = linkTextsOn(signInPage?.html ?? "").filter((text) =>
-      /laborator/i.test(text),
+      /mock/i.test(text),
     );
 
     expect(offered).toHaveLength(1);
@@ -113,14 +113,14 @@ describe("the Laboratory Identity Source on the Broker's sign-in page", () => {
  * two to disagree, and a source that quietly said the same thing in both would
  * let that case pass without ever staging what it is about.
  */
-describe("the Laboratory Identity Source says what it is told to", () => {
+describe("the Mock Identity Source says what it is told to", () => {
   it("can present an address as unverified", async () => {
     const { idToken, userinfo: fromUserinfo } =
-      await signInAtLaboratory("lab-unverified");
+      await signInAtMock("mock-unverified");
 
     for (const claims of [idToken, fromUserinfo]) {
       expect(claims).toMatchObject({
-        email: "shared@laboratory.test",
+        email: "shared@mock.test",
         email_verified: false,
       });
     }
@@ -128,14 +128,14 @@ describe("the Laboratory Identity Source says what it is told to", () => {
 
   it("can say one thing about an address in the ID token and another in userinfo", async () => {
     const { idToken, userinfo: fromUserinfo } =
-      await signInAtLaboratory("lab-split");
+      await signInAtMock("mock-split");
 
     expect(idToken).toMatchObject({
-      email: "split@laboratory.test",
+      email: "split@mock.test",
       email_verified: true,
     });
     expect(fromUserinfo).toMatchObject({
-      email: "shared@laboratory.test",
+      email: "shared@mock.test",
       email_verified: false,
     });
   });

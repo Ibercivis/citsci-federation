@@ -1,0 +1,24 @@
+{
+  "name": "Mock source (not for launch)",
+  "client": {
+    "id": "citsci-broker",
+    "secret": "mock-source-development-secret"
+  },
+  "identities": {
+    "mock-verified": {
+      "password": "mock",
+      "idToken": { "email": "shared@mock.test", "email_verified": true },
+      "userinfo": { "email": "shared@mock.test", "email_verified": true }
+    },
+    "mock-unverified": {
+      "password": "mock",
+      "idToken": { "email": "shared@mock.test", "email_verified": false },
+      "userinfo": { "email": "shared@mock.test", "email_verified": false }
+    },
+    "mock-split": {
+      "password": "mock",
+      "idToken": { "email": "split@mock.test", "email_verified": true },
+      "userinfo": { "email": "shared@mock.test", "email_verified": false }
+    }
+  }
+}

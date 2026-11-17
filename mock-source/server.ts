@@ -1,6 +1,6 @@
 /**
- * The Laboratory Identity Source: an OpenID provider that says exactly what
- * `laboratory.json` tells it to, and nothing it was not told.
+ * The Mock Identity Source: an OpenID provider that says exactly what
+ * `mock.json` tells it to, and nothing it was not told.
  *
  * It exists for the tests, and only for them. What it asserts about an
  * Identity's address is declared per Identity and **per destination**: the ID
@@ -16,7 +16,7 @@
 import { type JsonWebKey, createECDH, createHash } from "node:crypto";
 import { type IncomingMessage, createServer } from "node:http";
 import { type KoaContextWithOIDC, Provider } from "oidc-provider";
-import declaration from "./laboratory.json" with { type: "json" };
+import declaration from "./mock.json" with { type: "json" };
 
 type Identity =
   (typeof declaration.identities)[keyof typeof declaration.identities];
@@ -34,10 +34,10 @@ function required(name: string): string {
   return value;
 }
 
-const ISSUER = required("LABORATORY_ISSUER");
+const ISSUER = required("MOCK_ISSUER");
 /** The one client it serves is the Broker, which Keycloak calls back at this
- *  path for an Identity Source with the alias `laboratory`. */
-const BROKER_CALLBACK = `${required("BROKER_ISSUER")}/broker/laboratory/endpoint`;
+ *  path for an Identity Source with the alias `mock`. */
+const BROKER_CALLBACK = `${required("BROKER_ISSUER")}/broker/mock/endpoint`;
 
 /**
  * The signing key, the same on every start: derived from a declared seed, so
@@ -63,9 +63,7 @@ function derivedSigningKey(seed: string): JsonWebKey {
   };
 }
 
-const signingKey = derivedSigningKey(
-  "laboratory-source-development-signing-key",
-);
+const signingKey = derivedSigningKey("mock-source-development-signing-key");
 
 const provider = new Provider(ISSUER, {
   clients: [
@@ -78,7 +76,7 @@ const provider = new Provider(ISSUER, {
     },
   ],
   jwks: { keys: [{ ...signingKey, alg: "ES256", use: "sig" }] },
-  cookies: { keys: ["laboratory-source-development-cookie-key"] },
+  cookies: { keys: ["mock-source-development-cookie-key"] },
   claims: CLAIMS,
   // By default the ID token carries only `sub` when an access token is issued
   // alongside it, and the scope's claims are left to userinfo. Off, so the ID
@@ -159,10 +157,7 @@ const server = createServer((req, res) => {
     if (IDENTITIES[username]?.password !== form.get("password")) {
       res.writeHead(401, { "content-type": "text/html; charset=utf-8" });
       res.end(
-        signInPage(
-          uid,
-          "No laboratory Identity with that username and password.",
-        ),
+        signInPage(uid, "No mock Identity with that username and password."),
       );
       return;
     }
@@ -179,5 +174,5 @@ const server = createServer((req, res) => {
 });
 
 server.listen(Number(new URL(ISSUER).port || 80), () => {
-  console.log(`Laboratory Identity Source answering as ${ISSUER}`);
+  console.log(`Mock Identity Source answering as ${ISSUER}`);
 });

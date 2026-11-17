@@ -18,8 +18,8 @@ hostname means the same thing to a browser and to a container on the compose
 network, and `.env` says why.
 
 The one Identity the realm declares: `demo` / `demo`. Its sign-in page also
-offers the Laboratory Identity Source, whose Identities are declared in
-`laboratory-source/laboratory.json` (password `lab`).
+offers the Mock Identity Source, whose Identities are declared in
+`mock-source/mock.json` (password `mock`).
 
 Admin console: under the same origin, at `/admin` (`admin` / `admin`) — **for
 looking, not for changing.** A change made there is configuration no reviewer
@@ -185,16 +185,16 @@ So Keycloak is started with
 file instead, which makes it the default for every realm that declares none of
 its own. That option is read by the provider but not in its advertised list,
 so an upgrade could drop it without a word; the cases in
-`tests/laboratory-source.test.ts` are what notice, stopping on "Update Account
+`tests/mock-source.test.ts` are what notice, stopping on "Update Account
 Information". #65 replaces it: the step that layers the realm generates the
 `components` entry from this file, and the option goes.
 
-### The Laboratory Identity Source
+### The Mock Identity Source
 
-A test Identity Source this repository runs itself (`laboratory-source/`), so
+A test Identity Source this repository runs itself (`mock-source/`), so
 that what a source says about an address can be decided by hand: per Identity,
 and separately for the ID token and for userinfo. It is declared under the
-alias `laboratory`, with a display name that says it is not for launch, because
+alias `mock`, with a display name that says it is not for launch, because
 that name is what a Person reads on the sign-in page.
 
 - **`trustEmail` is off**, on this source and therefore everywhere: it is set
@@ -203,9 +203,9 @@ that name is what a Person reads on the sign-in page.
   one.
 - **Userinfo is on**, because the reported advisory this source exists to
   stage is about the address being read from userinfo. Being on is not the
-  same as being called: `laboratory-source/README.md` says what else that
+  same as being called: `mock-source/README.md` says what else that
   takes.
-- **Its endpoints are `${LABORATORY_ISSUER}/…`**, substituted from the
+- **Its endpoints are `${MOCK_ISSUER}/…`**, substituted from the
   environment by the realm import, so the address is declared once, in `.env`.
 
 ### Development credentials in the file

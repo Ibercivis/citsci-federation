@@ -3,7 +3,7 @@
 # Three services make up what a Brokered App sees as one frontier: a reverse
 # proxy, the OpenID provider behind it, and the provider's own database. A
 # fourth stands outside that frontier, where Google and GitHub stand: the
-# Laboratory Identity Source, which exists only for the tests. No Brokered
+# Mock Identity Source, which exists only for the tests. No Brokered
 # App's infrastructure is declared here: a Brokered App's development
 # environment stays in its own repository, and what this file knows about an
 # application is nothing at all.
@@ -74,9 +74,9 @@ services:
       # the realm path it serves under comes from the realm's own name, and
       # the discovery case fails loudly if the two disagree.
       BROKER_ISSUER: ${BROKER_ISSUER:?declare it in .env}
-      # Read by the realm import, which substitutes it into the Laboratory
+      # Read by the realm import, which substitutes it into the Mock
       # Identity Source's endpoints rather than spelling its address twice.
-      LABORATORY_ISSUER: ${LABORATORY_ISSUER:?declare it in .env}
+      MOCK_ISSUER: ${MOCK_ISSUER:?declare it in .env}
       # Behind the proxy, over HTTP, in production mode: the shape the ADR
       # asks for, with TLS terminated in front rather than absent.
       KC_HTTP_ENABLED: "true"
@@ -149,17 +149,17 @@ services:
       timeout: 5s
       retries: 20
 
-  # The Laboratory Identity Source: a test Identity Source this repository
+  # The Mock Identity Source: a test Identity Source this repository
   # declares and runs itself, so that what a source says about an address can
-  # be decided by hand (laboratory-source/). It is not a launch source and not
+  # be decided by hand (mock-source/). It is not a launch source and not
   # part of the Broker; it stands where Google and GitHub stand, outside it,
   # and that is why it is not behind the proxy.
-  laboratory-source:
+  mock-source:
     build:
       context: .
-      dockerfile: laboratory-source/Dockerfile
+      dockerfile: mock-source/Dockerfile
     environment:
-      LABORATORY_ISSUER: ${LABORATORY_ISSUER:?declare it in .env}
+      MOCK_ISSUER: ${MOCK_ISSUER:?declare it in .env}
       BROKER_ISSUER: ${BROKER_ISSUER:?declare it in .env}
     ports:
       - "8090:8090"
@@ -168,7 +168,7 @@ services:
         aliases:
           # The other half of its issuer, as for the proxy above: `.env`
           # says why one name has to work on both sides.
-          - laboratory.localhost
+          - mock.localhost
     healthcheck:
       test:
         [

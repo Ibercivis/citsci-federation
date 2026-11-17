@@ -4,5 +4,5 @@
 *
 !package.json
 !pnpm-lock.yaml
-!laboratory-source/server.ts
-!laboratory-source/laboratory.json
+!mock-source/server.ts
+!mock-source/mock.json

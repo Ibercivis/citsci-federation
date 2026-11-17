@@ -7,7 +7,7 @@
   //
   // `vitest` is here because most of the code in this repository is tests,
   // and `import`, `promise` and `node` because every one of its modules —
-  // the tests and the Laboratory Identity Source's server alike — is ESM
+  // the tests and the Mock Identity Source's server alike — is ESM
   // running on Node: those three plugins are the ones whose rules can fire
   // at all.
   "plugins": [

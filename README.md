@@ -18,21 +18,21 @@ Requires Docker, and Node with pnpm for the checks and the test suite.
 ```sh
 pnpm install
 pnpm broker:up      # Keycloak, its PostgreSQL, the reverse proxy in front,
-                    # and the Laboratory Identity Source the tests steer
+                    # and the Mock Identity Source the tests steer
 pnpm test           # drives the real OIDC protocol against it
 pnpm broker:down    # and removes the volume
 ```
 
 The Broker then answers at the issuer declared in [`.env`](.env), realm path
 included. Nothing else is needed: the realm, the clients, the one demo
-Identity and the laboratory Identities are declared in this repository and
+Identity and the mock Identities are declared in this repository and
 applied at start-up.
 
 ## What is declared here, and what is not
 
 `compose.yaml` declares the Broker — the reverse proxy, the OpenID provider
 behind it, and that provider's own database — and one Identity Source outside
-it, the Laboratory Identity Source in [`laboratory-source/`](laboratory-source/),
+it, the Mock Identity Source in [`mock-source/`](mock-source/),
 which exists so the tests can decide what a source says about an address. It
 is not a launch source. The proxy is in
 front **in every environment, including local** — the reason is parity of

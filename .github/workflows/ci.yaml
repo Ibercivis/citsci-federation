@@ -68,8 +68,8 @@ jobs:
       - run: pnpm test
 
       # Keycloak's own log is the only place that says why a flow was refused,
-      # and the runner is thrown away with it. The Laboratory Identity
+      # and the runner is thrown away with it. The Mock Identity
       # Source's is the other half of a refusal that happened there.
-      - name: The Broker's and the Laboratory Identity Source's logs, when the suite failed
+      - name: The Broker's and the Mock Identity Source's logs, when the suite failed
         if: failure()
-        run: docker compose logs keycloak laboratory-source
+        run: docker compose logs keycloak mock-source
