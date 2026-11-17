@@ -194,6 +194,10 @@
             "executor": "pkce-enforcer",
             "configuration": { "auto-configure": "false" }
           },
+          {
+            "executor": "reject-implicit-grant",
+            "configuration": { "auto-configure": "false" }
+          },
           { "executor": "secure-session", "configuration": {} }
         ]
       }

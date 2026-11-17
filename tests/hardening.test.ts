@@ -47,6 +47,34 @@ describe.each(EVERY_REGISTERED_CLIENT)(
       });
     });
 
+    // Every response type that hands a token to the browser at the
+    // authorization endpoint, where it lands in a URL: the implicit ones, and
+    // the hybrid ones. `code id_token` is here although it returns no access
+    // token, because the pilot allows the code flow and nothing beside it.
+    it.each([
+      "token",
+      "id_token",
+      "id_token token",
+      "code token",
+      "code id_token",
+      "code id_token token",
+    ])("refuses response_type=%s", async (responseType) => {
+      const result = await attempt(client, {
+        pkce: createPkce("S256"),
+        params: { response_type: responseType },
+      });
+
+      // Either code is a refusal, and which one arrives says only which of
+      // the Broker's checks caught the request first: a client that does not
+      // allow the flow is `unauthorized_client`, and the realm's rule against
+      // it is `invalid_request`. What matters is that an error came back and
+      // a token did not.
+      expect(result).toEqual({
+        outcome: "refused-at-authorization",
+        error: expect.stringMatching(/^(unauthorized_client|invalid_request)$/),
+      });
+    });
+
     it("refuses an authorization request that carries no nonce", async () => {
       const result = await attempt(client, {
         pkce: createPkce("S256"),
