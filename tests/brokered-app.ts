@@ -608,8 +608,9 @@ export interface AttemptOptions {
   /** The nonce to send, or null to send none. A fresh one by default, as a
    *  Brokered App sends on every request. */
   nonce?: string | null;
-  /** Redeem with this verifier instead of the pair's own. */
-  verifier?: string;
+  /** Redeem with this verifier instead of the pair's own, or null to redeem
+   *  with none. */
+  verifier?: string | null;
   /** Authorization parameters to add or override. */
   params?: Record<string, string>;
   /** Who signs in, and through which Identity Source; the realm's demo
@@ -660,7 +661,8 @@ export async function attempt(
   const code = new URL(dialogue.location).searchParams.get("code");
   if (!code) return refusedAtAuthorization(dialogue.location);
 
-  const verifier = options.verifier ?? options.pkce?.verifier;
+  const verifier =
+    options.verifier === undefined ? options.pkce?.verifier : options.verifier;
   const tokens = await redeemCode(client, {
     code,
     ...(verifier ? { code_verifier: verifier } : {}),

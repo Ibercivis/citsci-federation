@@ -62,6 +62,22 @@ describe.each(EVERY_REGISTERED_CLIENT)(
       });
     });
 
+    it("refuses to redeem a code with no verifier at all", async () => {
+      // Whoever intercepted a code has no verifier, so they send none. A
+      // Broker that checks a verifier only when one is offered has made PKCE
+      // optional at the token endpoint.
+      const result = await attempt(client, {
+        pkce: createPkce("S256"),
+        verifier: null,
+      });
+
+      expect(result).toEqual({
+        outcome: "refused-at-token",
+        status: 400,
+        error: "invalid_grant",
+      });
+    });
+
     // Every response type that hands a token to the browser at the
     // authorization endpoint, where it lands in a URL: the implicit ones, and
     // the hybrid ones. `code id_token` is here although it returns no access
