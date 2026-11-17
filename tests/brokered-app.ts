@@ -17,11 +17,6 @@ import { createRemoteJWKSet, jwtVerify } from "jose";
 import { type Client, DEMO_IDENTITY } from "./clients.ts";
 import { ISSUER, fetchDiscovery } from "./broker.ts";
 
-/** Everything the Broker serves lives under this origin, which is the one the
- *  configured issuer names (ADR-0001). It is how a browser here tells a page
- *  of the Broker's own dialogue from a redirect back to the application. */
-const BROKER_ORIGIN = new URL(ISSUER).origin;
-
 export type ChallengeMethod = "S256" | "plain";
 
 export interface Pkce {
@@ -46,31 +41,38 @@ export function createPkce(method: ChallengeMethod = "S256"): Pkce {
  * A browser, to the extent the flow needs one: something that carries cookies
  * between requests and does not follow redirects, so the authorization code
  * can be read off the Location header.
+ *
+ * Cookies are kept per host, as a browser keeps them. A sign-in through
+ * another Identity Source visits two servers, and sending one's cookies to the
+ * other is something no browser does and no server should be tested against.
  */
 export class Browser {
-  private readonly cookies = new Map<string, string>();
+  private readonly jars = new Map<string, Map<string, string>>();
 
-  /** The Cookie header for the next request, or nothing on a fresh browser. */
-  private cookieHeader(): Record<string, string> {
-    if (this.cookies.size === 0) return {};
-    const jar = [...this.cookies].map(([k, v]) => `${k}=${v}`).join("; ");
-    return { cookie: jar };
+  /** The Cookie header for a request to this address, or nothing at all. */
+  private cookieHeader(url: string): Record<string, string> {
+    const jar = this.jars.get(new URL(url).host);
+    if (!jar || jar.size === 0) return {};
+    return { cookie: [...jar].map(([k, v]) => `${k}=${v}`).join("; ") };
   }
 
-  private remember(response: Response): void {
+  private remember(url: string, response: Response): void {
+    const host = new URL(url).host;
+    const jar = this.jars.get(host) ?? new Map<string, string>();
+    this.jars.set(host, jar);
     for (const cookie of response.headers.getSetCookie()) {
       const pair = cookie.split(";", 1)[0] ?? "";
       const eq = pair.indexOf("=");
-      if (eq > 0) this.cookies.set(pair.slice(0, eq), pair.slice(eq + 1));
+      if (eq > 0) jar.set(pair.slice(0, eq), pair.slice(eq + 1));
     }
   }
 
   async get(url: string): Promise<Response> {
     const response = await fetch(url, {
       redirect: "manual",
-      headers: this.cookieHeader(),
+      headers: this.cookieHeader(url),
     });
-    this.remember(response);
+    this.remember(url, response);
     return response;
   }
 
@@ -79,12 +81,12 @@ export class Browser {
       method: "POST",
       redirect: "manual",
       headers: {
-        ...this.cookieHeader(),
+        ...this.cookieHeader(url),
         "content-type": "application/x-www-form-urlencoded",
       },
       body: new URLSearchParams(form).toString(),
     });
-    this.remember(response);
+    this.remember(url, response);
     return response;
   }
 }
@@ -122,12 +124,12 @@ const unescapeHtml = (value: string): string =>
  * a path relative to the page it was served at, so reading the HTML without
  * the address it came from cannot say where a submission goes.
  */
-interface Page {
+export interface Page {
   url: string;
   html: string;
 }
 
-interface HtmlForm {
+export interface HtmlForm {
   /** Where the form submits to, resolved against the page it was read from. */
   action: string;
   /** The values the form carries, which a browser sends back unchanged. */
@@ -156,7 +158,7 @@ const PRESSABLE = new Set(["submit", "button", "image"]);
  * not this harness's business, and a theme changing them is not a change in
  * the Broker's behaviour.
  */
-function formsOn(page: Page): HtmlForm[] {
+export function formsOn(page: Page): HtmlForm[] {
   return [...page.html.matchAll(/<form\b([^>]*)>([\s\S]*?)<\/form>/g)].map(
     ([, attributes, body]) => {
       const fields: Record<string, string> = {};
@@ -183,6 +185,55 @@ function formsOn(page: Page): HtmlForm[] {
   );
 }
 
+/** The text a link shows a Person, with its markup taken out. */
+const visibleText = (html: string): string =>
+  unescapeHtml(html.replace(/<[^>]*>/g, " "))
+    .replace(/\s+/g, " ")
+    .trim();
+
+/** The links in some HTML, by what they say and where they point as written. */
+function anchorsIn(html: string): Array<{ text: string; href: string }> {
+  return [...html.matchAll(/<a\b([^>]*)>([\s\S]*?)<\/a>/g)].flatMap(
+    ([, attributes, body]) => {
+      const href = attributesOf(attributes ?? "").href;
+      return href ? [{ text: visibleText(body ?? ""), href }] : [];
+    },
+  );
+}
+
+/**
+ * The links on a page, by what they say, pointing where a browser would go.
+ * How an Identity Source is offered on a sign-in page is a link a Person reads
+ * and follows, so that is how it is found: by the name it shows, never by an
+ * element id this provider's templates happen to give it.
+ */
+function linksOn(page: Page): Array<{ text: string; href: string }> {
+  return anchorsIn(page.html).map((link) => ({
+    text: link.text,
+    href: new URL(link.href, page.url).href,
+  }));
+}
+
+/** What each link on a page says, for a case that reads what a Person was
+ *  offered. */
+export const linkTextsOn = (html: string): string[] =>
+  anchorsIn(html).map((link) => link.text);
+
+/**
+ * Who signs in, and through which Identity Source. `through` is the source's
+ * name as the Broker's sign-in page shows it; absent, the Person signs in with
+ * a Local Credential on the Broker's own form.
+ */
+export interface Arrival {
+  through?: string;
+  username: string;
+  password: string;
+}
+
+type Question =
+  | { asks: "sign-in" | "consent"; form: HtmlForm }
+  | { asks: "choose-source"; href: string };
+
 /**
  * What the Broker is asking for on this page, and the form to answer it with.
  *
@@ -190,8 +241,20 @@ function formsOn(page: Page): HtmlForm[] {
  * that decides whether a flow ever reached a Person and the loop that answers
  * the questions would otherwise each carry their own idea of it, and could
  * disagree.
+ *
+ * A Person arriving through another Identity Source is offered it beside the
+ * Broker's own form, and follows it rather than filling the form in. The
+ * sign-in form they meet next is that source's, and it is answered the same
+ * way: a username and a password, whoever is asking.
  */
-function question(page: Page): { asks: Asked["kind"]; form: HtmlForm } | null {
+function question(page: Page, arrival: Arrival): Question | null {
+  if (arrival.through) {
+    // By the name it carries, wherever in the link's wording that is: a
+    // provider says "Sign in with" around it, and that is not the name.
+    const name = arrival.through;
+    const source = linksOn(page).find((link) => link.text.includes(name));
+    if (source) return { asks: "choose-source", href: source.href };
+  }
   const forms = formsOn(page);
   // A form asking for a username and a password is a sign-in, whatever page
   // it is on and whatever the theme calls it.
@@ -242,19 +305,28 @@ function submit(
   });
 }
 
-/** Where a browser came to rest: still inside the Broker, on some page of its
- *  dialogue, or back at the application that sent it. */
-type Landing =
+/** Where a browser came to rest: on some page of the dialogue — the Broker's,
+ *  or an Identity Source's it was sent to — or back at the application that
+ *  sent it. */
+export type Landing =
   | { at: "the application"; location: string }
-  | { at: "the Broker"; page: Page };
+  | { at: "a page"; page: Page };
 
 /** How many redirects a browser will follow before calling it a loop. */
 const MAX_HOPS = 10;
 
+/** Whether an address is this client's own callback: the one place a flow
+ *  ends, whether it ends in a code or in an error. */
+function isCallbackOf(client: Client, address: URL): boolean {
+  const callback = new URL(client.redirectUri);
+  return (
+    address.origin === callback.origin && address.pathname === callback.pathname
+  );
+}
+
 /**
- * Follows redirects the way a browser does, and stops at the first one that
- * leaves the Broker: that one is the application's own callback, which is
- * where the authorization code is read off.
+ * Follows redirects the way a browser does, and stops at the client's own
+ * callback, which is where the authorization code is read off.
  *
  * Following them matters because the Broker conducts its dialogue across
  * several pages — signing in and granting consent are not the same request —
@@ -262,8 +334,16 @@ const MAX_HOPS = 10;
  * back to the application. A harness that read the first Location as the end
  * of the flow would report a refusal every time the Broker asked a Person a
  * second question.
+ *
+ * It ends at the callback rather than at the first redirect leaving the
+ * Broker, because a Person arriving through another Identity Source leaves
+ * the Broker in the middle of the flow and comes back to it.
  */
-async function follow(browser: Browser, response: Response): Promise<Landing> {
+export async function follow(
+  browser: Browser,
+  response: Response,
+  client: Client,
+): Promise<Landing> {
   let current = response;
   for (let hop = 0; hop < MAX_HOPS; hop += 1) {
     const location = current.headers.get("location");
@@ -271,10 +351,10 @@ async function follow(browser: Browser, response: Response): Promise<Landing> {
       // Carrying the address it was served at, because a form on it may
       // submit to a path relative to that rather than to one spelled out.
       const page = { url: current.url, html: await current.text() };
-      return { at: "the Broker", page };
+      return { at: "a page", page };
     }
-    const target = new URL(location, BROKER_ORIGIN);
-    if (target.origin !== BROKER_ORIGIN) {
+    const target = new URL(location, current.url);
+    if (isCallbackOf(client, target)) {
       return { at: "the application", location: target.href };
     }
     current = await browser.get(target.href);
@@ -294,7 +374,7 @@ async function follow(browser: Browser, response: Response): Promise<Landing> {
  * of the Broker that only its dialogue shows.
  */
 export interface Asked {
-  kind: "sign-in" | "consent";
+  kind: Question["asks"];
   /** What the page said, so a case can read what a Person was shown. */
   html: string;
 }
@@ -304,15 +384,41 @@ type Dialogue =
   | { outcome: "redirected"; location: string; asked: Asked[] }
   | { outcome: "stuck"; complaint: string; asked: Asked[] };
 
-/** The most questions the Broker's dialogue asks here: signing in, and
- *  consenting. A dialogue that asks a third is one this stand-in app cannot
- *  drive, and it says so rather than looping. */
-const MOST_QUESTIONS_ASKED = 2;
+/** The most questions a dialogue asks here: choosing an Identity Source,
+ *  signing in at it, and consenting. A dialogue that asks one more is one this
+ *  stand-in app cannot drive, and it says so rather than looping. */
+const MOST_QUESTIONS_ASKED = 3;
+
+/** Who signs in when a case does not say: the realm's one Local Credential. */
+const DEMO_ARRIVAL: Arrival = {
+  username: DEMO_IDENTITY.username,
+  password: DEMO_IDENTITY.password,
+};
+
+/** Answers one question the way the arriving Person would. */
+function answer(
+  browser: Browser,
+  asking: Question,
+  arrival: Arrival,
+): Promise<Response> {
+  if (asking.asks === "choose-source") return browser.get(asking.href);
+  if (asking.asks === "sign-in") {
+    return submit(
+      browser,
+      asking.form,
+      { username: arrival.username, password: arrival.password },
+      "login",
+    );
+  }
+  // Pressing Yes, and only Yes. The same form offers No, and a Person who
+  // pressed both granted nothing.
+  return submit(browser, asking.form, {}, "accept");
+}
 
 /**
- * Drives the dialogue the Broker conducts in the browser — signing in, and
- * granting consent when it is asked for — until it redirects back to the
- * application.
+ * Drives the dialogue conducted in the browser — choosing an Identity Source
+ * when the Person arrives through one, signing in, and granting consent when
+ * it is asked for — until it redirects back to the application.
  *
  * Consent is one page for a Person who has not granted it to this application
  * before and no page at all afterwards, because the Broker remembers a grant
@@ -322,32 +428,20 @@ const MOST_QUESTIONS_ASKED = 2;
 async function completeDialogue(
   browser: Browser,
   firstPage: Page,
+  client: Client,
+  arrival: Arrival,
 ): Promise<Dialogue> {
   let page = firstPage;
   const asked: Asked[] = [];
   for (let step = 0; step < MOST_QUESTIONS_ASKED; step += 1) {
-    const asking = question(page);
+    const asking = question(page, arrival);
     if (!asking) {
       return { outcome: "stuck", complaint: pageComplaint(page), asked };
     }
     asked.push({ kind: asking.asks, html: page.html });
 
-    const response =
-      asking.asks === "sign-in"
-        ? await submit(
-            browser,
-            asking.form,
-            {
-              username: DEMO_IDENTITY.username,
-              password: DEMO_IDENTITY.password,
-            },
-            "login",
-          )
-        : // Pressing Yes, and only Yes. The same form offers No, and a Person
-          // who pressed both granted nothing.
-          await submit(browser, asking.form, {}, "accept");
-
-    const landing = await follow(browser, response);
+    const response = await answer(browser, asking, arrival);
+    const landing = await follow(browser, response, client);
     if (landing.at === "the application") {
       return { outcome: "redirected", location: landing.location, asked };
     }
@@ -515,6 +609,9 @@ export interface AttemptOptions {
   verifier?: string;
   /** Authorization parameters to add or override. */
   params?: Record<string, string>;
+  /** Who signs in, and through which Identity Source; the realm's demo
+   *  Identity, on the Broker's own form, when absent. */
+  as?: Arrival;
 }
 
 /** Runs a flow and reports where it died, or that it did not. */
@@ -530,7 +627,8 @@ export async function attempt(
   }
 
   const authorization = await requestAuthorization(browser, client, params);
-  const landing = await follow(browser, authorization);
+  const arrival = options.as ?? DEMO_ARRIVAL;
+  const landing = await follow(browser, authorization, client);
   if (landing.at === "the application") {
     // Sent straight back without a Person being asked anything: the Broker
     // turned the request away at the authorization endpoint.
@@ -538,7 +636,7 @@ export async function attempt(
   }
 
   const { page } = landing;
-  if (!question(page)) {
+  if (!question(page, arrival)) {
     // A page that asks a Person nothing is not a dialogue: the Broker said no
     // without ever offering a way through.
     return {
@@ -547,7 +645,7 @@ export async function attempt(
     };
   }
 
-  const dialogue = await completeDialogue(browser, page);
+  const dialogue = await completeDialogue(browser, page, client, arrival);
   if (dialogue.outcome === "stuck") {
     return { outcome: "refused-in-the-browser", complaint: dialogue.complaint };
   }

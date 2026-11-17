@@ -18,20 +18,23 @@ const ENV_FILE = join(import.meta.dirname, "..", ".env");
  * exactly the same — it compares `iss` against the value it was configured
  * with, and needs nothing stored to do it.
  */
-export const ISSUER = readIssuer();
+export const ISSUER = configured("BROKER_ISSUER");
 
-function readIssuer(): string {
-  if (!process.env.BROKER_ISSUER) process.loadEnvFile(ENV_FILE);
-  const issuer = process.env.BROKER_ISSUER;
-  if (!issuer) {
+/**
+ * A value the stack declares in `.env`, read from the environment when it is
+ * set there and from the file when it is not. There is no default to fall
+ * back to: an issuer is configuration (ADR-0001), and a guessed one is the one
+ * thing a Brokered App cannot be lied to about.
+ */
+export function configured(name: string): string {
+  if (!process.env[name]) process.loadEnvFile(ENV_FILE);
+  const value = process.env[name];
+  if (!value) {
     throw new Error(
-      `No BROKER_ISSUER in the environment and none declared in ${ENV_FILE}. ` +
-        "The issuer is configuration (ADR-0001); there is no default to fall " +
-        "back to, because a guessed issuer is the one thing a Brokered App " +
-        "cannot be lied to about.",
+      `No ${name} in the environment and none declared in ${ENV_FILE}.`,
     );
   }
-  return issuer;
+  return value;
 }
 
 /** Discovery, at the one path the specification puts it at. */
