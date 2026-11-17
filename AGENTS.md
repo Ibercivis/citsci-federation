@@ -2,17 +2,15 @@
 
 ## Language
 
-**Write every document in English**, including the gitignored notes under `docs/private/`: ADRs,
-`GLOSSARY.md`, specs, agent docs, orientation docs, issue and PR bodies, commit messages. This
-holds whatever language the request was made in — a Spanish prompt still produces English documents.
-Reply to the user in their language; write the files in English. See ADR-0008.
+**Write every document in English**: ADRs, `GLOSSARY.md`, specs, agent docs, orientation docs,
+issue and PR bodies, commit messages, and the gitignored notes under `docs/private/`. A Spanish
+prompt still produces English documents. Reply to the user in their language. See ADR-0008.
 
-Documents, not conversations: text addressed to someone outside the project (a mail to a supplier,
-a message to a partner) is drafted in the language that person reads, and what the repo keeps is the
-English record of it, noting at the top when the original was sent in another language.
+Text addressed outside the project — a mail to a supplier, a message to a partner — is drafted in
+the language that person reads. The repo keeps the English record, noting at the top when the
+original went out in another language.
 
-If you find Spanish in a document you are already editing, translate that document as part of the
-change rather than leaving it half-translated.
+Translate any Spanish you find in a document you are already editing, as part of the change.
 
 ## What goes in a document
 
