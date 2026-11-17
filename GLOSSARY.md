@@ -72,6 +72,12 @@ An Identity whose Identity Source is the Broker itself: an email address and a p
 holds. It is one Identity Source among the others, and no Brokered App can tell it apart from them.
 _Avoid_: local account, password login, native user, usuario local
 
+**Laboratory Identity Source**:
+An Identity Source this repository runs only so the tests can decide what a source says about an
+address. It vouches for nobody, it is never a launch source, and its name says so wherever a Person
+could see it.
+_Avoid_: test IdP, mock provider, lab IdP
+
 **Verified Email**:
 An email address belonging to an Identity, affirmed as verified either by the Identity Source or by
 the Broker's own confirmation. It is the one key that decides whether a new Identity belongs to an

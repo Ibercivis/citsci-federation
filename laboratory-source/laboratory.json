@@ -1,0 +1,24 @@
+{
+  "name": "Laboratory source (not for launch)",
+  "client": {
+    "id": "citsci-broker",
+    "secret": "laboratory-source-development-secret"
+  },
+  "identities": {
+    "lab-verified": {
+      "password": "lab",
+      "idToken": { "email": "shared@laboratory.test", "email_verified": true },
+      "userinfo": { "email": "shared@laboratory.test", "email_verified": true }
+    },
+    "lab-unverified": {
+      "password": "lab",
+      "idToken": { "email": "shared@laboratory.test", "email_verified": false },
+      "userinfo": { "email": "shared@laboratory.test", "email_verified": false }
+    },
+    "lab-split": {
+      "password": "lab",
+      "idToken": { "email": "split@laboratory.test", "email_verified": true },
+      "userinfo": { "email": "shared@laboratory.test", "email_verified": false }
+    }
+  }
+}
