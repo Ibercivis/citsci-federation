@@ -1,0 +1,72 @@
+# What bumps the exact versions in `package.json`. Nothing else does, and
+# `CODING_STANDARDS.md` says why they are exact.
+#
+# No `commit-message` prefix, here or below. Dependabot's own subject — `Bump
+# the toolchain group with 3 updates` — already has the shape
+# `scripts/check-pr-metadata.sh` asks of every title landing in `main`, and a
+# `chore(deps):` prefix would be refused by that check. Dependabot can also
+# infer a prefix from recent history; what stops it is `CODING_STANDARDS.md`
+# refusing Conventional Commits for everybody.
+version: 2
+
+updates:
+  # The toolchain, as one pull request. Ungrouped, exact pins mean one pull
+  # request per dependency per bump, which is how Dependabot gets muted.
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: weekly
+    groups:
+      toolchain:
+        dependency-type: development
+        patterns:
+          - "*"
+    # `jose` arrives on its own, and needs no rule to: a group declaring
+    # `dependency-type: development` claims the devDependencies and nothing
+    # else. That is the point — it verifies the Broker's tokens, so a bump of
+    # it should cost a reading.
+    #
+    # `increase` is declared, not left to the default: a bump rewrites the pin
+    # and never widens it to a range.
+    versioning-strategy: increase
+
+  # The actions in the workflows, pinned by SHA with the version in a trailing
+  # comment. Dependabot keeps both in step, which is why this ecosystem is on:
+  # a SHA pin is also the thing nobody updates by hand.
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns:
+          - "*"
+
+  # The images in `compose.yaml`: Caddy and PostgreSQL.
+  #
+  # `docker-compose`, not `docker`: the `docker` ecosystem reads Dockerfiles
+  # and Kubernetes manifests only, so pointed here it reads nothing in this
+  # file.
+  #
+  # Ungrouped, unlike the two above: a PostgreSQL major arrives with a data
+  # directory to migrate, and that is not read in a batch with Caddy.
+  - package-ecosystem: docker-compose
+    directory: "/"
+    schedule:
+      interval: weekly
+    # Keycloak does not move on its own: ADR-0004 rests on how that version
+    # treats a verified email address, so that bump is read against the ADR and
+    # made by hand. The image lives in `broker/Dockerfile` now and not here, so
+    # this rule guards nothing until an image returns to this file — and it is
+    # the rule the `docker` ecosystem will need.
+    #
+    # The name carries no registry, and that is the trap. `broker/Dockerfile`
+    # says `quay.io/keycloak/keycloak`, but Dependabot keeps only the image as
+    # the dependency's name and files `quay.io` as its source
+    # (`build_dependency` in dependabot-core's `shared/shared_file_parser.rb`).
+    # The fuller spelling matches nothing and silently disables the rule.
+    ignore:
+      - dependency-name: keycloak/keycloak
+
+# The `docker` ecosystem is off, and `broker/Dockerfile` is what it would read;
+# `docs/verification.md` carries that gap with the other absent tools.

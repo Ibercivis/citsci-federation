@@ -53,3 +53,6 @@ and the diff is not yours", on whichever machine installed last. CI runs
 `pnpm install --frozen-lockfile`, which is what makes these versions mean
 anything; nothing stops the next `pnpm add` from writing a caret except this
 paragraph.
+
+Nothing above notices a pin going stale. `.github/dependabot.yml` is what
+does.
