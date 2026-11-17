@@ -1,0 +1,4 @@
+# Only the mapper is built from this directory; the rest is not the image's.
+*
+!person-identifier/pom.xml
+!person-identifier/src/
