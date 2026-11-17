@@ -21,7 +21,7 @@ services:
   # Keycloak publishes no port of its own — there is no way to reach the
   # Broker here that bypasses the shape production will have.
   proxy:
-    image: caddy:2.10-alpine
+    image: caddy:2.11-alpine
     ports:
       - "8080:8080"
     volumes:
