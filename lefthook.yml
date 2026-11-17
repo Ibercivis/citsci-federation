@@ -26,9 +26,8 @@ pre-commit:
     - name: internal notes stay out of this public repository
       run: ./scripts/guard-private.sh
 
-    # Content, not paths: guard-private.sh above stops the private notes from
-    # entering this repository, and this stops a credential pasted straight into
-    # a tracked file. No glob, because a secret is not choosy about extensions.
+    # Content, not paths: guard-private.sh above checks where a file goes, this
+    # checks what is in it. No glob — a secret is not choosy about extensions.
     - name: no credential reaches a commit
       run: ./scripts/check-no-credentials.sh {staged_files}
 

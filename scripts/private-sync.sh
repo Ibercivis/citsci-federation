@@ -65,20 +65,13 @@ case "${1:-}" in
     if [ -n "$(git_private status --porcelain)" ]; then
       git_private add -A
 
-      # Scan before committing, and hold back what looks like a credential.
+      # The only commit here nobody reads: `add -A`, `--no-verify`, push. A
+      # credential dropped in by mistake is published before anyone can
+      # reconsider, and a private history keeps it as long as a public one.
       #
-      # This is the one place in the project where a commit happens with nobody
-      # reading it: `add -A` takes whatever the turn left behind, `--no-verify`
-      # means a pre-commit hook in there cannot intervene, and the push follows
-      # at once. A file dropped here by mistake is therefore published before it
-      # can be reconsidered, and the one class of file that cannot survive that
-      # is a live credential — a private repository keeps it in the history just
-      # as faithfully as a public one would.
-      #
-      # Held back rather than refused: the rest of the turn's notes are worth
-      # committing, and a sync that stops dead because one file is wrong is a
-      # sync somebody switches off. The file stays in the working tree, named in
-      # a warning, until a person deals with it.
+      # Held back, not refused — a sync that stops dead over one file is a sync
+      # somebody switches off. The file stays in the working tree, named in a
+      # warning, until a person deals with it.
       withheld=
       if [ -x "$scanner" ]; then
         oldifs=$IFS
@@ -94,18 +87,16 @@ case "${1:-}" in
         done
         IFS=$oldifs
       else
-        # Warn and carry on rather than block. The scanner lives in the public
-        # repository beside this script, so it goes missing only in a half-made
-        # checkout, and a guard that stops all note-taking over a chmod is a
-        # guard with a short life.
-        echo "internal notes: credential scanner missing or not executable; committing unchecked." >&2
-        echo "  expected at: scripts/check-no-credentials.sh" >&2
+        # Warn and carry on: the scanner sits beside this script, so it is
+        # missing only in a half-made checkout, and a guard that stops all
+        # note-taking over a chmod gets switched off.
+        echo "internal notes: scripts/check-no-credentials.sh missing or not executable; committing unchecked." >&2
       fi
 
       if [ -n "$withheld" ]; then
-        echo "internal notes: NOT committed, held back in docs/private/ — the lines above are shaped like live credentials:" >&2
+        echo "internal notes: held back in docs/private/, not committed, not published:" >&2
         printf '    %s\n' $withheld >&2
-        echo "  nothing was published. Move the value to the shared vault and reference the entry." >&2
+        echo "  move the value to the shared vault and reference the entry." >&2
       fi
 
       if [ -n "$(git_private diff --cached --name-only)" ]; then
