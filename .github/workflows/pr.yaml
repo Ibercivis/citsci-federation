@@ -27,4 +27,7 @@ jobs:
         env:
           PR_TITLE: ${{ github.event.pull_request.title }}
           PR_BODY: ${{ github.event.pull_request.body }}
-        run: ./scripts/check-pr-metadata.sh "$PR_TITLE" "$PR_BODY"
+          # One rule exempts Dependabot, or its bumps are unmergeable here;
+          # the script says which rule and why.
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+        run: ./scripts/check-pr-metadata.sh "$PR_TITLE" "$PR_BODY" "$PR_AUTHOR"

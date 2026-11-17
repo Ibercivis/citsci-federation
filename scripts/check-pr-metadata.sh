@@ -4,12 +4,14 @@
 # `PR_TITLE`, `merge_commit_message` is `PR_BODY`, and both stay editable
 # after review.
 #
-# Usage: scripts/check-pr-metadata.sh "<title>" "<body>"
+# Usage: scripts/check-pr-metadata.sh "<title>" "<body>" [<author>]
 
 set -euo pipefail
 
 title=${1-}
 body=${2-}
+# Read by one rule below, which says why. Absent, every rule applies.
+author=${3-}
 
 # A ceiling, not a target: it refuses a title that turned into a paragraph.
 # The published subject runs longer — GitHub appends " (#123)" and the `[#12]`
@@ -46,7 +48,17 @@ fi
 
 # Either half may carry the reference; both land in the same commit. Spelling
 # out `No ticket` makes an unticketed change a sentence somebody wrote.
-if [[ ! ${title}${body} =~ (#[0-9]+|No\ ticket) ]]; then
+#
+# Which is why this rule, alone among them, asks who opened the pull request.
+# A Dependabot body quotes an upstream changelog, so a `#1234` in it belongs
+# to another repository: left to apply, this rule would pass a bump whose
+# release notes happen to cite one and fail the same bump the week they do
+# not.
+#
+# One bot by name, not every `[bot]`: the next bot may be one that opens a
+# pull request from a ticket and can name it, and that one should be refused
+# here and read. Every other rule still applies to a bot's title and body.
+if [[ $author != "dependabot[bot]" && ! ${title}${body} =~ (#[0-9]+|No\ ticket) ]]; then
   fail "No issue reference (#12) in the title or the body. Write 'No ticket' if there is none."
 fi
 

@@ -47,7 +47,8 @@ those two strings are published as the merge commit's subject and message, and u
 message they stay editable after review. It asks
 for a title short enough for a subject line and a body that says something, and for an issue
 reference in one of them or the words `No ticket`. The rules live in
-`scripts/check-pr-metadata.sh`, each next to the reason it exists.
+`scripts/check-pr-metadata.sh`, each next to the reason it exists. The issue reference, alone among
+them, does not apply to a pull request opened by `dependabot[bot]`; the script says why.
 
 Which row a new check joins is not a free choice, and the rule is not here: `CODING_STANDARDS.md`
 holds it, along with the reason the suite and `pr` are the two that stay out of `pnpm check`.
