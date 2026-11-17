@@ -149,6 +149,36 @@
       "secret": "brokered-app-confidential-development-secret"
     }
   ],
+  "identityProviders": [
+    {
+      "alias": "laboratory",
+      "displayName": "Laboratory source (not for launch)",
+      "providerId": "oidc",
+      "enabled": true,
+      "trustEmail": false,
+      "storeToken": false,
+      "addReadTokenRoleOnCreate": false,
+      "linkOnly": false,
+      "hideOnLogin": false,
+      "config": {
+        "issuer": "${LABORATORY_ISSUER}",
+        "authorizationUrl": "${LABORATORY_ISSUER}/auth",
+        "tokenUrl": "${LABORATORY_ISSUER}/token",
+        "userInfoUrl": "${LABORATORY_ISSUER}/me",
+        "jwksUrl": "${LABORATORY_ISSUER}/jwks",
+        "useJwksUrl": "true",
+        "validateSignature": "true",
+        "disableUserInfo": "false",
+        "clientId": "citsci-broker",
+        "clientSecret": "laboratory-source-development-secret",
+        "clientAuthMethod": "client_secret_post",
+        "defaultScope": "openid email",
+        "pkceEnabled": "true",
+        "pkceMethod": "S256",
+        "syncMode": "IMPORT"
+      }
+    }
+  ],
   "users": [
     {
       "username": "demo",
