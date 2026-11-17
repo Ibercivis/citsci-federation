@@ -47,6 +47,15 @@ repository has its own issues, and `docs/private/` is committed by its script.
 left #52 open. A pull request that finishes a ticket carries that line; one that advances it says
 `Part of #<n>`.
 
+**Name the kind when you mention one**: `issue #62`, `PR #63`. A bare `#62` is ambiguous, because
+GitHub numbers both from one sequence — a pull request is an issue in its data model, which is why
+`/issues/69` redirects to `/pull/69`. This holds in a reply to the user as much as in a document.
+
+The spellings a machine reads are exempt and stay bare: the `[#62]` commit prefix, and `Closes #<n>`
+or `Part of #<n>` in a body. GitHub and the hook below match those literally. When a number is
+already in hand and its kind is not, `gh pr view <n>` settles it by failing on an issue; `gh issue
+view <n>` answers for both and settles nothing.
+
 Two hooks hold this up: one refuses a pull request that says neither, the other assigns the issue
 when work lands on an `issue-<n>` branch, which is what a claim means here.
 
