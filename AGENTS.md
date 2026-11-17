@@ -38,22 +38,22 @@ register of whatever it reads, which is why this file is written the way it is.
 
 GitHub Issues in `Ibercivis/citsci-federation`, via the `gh` CLI. See `docs/agents/issue-tracker.md`.
 
-A commit in this repository opens its subject with the issue it serves, as `[#51] Rename Federated
-App to Brokered App`, so its origin shows in `git log --oneline`; a commit no issue asked for opens
-with its subject alone. Only this repository's commits: an application repository has issues of
-its own, and `docs/private/` is committed by its script.
+A commit subject opens with the issue it serves: `[#51] Rename Federated App to Brokered App`. A
+commit no issue asked for opens with its subject alone. This repository only — an application
+repository has its own issues, and `docs/private/` is committed by its script.
 
-**That prefix is traceability; the pull request body is what closes the ticket.** GitHub acts only
-on `Closes #<n>` in the body, and only on a merge into the default branch — #55 merged without one
-and left #52 open. A pull request that finishes a ticket carries that line; one that merely advances
-it says `Part of #<n>`. Two hooks hold this up rather than trusting anyone to remember it: one
-refuses a pull request that says neither, the other assigns the issue the moment work lands on an
-`issue-<n>` branch, which is what this repository means by a claim.
+**The prefix is traceability. The pull request body closes the ticket.** GitHub acts only on
+`Closes #<n>` in the body, and only on a merge into the default branch; #55 merged without one and
+left #52 open. A pull request that finishes a ticket carries that line; one that advances it says
+`Part of #<n>`.
+
+Two hooks hold this up: one refuses a pull request that says neither, the other assigns the issue
+when work lands on an `issue-<n>` branch, which is what a claim means here.
 
 ### Review replies
 
-An agent never posts a reply to a review comment the user hasn't read. Draft them, show them, post
-only what the user approved in that turn — `gh` and the GitHub UI are the same thing here.
+An agent never posts a reply to a review comment the user has not read. Draft it, show it, post
+only what the user approved in that turn. `gh` and the GitHub UI are the same thing here.
 
 ### Triage labels
 
@@ -61,13 +61,13 @@ The five canonical triage labels, unchanged. See `docs/agents/triage-labels.md`.
 
 ### Merging
 
-An agent never merges a pull request — not with `gh`, not in the web UI, and not by asking for
+An agent never merges a pull request: not with `gh`, not in the web UI, not by asking for
 auto-merge, which is off at the repository and not an agent's to turn back on. Every merge is a
 human pressing the button after reading the diff. Green checks are the precondition, never the
 verdict. See ADR-0014.
 
 Bring a branch up to date by rebasing it onto `main`, never by merging `main` into it, so the only
-merge commit in its history is the one that lands it. Not once somebody else has pulled the branch:
+merge commit in its history is the one that lands it. Stop once somebody else has pulled the branch:
 rewriting it under them is worse than the merge commit it saves.
 
 ### Domain docs
