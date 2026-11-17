@@ -5,10 +5,11 @@
   // the three oxlint enables on its own (oxc, typescript, unicorn) are listed
   // here too. Dropping one from this list turns it off.
   //
-  // `vitest` is here because the tests are the only code in this repository
-  // today, and `import`, `promise` and `node` because every one of its
-  // modules is ESM running on Node: those three plugins are the ones whose
-  // rules can fire at all.
+  // `vitest` is here because most of the code in this repository is tests,
+  // and `import`, `promise` and `node` because every one of its modules —
+  // the tests and the Mock Identity Source's server alike — is ESM
+  // running on Node: those three plugins are the ones whose rules can fire
+  // at all.
   "plugins": [
     "oxc",
     "typescript",

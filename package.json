@@ -20,10 +20,12 @@
     "prepare": "lefthook install"
   },
   "dependencies": {
-    "jose": "6.2.17"
+    "jose": "6.2.17",
+    "oidc-provider": "9.15.0"
   },
   "devDependencies": {
     "@types/node": "24.19.2",
+    "@types/oidc-provider": "9.13.1",
     "lefthook": "2.2.2",
     "oxfmt": "0.78.0",
     "oxlint": "1.93.0",

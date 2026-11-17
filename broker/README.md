@@ -17,7 +17,9 @@ Discovery: `$BROKER_ISSUER/.well-known/openid-configuration`, where
 hostname means the same thing to a browser and to a container on the compose
 network, and `.env` says why.
 
-The one Identity the realm declares: `demo` / `demo`.
+The one Identity the realm declares: `demo` / `demo`. Its sign-in page also
+offers the Mock Identity Source, whose Identities are declared in
+`mock-source/mock.json` (password `mock`).
 
 Admin console: under the same origin, at `/admin` (`admin` / `admin`) — **for
 looking, not for changing.** A change made there is configuration no reviewer
@@ -165,6 +167,46 @@ Person (ADR-0004).
 Keycloak will not let a Person finish signing in until their first and last
 name are filled, because it assumes it owns their Profile. It does not, so the
 required action is disabled rather than the Identity being given a name.
+
+### Names are optional
+
+Keycloak's default user profile requires a first and a last name, and stops a
+Person arriving through an Identity Source for the first time on a page asking
+for them. A name is **Profile**, so the user profile is declared with both
+attributes optional. They are kept rather than removed: whether the Broker
+should hold a name a source sends at all is a question for the first source
+that sends one (#28).
+
+It is declared in `user-profile.json`, not in the realm file. The realm format
+has no field of its own for a user profile, only a `components` entry whose
+value is the whole profile as one escaped JSON string, which nobody can review.
+So Keycloak is started with
+`--spi-user-profile--declarative-user-profile--config-file` pointing at the
+file instead, which makes it the default for every realm that declares none of
+its own. That option is read by the provider but not in its advertised list,
+so an upgrade could drop it without a word; the cases in
+`tests/mock-source.test.ts` are what notice, stopping on "Update Account
+Information". #65 replaces it: the step that layers the realm generates the
+`components` entry from this file, and the option goes.
+
+### The Mock Identity Source
+
+A test Identity Source this repository runs itself (`mock-source/`), so
+that what a source says about an address can be decided by hand: per Identity,
+and separately for the ID token and for userinfo. It is declared under the
+alias `mock`, with a display name that says it is not for launch, because
+that name is what a Person reads on the sign-in page.
+
+- **`trustEmail` is off**, on this source and therefore everywhere: it is set
+  per Identity Source and never on the realm (ADR-0004). A case that needs it
+  on declares a second source over the same server rather than flipping this
+  one.
+- **Userinfo is on**, because the reported advisory this source exists to
+  stage is about the address being read from userinfo. Being on is not the
+  same as being called: `mock-source/README.md` says what else that
+  takes.
+- **Its endpoints are `${MOCK_ISSUER}/…`**, substituted from the
+  environment by the realm import, so the address is declared once, in `.env`.
 
 ### Development credentials in the file
 

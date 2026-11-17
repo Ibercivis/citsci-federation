@@ -136,6 +136,36 @@
       "secret": "brokered-app-confidential-development-secret"
     }
   ],
+  "identityProviders": [
+    {
+      "alias": "mock",
+      "displayName": "Mock source (not for launch)",
+      "providerId": "oidc",
+      "enabled": true,
+      "trustEmail": false,
+      "storeToken": false,
+      "addReadTokenRoleOnCreate": false,
+      "linkOnly": false,
+      "hideOnLogin": false,
+      "config": {
+        "issuer": "${MOCK_ISSUER}",
+        "authorizationUrl": "${MOCK_ISSUER}/auth",
+        "tokenUrl": "${MOCK_ISSUER}/token",
+        "userInfoUrl": "${MOCK_ISSUER}/me",
+        "jwksUrl": "${MOCK_ISSUER}/jwks",
+        "useJwksUrl": "true",
+        "validateSignature": "true",
+        "disableUserInfo": "false",
+        "clientId": "citsci-broker",
+        "clientSecret": "mock-source-development-secret",
+        "clientAuthMethod": "client_secret_post",
+        "defaultScope": "openid email",
+        "pkceEnabled": "true",
+        "pkceMethod": "S256",
+        "syncMode": "IMPORT"
+      }
+    }
+  ],
   "users": [
     {
       "username": "demo",

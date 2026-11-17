@@ -1,0 +1,8 @@
+# The build context is the repository root; the image needs three files of it.
+# An allowlist, so nothing else — `docs/private/` least of all — is ever sent
+# to the builder.
+*
+!package.json
+!pnpm-lock.yaml
+!mock-source/server.ts
+!mock-source/mock.json
