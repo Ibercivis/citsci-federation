@@ -50,6 +50,17 @@ reference in one of them or the words `No ticket`. The rules live in
 `scripts/check-pr-metadata.sh`, each next to the reason it exists. The issue reference, alone among
 them, does not apply to a pull request opened by `dependabot[bot]`; the script says why.
 
+Nothing in those rows bumps the pinned versions the checks run at. **Dependabot** does, through the
+same gate as anyone's pull request; `.github/dependabot.yml` holds what it groups and what it must
+not touch.
+
+Two of its switches are repository settings, invisible from this tree like the ruleset above and
+recorded here for that reason: **Dependabot alerts** and **Dependabot security updates**, both on
+since 16 November 2026. The file can only narrow what they propose, and one narrowing will read as
+a defect: an `ignore` suppresses a *security* pull request as well as a scheduled one, so a Keycloak
+advisory arrives as an alert to read against ADR-0004, never as a pull request that moves the pin by
+itself.
+
 Which row a new check joins is not a free choice, and the rule is not here: `CODING_STANDARDS.md`
 holds it, along with the reason the suite and `pr` are the two that stay out of `pnpm check`.
 
@@ -69,7 +80,7 @@ A row marked *Fired* is decided and not yet built, and carries an issue.
 | **Faster type check** | TypeScript 7 — `tsc` *is* the Go port, ~8–12× on full builds | No compiler API until 7.1 | When `tsc --noEmit` is the slow part of `pnpm check` |
 | ↳ and then three passes become two | `oxlint --type-check` — reports compiler errors from the same TypeScript program it lints with, and oxc documents it as replacing a separate `tsc --noEmit` in CI | Requires TypeScript 7, so it is the row above or nothing. Keep `tsc --noEmit` until both have run on this tree and the output has been compared | The row above. Neither alone |
 | **Coverage** | `@vitest/coverage-v8` | — | A number we would act on. We do not have one yet |
-| **Who bumps the pins** ([#49](https://github.com/Ibercivis/citsci-federation/issues/49)) | Dependabot, grouped and scheduled | Exact pins mean every bump is a pull request, so grouping is the whole design. The Keycloak image stays out of it: ADR-0004 rests on that version | Fired, for lack of a trigger. "A version nobody remembers choosing" is not something anyone notices, and that is the argument for a mechanism over a rule |
+| **The plugin image's own base images** — nothing watches `broker/Dockerfile` ([issue #71](https://github.com/Ibercivis/citsci-federation/issues/71)) | Dependabot's `docker` ecosystem, ignoring `keycloak/keycloak` as the `docker-compose` rule already does | Four lines. The `maven` stage is ordinary and unwatched; the other is the pinned Keycloak image | Fired. The Dockerfile is on `main`, which is the condition this row waited for |
 
 Also considered and rejected: **Vite+** (takes too many decisions for us, and its `vp hooks` fights
 lefthook for `core.hooksPath`), **eslint-plugin-boundaries** (requires ESLint), **steiger** (beta,
@@ -77,4 +88,4 @@ and its rules are Feature-Sliced Design whatever the billing says).
 
 There is no Rust-based mutation tester for JS/TS, and no Vitest-native one.
 
-_Versions and claims checked 13 November 2026._
+_Versions and claims checked 13 November 2026; the Dependabot rows 17 November 2026._
