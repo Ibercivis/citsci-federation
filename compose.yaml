@@ -89,12 +89,15 @@ services:
       KC_BOOTSTRAP_ADMIN_USERNAME: admin
       KC_BOOTSTRAP_ADMIN_PASSWORD: admin
     # The realm is imported from the versioned file and configured nowhere
-    # else: the admin console takes no part in it.
+    # else: the admin console takes no part in it. The user profile is the one
+    # piece kept beside it, in broker/user-profile.json, and broker/README.md
+    # says why.
     entrypoint: ["/bin/sh", "-c"]
     command:
-      - exec /opt/keycloak/bin/kc.sh start --import-realm --hostname "$${BROKER_ISSUER%/realms/*}"
+      - exec /opt/keycloak/bin/kc.sh start --import-realm --hostname "$${BROKER_ISSUER%/realms/*}" --spi-user-profile--declarative-user-profile--config-file=/opt/keycloak/conf/user-profile.json
     volumes:
       - ./broker/realm-citsci.json:/opt/keycloak/data/import/realm-citsci.json:ro
+      - ./broker/user-profile.json:/opt/keycloak/conf/user-profile.json:ro
     depends_on:
       broker-db:
         condition: service_healthy

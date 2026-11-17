@@ -172,10 +172,22 @@ required action is disabled rather than the Identity being given a name.
 
 Keycloak's default user profile requires a first and a last name, and stops a
 Person arriving through an Identity Source for the first time on a page asking
-for them. A name is **Profile**, so the realm declares the user profile with
-both attributes optional. They are kept rather than removed: whether the
-Broker should hold a name a source sends at all is a question for the first
-source that sends one (#28).
+for them. A name is **Profile**, so the user profile is declared with both
+attributes optional. They are kept rather than removed: whether the Broker
+should hold a name a source sends at all is a question for the first source
+that sends one (#28).
+
+It is declared in `user-profile.json`, not in the realm file. The realm format
+has no field of its own for a user profile, only a `components` entry whose
+value is the whole profile as one escaped JSON string, which nobody can review.
+So Keycloak is started with
+`--spi-user-profile--declarative-user-profile--config-file` pointing at the
+file instead, which makes it the default for every realm that declares none of
+its own. That option is read by the provider but not in its advertised list,
+so an upgrade could drop it without a word; the cases in
+`tests/laboratory-source.test.ts` are what notice, stopping on "Update Account
+Information". #65 replaces it: the step that layers the realm generates the
+`components` entry from this file, and the option goes.
 
 ### The Laboratory Identity Source
 
