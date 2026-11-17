@@ -16,11 +16,55 @@ import type { Client } from "./clients.ts";
 import { Browser, createPkce, follow, formsOn } from "./brokered-app.ts";
 import declaration from "../mock-source/mock.json" with { type: "json" };
 
+/**
+ * Every Identity Source this one server stands behind, by the alias the
+ * Broker knows it under: the name a Person reads on the sign-in page, and
+ * whether the Broker trusts this source's word on an address (`trustEmail`,
+ * set per source and never on the realm — ADR-0004).
+ *
+ * There is more than one because a Person cannot hold two Identities from the
+ * same source: `federated_identity` keeps one link per source per Person, so
+ * both halves of ADR-0004 — the merge and its refusal — can only be staged
+ * across two of them.
+ */
+export const MOCK_SOURCES = declaration.sources;
+
+type MockSourceAlias = keyof typeof MOCK_SOURCES;
+
+/**
+ * A source by the name a Person reads, asked for by what the Broker does with
+ * its word on an address rather than by its alias. A case needs *a source that
+ * affirms addresses*, not `mock-affirming-a` in particular.
+ *
+ * `affirmsAddresses` is `mock.json` repeating the realm's `trustEmail`, so the
+ * two can disagree. This is what says so, instead of leaving a case to fail
+ * somewhere further on with nothing to point at.
+ */
+function sourceNamed(alias: MockSourceAlias, affirming: boolean): string {
+  const source = MOCK_SOURCES[alias];
+  if (source.affirmsAddresses !== affirming) {
+    throw new Error(
+      `${alias} ${source.affirmsAddresses ? "affirms" : "does not affirm"} ` +
+        `addresses, and this case asked for one that ${affirming ? "does" : "does not"}. ` +
+        "Either mock.json or the realm's trustEmail has moved without the other.",
+    );
+  }
+  return source.name;
+}
+
+/** The two sources that affirm addresses, named A and B because what the
+ *  cases need of them is only that they are two. */
+export const AFFIRMING_SOURCE_A = sourceNamed("mock-affirming-a", true);
+export const AFFIRMING_SOURCE_B = sourceNamed("mock-affirming-b", true);
+
+/** The source that affirms nothing: every address arriving through it is
+ *  unverified, whatever its claims say. */
+export const SOURCE_AFFIRMING_NOTHING = sourceNamed("mock", false);
+
 export const MOCK_SOURCE = {
-  /** What the Broker's sign-in page calls it, and the source's own page too.
-   *  The realm file spells it a third time, because JSON can import nothing,
-   *  and the case that reads the sign-in page notices if the two drift. */
-  name: declaration.name,
+  /** The source that affirms nothing, which is the one the cases that predate
+   *  ADR-0004's two halves arrive through. */
+  name: SOURCE_AFFIRMING_NOTHING,
   issuer: configured("MOCK_ISSUER"),
 } as const;
 

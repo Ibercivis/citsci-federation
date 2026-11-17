@@ -31,10 +31,12 @@ applied at start-up.
 ## What is declared here, and what is not
 
 `compose.yaml` declares the Broker — the reverse proxy, the OpenID provider
-behind it, and that provider's own database — and one Identity Source outside
-it, the Mock Identity Source in [`mock-source/`](mock-source/),
-which exists so the tests can decide what a source says about an address. It
-is not a launch source. The proxy is in
+behind it, and that provider's own database — and the Mock Identity Source
+outside it, in [`mock-source/`](mock-source/), which exists so the tests can
+decide what a source says about an address. None of it is a launch source. One
+server stands behind three Identity Sources there, because a Person cannot
+hold two Identities from the same source and ADR-0004 is about what happens
+when their second Identity arrives. The proxy is in
 front **in every environment, including local** — the reason is parity of
 form, since the cookie, TLS, redirect-URI and CORS failures that depend on
 deployment shape otherwise appear for the first time in production (ADR-0001).
@@ -45,7 +47,11 @@ about an application is the client the Broker knows it by.
 
 The Keycloak version is **pinned**, because a security property of the design
 rests on how it treats a verified email address (ADR-0004). It does not move
-on its own.
+on its own. One extension of ours reads that flag from where this version's
+OIDC provider keeps it, which is the sharpest edge of the pin:
+[`broker/verified-email/`](broker/verified-email/) is what refuses to join an
+Identity whose address nobody affirmed, and the suite is what notices if an
+upgrade moves the flag out from under it.
 
 ## How this is tested
 

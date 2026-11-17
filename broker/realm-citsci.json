@@ -3,6 +3,7 @@
   "enabled": true,
   "displayName": "Ibercivis Citizen Science",
   "loginWithEmailAllowed": true,
+  "firstBrokerLoginFlow": "citsci first broker login",
   "requiredActions": [
     {
       "alias": "VERIFY_PROFILE",
@@ -182,6 +183,172 @@
         "pkceMethod": "S256",
         "syncMode": "IMPORT"
       }
+    },
+    {
+      "alias": "mock-affirming-a",
+      "displayName": "Mock source A, affirms addresses (not for launch)",
+      "providerId": "oidc",
+      "enabled": true,
+      "trustEmail": true,
+      "storeToken": false,
+      "addReadTokenRoleOnCreate": false,
+      "linkOnly": false,
+      "hideOnLogin": false,
+      "config": {
+        "issuer": "${MOCK_ISSUER}",
+        "authorizationUrl": "${MOCK_ISSUER}/auth",
+        "tokenUrl": "${MOCK_ISSUER}/token",
+        "userInfoUrl": "${MOCK_ISSUER}/me",
+        "jwksUrl": "${MOCK_ISSUER}/jwks",
+        "useJwksUrl": "true",
+        "validateSignature": "true",
+        "disableUserInfo": "false",
+        "clientId": "citsci-broker",
+        "clientSecret": "mock-source-development-secret",
+        "clientAuthMethod": "client_secret_post",
+        "defaultScope": "openid email",
+        "pkceEnabled": "true",
+        "pkceMethod": "S256",
+        "syncMode": "IMPORT"
+      }
+    },
+    {
+      "alias": "mock-affirming-b",
+      "displayName": "Mock source B, affirms addresses (not for launch)",
+      "providerId": "oidc",
+      "enabled": true,
+      "trustEmail": true,
+      "storeToken": false,
+      "addReadTokenRoleOnCreate": false,
+      "linkOnly": false,
+      "hideOnLogin": false,
+      "config": {
+        "issuer": "${MOCK_ISSUER}",
+        "authorizationUrl": "${MOCK_ISSUER}/auth",
+        "tokenUrl": "${MOCK_ISSUER}/token",
+        "userInfoUrl": "${MOCK_ISSUER}/me",
+        "jwksUrl": "${MOCK_ISSUER}/jwks",
+        "useJwksUrl": "true",
+        "validateSignature": "true",
+        "disableUserInfo": "false",
+        "clientId": "citsci-broker",
+        "clientSecret": "mock-source-development-secret",
+        "clientAuthMethod": "client_secret_post",
+        "defaultScope": "openid email",
+        "pkceEnabled": "true",
+        "pkceMethod": "S256",
+        "syncMode": "IMPORT"
+      }
+    }
+  ],
+  "authenticatorConfig": [
+    {
+      "alias": "citsci-review-what-is-missing",
+      "config": {
+        "update.profile.on.first.login": "missing"
+      }
+    },
+    {
+      "alias": "citsci-refuse-an-unverified-join",
+      "config": {
+        "denyErrorMessage": "We could not sign you in, because the service you signed in with did not confirm your email address."
+      }
+    }
+  ],
+  "authenticationFlows": [
+    {
+      "alias": "citsci first broker login",
+      "description": "What the Broker does the first time an Identity arrives from a source: create a Person, or join the one that holds this address — never the second without a Verified Email (ADR-0004).",
+      "providerId": "basic-flow",
+      "topLevel": true,
+      "builtIn": false,
+      "authenticationExecutions": [
+        {
+          "authenticator": "idp-review-profile",
+          "authenticatorConfig": "citsci-review-what-is-missing",
+          "requirement": "REQUIRED",
+          "priority": 10,
+          "authenticatorFlow": false,
+          "userSetupAllowed": false
+        },
+        {
+          "flowAlias": "citsci create a Person, or join one",
+          "requirement": "REQUIRED",
+          "priority": 20,
+          "authenticatorFlow": true,
+          "userSetupAllowed": false
+        }
+      ]
+    },
+    {
+      "alias": "citsci create a Person, or join one",
+      "description": "The two ways a first arrival can end. Keycloak needs them as alternatives of one subflow, and idp-create-user-if-unique is what decides which: it creates a Person when the address belongs to nobody, and gives way when it does not.",
+      "providerId": "basic-flow",
+      "topLevel": false,
+      "builtIn": false,
+      "authenticationExecutions": [
+        {
+          "authenticator": "idp-create-user-if-unique",
+          "requirement": "ALTERNATIVE",
+          "priority": 10,
+          "authenticatorFlow": false,
+          "userSetupAllowed": false
+        },
+        {
+          "flowAlias": "citsci join the Person holding this address",
+          "requirement": "ALTERNATIVE",
+          "priority": 20,
+          "authenticatorFlow": true,
+          "userSetupAllowed": false
+        }
+      ]
+    },
+    {
+      "alias": "citsci join the Person holding this address",
+      "description": "Reached when the arriving address already belongs to a Person. The refusal is asked first, so an Identity with no Verified Email never reaches idp-auto-link.",
+      "providerId": "basic-flow",
+      "topLevel": false,
+      "builtIn": false,
+      "authenticationExecutions": [
+        {
+          "flowAlias": "citsci refuse an unverified address",
+          "requirement": "CONDITIONAL",
+          "priority": 10,
+          "authenticatorFlow": true,
+          "userSetupAllowed": false
+        },
+        {
+          "authenticator": "idp-auto-link",
+          "requirement": "REQUIRED",
+          "priority": 20,
+          "authenticatorFlow": false,
+          "userSetupAllowed": false
+        }
+      ]
+    },
+    {
+      "alias": "citsci refuse an unverified address",
+      "description": "ADR-0004's negative direction, and the only thing enforcing it: idp-auto-link matches on the address alone and never reads email_verified (issue #75).",
+      "providerId": "basic-flow",
+      "topLevel": false,
+      "builtIn": false,
+      "authenticationExecutions": [
+        {
+          "authenticator": "citsci-condition-unverified-email",
+          "requirement": "REQUIRED",
+          "priority": 10,
+          "authenticatorFlow": false,
+          "userSetupAllowed": false
+        },
+        {
+          "authenticator": "deny-access-authenticator",
+          "authenticatorConfig": "citsci-refuse-an-unverified-join",
+          "requirement": "REQUIRED",
+          "priority": 20,
+          "authenticatorFlow": false,
+          "userSetupAllowed": false
+        }
+      ]
     }
   ],
   "clientProfiles": {

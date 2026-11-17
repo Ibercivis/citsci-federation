@@ -1,4 +1,7 @@
-# Only the mapper is built from this directory; the rest is not the image's.
+# Only the two Keycloak extensions are built from this directory; the rest is
+# not the image's.
 *
 !person-identifier/pom.xml
 !person-identifier/src/
+!verified-email/pom.xml
+!verified-email/src/

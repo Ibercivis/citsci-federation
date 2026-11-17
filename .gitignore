@@ -19,6 +19,7 @@ node_modules/
 test-results/
 playwright-report/
 
-# The Person Identifier mapper's build output, if it is ever built outside
-# the image.
+# The Keycloak extensions' build output, if either is ever built outside the
+# image.
 broker/person-identifier/target/
+broker/verified-email/target/

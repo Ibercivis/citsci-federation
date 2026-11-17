@@ -1,5 +1,18 @@
 {
-  "name": "Mock source (not for launch)",
+  "sources": {
+    "mock": {
+      "name": "Mock source (not for launch)",
+      "affirmsAddresses": false
+    },
+    "mock-affirming-a": {
+      "name": "Mock source A, affirms addresses (not for launch)",
+      "affirmsAddresses": true
+    },
+    "mock-affirming-b": {
+      "name": "Mock source B, affirms addresses (not for launch)",
+      "affirmsAddresses": true
+    }
+  },
   "client": {
     "id": "citsci-broker",
     "secret": "mock-source-development-secret"
@@ -19,6 +32,26 @@
       "password": "mock",
       "idToken": { "email": "split@mock.test", "email_verified": true },
       "userinfo": { "email": "shared@mock.test", "email_verified": false }
+    },
+    "takeover-verified": {
+      "password": "mock",
+      "idToken": { "email": "takeover@mock.test", "email_verified": true },
+      "userinfo": { "email": "takeover@mock.test", "email_verified": true }
+    },
+    "takeover-unverified": {
+      "password": "mock",
+      "idToken": { "email": "takeover@mock.test", "email_verified": false },
+      "userinfo": { "email": "takeover@mock.test", "email_verified": false }
+    },
+    "merge-verified": {
+      "password": "mock",
+      "idToken": { "email": "merge@mock.test", "email_verified": true },
+      "userinfo": { "email": "merge@mock.test", "email_verified": true }
+    },
+    "untrusted-verified": {
+      "password": "mock",
+      "idToken": { "email": "untrusted@mock.test", "email_verified": true },
+      "userinfo": { "email": "untrusted@mock.test", "email_verified": true }
     }
   }
 }

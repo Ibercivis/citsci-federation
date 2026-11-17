@@ -268,6 +268,18 @@ function question(page: Page, arrival: Arrival): Question | null {
   return null;
 }
 
+/**
+ * What a Person would read on a page: its markup taken out, and the parts a
+ * browser never shows — scripts and stylesheets — taken out first, since the
+ * provider's pages carry both and neither is anything a Person was told.
+ */
+const readableTextOf = (html: string): string =>
+  visibleText(
+    html
+      .replace(/<script\b[\s\S]*?<\/script>/g, " ")
+      .replace(/<style\b[\s\S]*?<\/style>/g, " "),
+  );
+
 /** Reads the Broker's own complaint off a page, so a failed step says why. */
 function pageComplaint({ html }: Page): string {
   const messages = [...html.matchAll(/id="input-error[^"]*"[^>]*>([^<]+)</g)]
@@ -275,15 +287,19 @@ function pageComplaint({ html }: Page): string {
     .filter(Boolean);
   const heading = /<h1[^>]*id="kc-page-title"[^>]*>([^<]+)</.exec(html);
   const asksFor = /name="(firstName|lastName|email|password-new)"/.exec(html);
-  return (
-    [
-      heading?.[1] ? `Page: ${heading[1].trim()}` : "",
-      messages.length ? `Errors: ${messages.join(" | ")}` : "",
-      asksFor?.[1] ? `Asks for field: ${asksFor[1]}` : "",
-    ]
-      .filter(Boolean)
-      .join("\n") || html.slice(0, 400)
-  );
+  return [
+    heading?.[1] ? `Page: ${heading[1].trim()}` : "",
+    messages.length ? `Errors: ${messages.join(" | ")}` : "",
+    asksFor?.[1] ? `Asks for field: ${asksFor[1]}` : "",
+    // Everything a Person would read, because a refusal the Broker states in
+    // its own words — a message declared in the realm rather than one of this
+    // provider's — appears nowhere above. A case asserting that the Broker
+    // said why has only this to read it from, and it is also what makes the
+    // last line unconditional: there is always something a Person was shown.
+    `Says: ${readableTextOf(html)}`,
+  ]
+    .filter(Boolean)
+    .join("\n");
 }
 
 /**
