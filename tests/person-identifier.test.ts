@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ALL_CLIENTS, CONFIDENTIAL_CLIENT, PUBLIC_CLIENT } from "./clients.ts";
+import { CLIENT_TYPES, CONFIDENTIAL_CLIENT, PUBLIC_CLIENT } from "./clients.ts";
 import {
   authenticate,
   introspect,
@@ -63,7 +63,7 @@ const PROFILE_CLAIMS = [
 ];
 
 /** Every place a Brokered App can read the Person from, for one sign-in. */
-async function everyPlace(client: (typeof ALL_CLIENTS)[number][1]) {
+async function everyPlace(client: (typeof CLIENT_TYPES)[number][1]) {
   const { claims, accessToken } = await authenticate(client);
   const places: Array<[string, Record<string, unknown>]> = [
     ["the ID token", claims],
@@ -79,7 +79,7 @@ async function everyPlace(client: (typeof ALL_CLIENTS)[number][1]) {
   return { idToken: claims, places };
 }
 
-describe.each(ALL_CLIENTS)(
+describe.each(CLIENT_TYPES)(
   "a %s Brokered App knows the Person by their Person Identifier",
   (_shape, client) => {
     it("receives it in sub and in voperson_id, scoped with the organisation's domain", async () => {

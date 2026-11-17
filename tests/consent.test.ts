@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ALL_CLIENTS } from "./clients.ts";
+import { CLIENT_TYPES } from "./clients.ts";
 import { authenticate } from "./brokered-app.ts";
 
 /**
@@ -17,7 +17,7 @@ import { authenticate } from "./brokered-app.ts";
  * with no page at all. So a consent page here is evidence that this client
  * requires consent.
  */
-describe.each(ALL_CLIENTS)(
+describe.each(CLIENT_TYPES)(
   "the Broker asks a Person to consent before a %s Brokered App receives anything",
   (_shape, client) => {
     it("shows a consent page naming the application, and completes once accepted", async () => {

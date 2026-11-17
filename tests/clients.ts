@@ -41,8 +41,8 @@ export const CONFIDENTIAL_CLIENT: Client = {
   redirectUri: "http://localhost:8000/accounts/oidc/broker/login/callback/",
 };
 
-/** Every client in the realm, for the cases that must hold for both shapes. */
-export const ALL_CLIENTS: ReadonlyArray<[string, Client]> = [
+/** The public and the confidential client, for cases that hold for both. */
+export const CLIENT_TYPES: ReadonlyArray<[string, Client]> = [
   ["public", PUBLIC_CLIENT],
   ["confidential", CONFIDENTIAL_CLIENT],
 ];
