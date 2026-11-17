@@ -47,6 +47,15 @@ repository has its own issues, and `docs/private/` is committed by its script.
 left #52 open. A pull request that finishes a ticket carries that line; one that advances it says
 `Part of #<n>`.
 
+**Name the kind when you mention one**: `issue #62`, `PR #63`. A bare `#62` is ambiguous, because
+GitHub numbers both from one sequence — a pull request is an issue in its data model, which is why
+`/issues/69` redirects to `/pull/69`. This holds in a reply to the user as much as in a document.
+
+The spellings a machine reads are exempt and stay bare: the `[#62]` commit prefix, and `Closes #<n>`
+or `Part of #<n>` in a body. GitHub and the hook below match those literally. When a number is
+already in hand and its kind is not, `gh pr view <n>` settles it by failing on an issue; `gh issue
+view <n>` answers for both and settles nothing.
+
 Two hooks hold this up: one refuses a pull request that says neither, the other assigns the issue
 when work lands on an `issue-<n>` branch, which is what a claim means here.
 
@@ -144,11 +153,12 @@ database users, known weaknesses — into issues, PRs, commit messages, orientat
 or any other published surface. Read it to do the work; describe conclusions without the detail.
 Never `git add -f` anything under it.
 
-It is **its own private repository**, `Ibercivis/citsci-federation-private`, cloned at that path: the
-canonical copy, carrying the history and the backup this folder never had. A fresh checkout fetches
-it once, into an empty `docs/private/`:
+It is **its own private repository**, `ibercivis-federation/citsci-federation-private`, cloned at
+that path: the canonical copy, carrying the history and the backup this folder never had. It lives
+in its own organisation so that access to it is the three people who need it, not every owner of
+`Ibercivis`. A fresh checkout fetches it once, into an empty `docs/private/`:
 
-    git clone https://github.com/Ibercivis/citsci-federation-private.git docs/private
+    git clone https://github.com/ibercivis-federation/citsci-federation-private.git docs/private
 
 Nobody runs git in there by hand afterwards. `scripts/private-sync.sh`, wired to the `SessionStart`
 and `Stop` hooks, pulls it when a session opens and commits and pushes it when a turn ends. Commit
