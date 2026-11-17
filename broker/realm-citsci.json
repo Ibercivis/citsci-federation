@@ -134,6 +134,24 @@
       "optionalClientScopes": [],
       "clientAuthenticatorType": "client-secret",
       "secret": "brokered-app-confidential-development-secret"
+    },
+    {
+      "clientId": "misconfigured-client",
+      "name": "Misconfigured client",
+      "description": "Testing only: see MISCONFIGURED_CLIENT in tests/clients.ts.",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "consentRequired": true,
+      "redirectUris": ["http://localhost:3001/*"],
+      "webOrigins": [],
+      "attributes": {},
+      "defaultClientScopes": ["acr", "basic", "email", "web-origins"],
+      "optionalClientScopes": []
     }
   ],
   "identityProviders": [
@@ -171,7 +189,13 @@
       {
         "name": "code-flow-only",
         "description": "What every client is held to, whatever its own settings say.",
-        "executors": [{ "executor": "secure-session", "configuration": {} }]
+        "executors": [
+          {
+            "executor": "pkce-enforcer",
+            "configuration": { "auto-configure": "false" }
+          },
+          { "executor": "secure-session", "configuration": {} }
+        ]
       }
     ]
   },
