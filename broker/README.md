@@ -66,6 +66,11 @@ ADR-0004, and it is base because it is how every Identity Source joins a
 Person. A stand-in client that a Brokered App will replace is base too, until
 the real registration takes its place.
 
+Seam 2, `tests/declaration.test.ts`, checks that the running Broker is the mode
+it claims to be. It looks for every entry in both layers the way a Brokered
+App or a Person meets it, and expects the testing layer's exactly when the
+mode is `testing`.
+
 ## The realm is applied from the declaration, and from nowhere else
 
 `--import-realm` applies the realm the image carries when the realm is not yet
@@ -78,7 +83,8 @@ directory the whole of the code.
 
 The cost is stated plainly: an edit to the declaration does **not** reach a
 stack that is already up, and neither does a change of `BROKER_MODE`. A
-`reset` is how either lands. A Broker holding state worth keeping will need a migration path that this pilot
+`reset` is how either lands. Seam 2 fails on a Broker left in the other mode. A
+Broker holding state worth keeping will need a migration path that this pilot
 does not have yet.
 
 **Re-applying the file on every start was considered and rejected.** Keycloak
