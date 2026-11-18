@@ -7,6 +7,8 @@ import { type Realm, derive } from "../broker/realm/derive.ts";
  * it is exercised without building one.
  */
 
+const ISSUER = "http://mock.localhost:8090";
+
 const PROFILE = { attributes: [{ name: "email" }] };
 
 const BASE = {
@@ -47,7 +49,7 @@ describe("deriving the realm Keycloak imports", () => {
   });
 
   it("appends the testing layer's entries to the base's in testing", () => {
-    const realm = derive("testing", declaration());
+    const realm = derive("testing", declaration(), ISSUER);
 
     expect(realm["clients"]).toEqual([
       { clientId: "brokered-app-public" },
@@ -68,7 +70,7 @@ describe("deriving the realm Keycloak imports", () => {
       clients: [{ clientId: "brokered-app-public", implicitFlowEnabled: true }],
     };
 
-    expect(() => derive("testing", declaration(redeclaring))).toThrow(
+    expect(() => derive("testing", declaration(redeclaring), ISSUER)).toThrow(
       'The testing layer re-declares clients "brokered-app-public", which the base declares. A layer only adds.',
     );
   });
@@ -78,14 +80,51 @@ describe("deriving the realm Keycloak imports", () => {
     const redeclaring = { clientScopes: [{ name: "voperson_id" }] };
 
     expect(() =>
-      derive("testing", {
-        base,
-        testing: redeclaring,
-        userProfile: PROFILE,
-      }),
+      derive(
+        "testing",
+        {
+          base,
+          testing: redeclaring,
+          userProfile: PROFILE,
+        },
+        ISSUER,
+      ),
     ).toThrow(
       'The testing layer re-declares clientScopes "voperson_id", which the base declares. A layer only adds.',
     );
+  });
+
+  it("writes the Mock Identity Source's issuer into the testing layer's endpoints", () => {
+    const withMock = {
+      identityProviders: [
+        {
+          alias: "mock",
+          config: {
+            issuer: "${MOCK_ISSUER}",
+            tokenUrl: "${MOCK_ISSUER}/token",
+          },
+        },
+      ],
+    };
+
+    expect(
+      derive("testing", declaration(withMock), ISSUER)["identityProviders"],
+    ).toEqual([
+      {
+        alias: "mock",
+        config: { issuer: ISSUER, tokenUrl: `${ISSUER}/token` },
+      },
+    ]);
+  });
+
+  it("refuses a testing build without the Mock Identity Source's issuer", () => {
+    expect(() => derive("testing", declaration(), "")).toThrow(
+      "No MOCK_ISSUER: the testing layer's Mock Identity Sources are reached at it. Declare it in .env.",
+    );
+  });
+
+  it("builds production without the Mock Identity Source's issuer", () => {
+    expect(() => derive("production", declaration(), "")).not.toThrow();
   });
 
   it("refuses a base that declares components, which the user profile would overwrite", () => {
@@ -103,7 +142,7 @@ describe("deriving the realm Keycloak imports", () => {
 
   it("refuses a testing layer that sets a value rather than adding entries", () => {
     expect(() =>
-      derive("testing", declaration({ loginWithEmailAllowed: false })),
+      derive("testing", declaration({ loginWithEmailAllowed: false }), ISSUER),
     ).toThrow(
       'The testing layer sets "loginWithEmailAllowed", which is not a list of entries. A layer only adds.',
     );

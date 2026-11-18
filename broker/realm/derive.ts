@@ -4,13 +4,15 @@
  * Keycloak imports one complete realm per file and cannot layer two, so the
  * layering happens here, inside the image build (`broker/Dockerfile`):
  *
- *   node derive.ts <testing|production> > realm-citsci.json
+ *   node derive.ts <testing|production> <MOCK_ISSUER> > realm-citsci.json
  *
  * `base.json` is the whole Broker anywhere it runs. `testing.json` only adds
  * to it, and only in `testing`. `user-profile.json` becomes the realm's user
- * profile. What comes out is never written into this repository, so there is
- * nothing to edit by hand. `broker/README.md` says which layer an addition
- * belongs in.
+ * profile. In `testing`, the Mock Identity Source's issuer is written into the
+ * layer here, so the build fails without it rather than importing endpoints
+ * with nothing in front of them. What comes out is never written into this
+ * repository, so there is nothing to edit by hand. `broker/README.md` says
+ * which layer an addition belongs in.
  */
 
 import { readFileSync } from "node:fs";
@@ -28,7 +30,11 @@ export interface Declaration {
  *  quietly build the base alone. */
 const MODES = ["testing", "production"];
 
-export function derive(mode: string, declaration: Declaration): Realm {
+export function derive(
+  mode: string,
+  declaration: Declaration,
+  mockIssuer = "",
+): Realm {
   if (!MODES.includes(mode)) {
     throw new Error(
       `Unknown BROKER_MODE "${mode}": it is "testing" or "production".`,
@@ -41,7 +47,13 @@ export function derive(mode: string, declaration: Declaration): Realm {
   }
   const realm: Realm = { ...declaration.base };
   if (mode === "testing") {
-    for (const [field, entries] of Object.entries(declaration.testing)) {
+    if (mockIssuer === "") {
+      throw new Error(
+        "No MOCK_ISSUER: the testing layer's Mock Identity Sources are reached at it. Declare it in .env.",
+      );
+    }
+    const layer = withIssuer(declaration.testing, mockIssuer) as Realm;
+    for (const [field, entries] of Object.entries(layer)) {
       realm[field] = added(field, realm[field] ?? [], entries);
     }
   }
@@ -85,6 +97,25 @@ function keyOf(entry: unknown): string | undefined {
   return typeof key === "string" ? key : undefined;
 }
 
+/** Every `${MOCK_ISSUER}` in the layer's strings, replaced by the issuer. */
+function withIssuer(value: unknown, issuer: string): unknown {
+  if (typeof value === "string") {
+    return value.replaceAll("${MOCK_ISSUER}", issuer);
+  }
+  if (Array.isArray(value)) {
+    return value.map((item) => withIssuer(item, issuer));
+  }
+  if (typeof value === "object" && value !== null) {
+    return Object.fromEntries(
+      Object.entries(value).map(([key, item]) => [
+        key,
+        withIssuer(item, issuer),
+      ]),
+    );
+  }
+  return value;
+}
+
 /**
  * The realm format has no field of its own for a user profile. It takes one
  * only as a component whose value is the whole profile as a single string,
@@ -107,10 +138,14 @@ const read = (name: string) =>
   JSON.parse(readFileSync(join(import.meta.dirname, name), "utf8"));
 
 if (import.meta.main) {
-  const realm = derive(process.argv[2] ?? "", {
-    base: read("base.json"),
-    testing: read("testing.json"),
-    userProfile: read("user-profile.json"),
-  });
+  const realm = derive(
+    process.argv[2] ?? "",
+    {
+      base: read("base.json"),
+      testing: read("testing.json"),
+      userProfile: read("user-profile.json"),
+    },
+    process.argv[3],
+  );
   process.stdout.write(`${JSON.stringify(realm, null, 2)}\n`);
 }

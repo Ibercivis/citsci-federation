@@ -306,8 +306,9 @@ second Identity arrives. One source cannot stage either half of it.
   stage is about the address being read from userinfo. Being on is not the
   same as being called: `mock-source/README.md` says what else that
   takes.
-- **Its endpoints are `${MOCK_ISSUER}/…`**, substituted from the
-  environment by the realm import, so the address is declared once, in `.env`.
+- **Its endpoints are `${MOCK_ISSUER}/…`**, written in by the image build, so
+  the address is declared once, in `.env`, and a testing build without it
+  fails.
 
 ### Development credentials in the file
 

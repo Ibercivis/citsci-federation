@@ -58,6 +58,9 @@ services:
       context: ./broker
       args:
         BROKER_MODE: ${BROKER_MODE:?declare it in .env}
+        # Written into the testing layer by the build, which refuses a
+        # testing image without it. Production does not read it.
+        MOCK_ISSUER: ${MOCK_ISSUER:-}
     # The channel for a value that must not be typed into a tracked file. It
     # is absent on most machines, and absent is not an error: nothing in this
     # stack needs a live credential yet.
@@ -82,10 +85,6 @@ services:
       # the realm path it serves under comes from the realm's own name, and
       # the discovery case fails loudly if the two disagree.
       BROKER_ISSUER: ${BROKER_ISSUER:?declare it in .env}
-      # Read by the realm import, which substitutes it into the Mock
-      # Identity Source's endpoints rather than spelling its address twice.
-      # Only the testing layer names it, so the base starts without it.
-      MOCK_ISSUER: ${MOCK_ISSUER:-}
       # Behind the proxy, over HTTP, in production mode: the shape the ADR
       # asks for, with TLS terminated in front rather than absent.
       KC_HTTP_ENABLED: "true"
