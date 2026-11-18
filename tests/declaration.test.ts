@@ -25,7 +25,9 @@ import testing from "../broker/realm/testing.json" with { type: "json" };
  * which `--import-realm` does not replace.
  *
  * The entries are read from the layer files, so an entry added to either is
- * covered without touching this file.
+ * covered without touching this file — for the kinds in LOOKED_FOR. The
+ * testing layer may declare no other, so a new kind there fails until this
+ * file learns how to look for it.
  */
 
 const MODE = configured("BROKER_MODE");
@@ -43,6 +45,13 @@ interface Layer {
     credentials?: ReadonlyArray<{ type: string; value: string }>;
   }>;
 }
+
+/** The kinds of entry this file knows how to look for. */
+const LOOKED_FOR: ReadonlyArray<keyof Layer> = [
+  "clients",
+  "identityProviders",
+  "users",
+];
 
 const LAYERS: ReadonlyArray<[string, Layer, boolean]> = [
   ["base", base, true],
@@ -84,6 +93,16 @@ async function signInPageLinks(): Promise<string[]> {
 }
 
 describe(`the running Broker is the ${MODE} declaration`, () => {
+  it("knows how to look for every kind of entry the testing layer declares", () => {
+    const unknown = Object.keys(testing).filter(
+      (kind) => !(LOOKED_FOR as ReadonlyArray<string>).includes(kind),
+    );
+    expect(
+      unknown,
+      "The testing layer declares a kind seam 2 cannot look for. Teach tests/declaration.test.ts to find it the way a Brokered App or a Person would.",
+    ).toEqual([]);
+  });
+
   describe.each(LAYERS)("the %s layer", (_layer, layer, expected) => {
     const clients = layer.clients ?? [];
     const sources = layer.identityProviders ?? [];
