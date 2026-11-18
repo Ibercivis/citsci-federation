@@ -234,7 +234,7 @@
       "credentials": [
         {
           "type": "password",
-          "value": "demo"
+          "value": "demo-password"
         }
       ]
     }

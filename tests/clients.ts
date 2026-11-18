@@ -74,6 +74,6 @@ export const EVERY_REGISTERED_CLIENT: ReadonlyArray<[string, Client]> = [
  *  authenticate. */
 export const DEMO_IDENTITY = {
   username: "demo",
-  password: "demo",
+  password: "demo-password",
   email: "demo@example.org",
 } as const;

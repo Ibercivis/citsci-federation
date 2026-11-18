@@ -17,7 +17,8 @@ Discovery: `$BROKER_ISSUER/.well-known/openid-configuration`, where
 hostname means the same thing to a browser and to a container on the compose
 network, and `.env` says why.
 
-In `testing`, the one Identity the realm declares is `demo` / `demo`, and its
+
+In `testing`, the one Identity the realm declares is `demo` / `demo-password`, and its
 sign-in page also offers the Mock Identity Sources, whose Identities are
 declared in `mock-source/mock.json` (password `mock`). In `production` there
 are neither.

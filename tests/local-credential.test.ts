@@ -266,3 +266,32 @@ describe.each(CLIENT_TYPES)(
     });
   },
 );
+
+describe("the declared password policy", () => {
+  it("refuses a password shorter than twelve characters", async () => {
+    const address = freshAddress();
+    const registering = await register(address);
+    const form = await openConfirmation(registering, address);
+
+    const landing = await choosePassword(registering, form, "elevenchars");
+
+    expect(codeIn(landing)).toBeNull();
+    // Still asked for one, rather than turned away.
+    expect(
+      landing.at === "a page" &&
+        formsOn(landing.page).some((each) => "password-new" in each.fields),
+    ).toBe(true);
+  });
+
+  it("accepts twelve characters of a single kind: there are no composition rules", async () => {
+    const address = freshAddress();
+
+    const claims = await confirm(
+      await register(address),
+      address,
+      "aaaaaaaaaaaa",
+    );
+
+    expect(claims.sub).toMatch(PERSON_IDENTIFIER);
+  });
+});
