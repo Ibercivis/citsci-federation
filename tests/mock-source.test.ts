@@ -8,8 +8,8 @@ import {
   verifyAccessToken,
 } from "./brokered-app.ts";
 import {
+  AFFIRMING_SOURCE_A,
   MOCK_IDENTITIES,
-  MOCK_SOURCE,
   MOCK_SOURCES,
   type MockIdentity,
   signInAtMock,
@@ -31,9 +31,12 @@ import {
 const PERSON_IDENTIFIER =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}@ibercivis\.es$/;
 
+/** Through a source whose word on the address is trusted. Through one whose
+ *  word is not, the Broker first confirms the address by mail (ADR-0004), and
+ *  these cases are about arriving, not about that. */
 const arrivingAs = (identity: MockIdentity) => ({
   as: {
-    through: MOCK_SOURCE.name,
+    through: AFFIRMING_SOURCE_A,
     username: identity,
     password: MOCK_IDENTITIES[identity].password,
   },

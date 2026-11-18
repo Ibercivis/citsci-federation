@@ -3,6 +3,9 @@
   "enabled": true,
   "displayName": "Ibercivis Citizen Science",
   "loginWithEmailAllowed": true,
+  "registrationAllowed": true,
+  "registrationEmailAsUsername": true,
+  "verifyEmail": true,
   "smtpServer": {
     "host": "${SMTP_HOST}",
     "port": "${SMTP_PORT}",
@@ -18,6 +21,24 @@
       "enabled": false,
       "defaultAction": false,
       "priority": 90,
+      "config": {}
+    },
+    {
+      "alias": "VERIFY_EMAIL",
+      "name": "Verify Email",
+      "providerId": "VERIFY_EMAIL",
+      "enabled": true,
+      "defaultAction": false,
+      "priority": 20,
+      "config": {}
+    },
+    {
+      "alias": "UPDATE_PASSWORD",
+      "name": "Update Password",
+      "providerId": "UPDATE_PASSWORD",
+      "enabled": true,
+      "defaultAction": false,
+      "priority": 30,
       "config": {}
     }
   ],
