@@ -7,6 +7,8 @@ import {
   type Landing,
   type Page,
   type Pkce,
+  attempt,
+  authenticate,
   createPkce,
   everyPlace,
   follow,
@@ -16,7 +18,7 @@ import {
   requestAuthorization,
   verifyIdToken,
 } from "./brokered-app.ts";
-import { linkMailedTo } from "./mailbox.ts";
+import { linkMailedTo, mailCountTo } from "./mailbox.ts";
 import { AFFIRMING_SOURCE_A, MOCK_IDENTITIES } from "./mock-source.ts";
 
 /**
@@ -293,5 +295,62 @@ describe("the declared password policy", () => {
     );
 
     expect(claims.sub).toMatch(PERSON_IDENTIFIER);
+  });
+});
+
+/** A Person who has registered, confirmed their address and chosen a
+ *  password: somebody with a Local Credential to sign in with. */
+async function personWithALocalCredential(password = A_PASSWORD) {
+  const address = freshAddress();
+  const claims = await confirm(await register(address), address, password);
+  return { address, sub: claims.sub };
+}
+
+/**
+ * Asks the Broker to recover the password for an address, from the link its
+ * sign-in page offers, follows the link that is mailed, and chooses a new
+ * password where that link leads.
+ */
+async function recover(address: string, password: string): Promise<void> {
+  const browser = new Browser();
+  const pkce = createPkce("S256");
+  const signIn = await pageAfter(
+    browser,
+    await requestAuthorization(browser, CONFIDENTIAL_CLIENT, {
+      nonce: randomUUID(),
+      code_challenge: pkce.challenge,
+      code_challenge_method: pkce.method,
+    }),
+  );
+  const offer = linksOn(signIn).find((link) => /forgot/i.test(link.text));
+  if (!offer) throw new Error("The sign-in page offers no recovery.");
+  const page = await pageAfter(browser, await browser.get(offer.href));
+  const ask = formsOn(page).find((form) => "username" in form.fields);
+  if (!ask) throw new Error("The recovery page carries no form.");
+
+  const seen = await mailCountTo(address);
+  await browser.postForm(ask.action, { ...ask.fields, username: address });
+  const chosen = await pageAfter(
+    browser,
+    await browser.get(await linkMailedTo(address, seen)),
+  );
+  const form = formsOn(chosen).find((each) => "password-new" in each.fields);
+  if (!form) throw new Error("The recovery link asked for no password.");
+  await choosePassword({ browser, pkce, form }, form, password);
+}
+
+describe("recovering a forgotten password", () => {
+  it("is done by mail, and the new password replaces the old one", async () => {
+    const { address, sub } = await personWithALocalCredential();
+
+    await recover(address, "a new password, chosen by mail");
+
+    const withNew = await authenticate(
+      CONFIDENTIAL_CLIENT,
+      signingIn(address, "a new password, chosen by mail"),
+    );
+    const withOld = await attempt(CONFIDENTIAL_CLIENT, signingIn(address));
+    expect(withNew.claims.sub).toBe(sub);
+    expect(withOld.outcome).toBe("refused-in-the-browser");
   });
 });

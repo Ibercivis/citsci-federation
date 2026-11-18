@@ -6,6 +6,7 @@
   "registrationAllowed": true,
   "registrationEmailAsUsername": true,
   "verifyEmail": true,
+  "resetPasswordAllowed": true,
   "passwordPolicy": "length(12)",
   "smtpServer": {
     "host": "${SMTP_HOST}",
