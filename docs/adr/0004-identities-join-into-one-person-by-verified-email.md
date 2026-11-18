@@ -57,38 +57,26 @@ takeover, so it is a first-class assertion and not a nice-to-have.
 
 ## What enforces the negative direction
 
-**The provider does not, and this decision read as though it would.** Keycloak performs the merge
-with `idp-auto-link`, which matches an arriving Identity against a Person by email address and never
-reads `email_verified`. So the configuration that delivers the paragraph above also delivers the
-takeover this ADR exists to refuse, silently: measured on the pinned version, a verified address and
-then the same address **unverified** through a second source produce one Person Identifier, with no
-page and no error (issue #75).
+**Not the provider, which this decision read as though it would.** Keycloak performs the merge with
+`idp-auto-link`, and that authenticator compares the address and never reads `email_verified`. So the
+configuration that delivers the paragraph above also delivers the takeover this ADR refuses: a
+verified address, then the same address unverified from a second source, one Person Identifier, no
+page and no error (issue #75). Configuration cannot stop it either — no condition Keycloak ships sees
+what the arriving source claimed.
 
-Nor is it a setting that could be guarded. No condition authenticator Keycloak ships can see the
-arriving claim, with or without a mapper's help
-(`docs/notes/conditional-subflow-and-brokered-email-verified.md`).
+So the rule is **our code**: a condition in `broker/verified-email/`, which the realm puts in a
+conditional subflow ahead of the join. It reads the two facts Keycloak itself reads when it creates a
+Person — this source is trusted on addresses, and it said it verified this one — so the join path
+cannot drift away from the create path. Whatever it cannot establish counts as unverified.
 
-So the rule is **our code, in this repository**: a condition in `broker/verified-email/`, compiled
-into the Broker's image, which the realm puts in a conditional subflow ahead of `idp-auto-link` in
-its `citsci first broker login` flow. It answers one question — did this address arrive affirmed by a
-source whose word on an address the Broker trusts — and it reads the same two facts Keycloak reads
-when it sets `emailVerified` on a Person it is creating, so the join path and the create path cannot
-drift apart. Anything it cannot establish counts as unverified.
+An Identity it refuses is **turned away** today, told the service it came from did not confirm the
+address. They should instead be asked for an address and sent a confirmation link, which gets them a
+Person of their own rather than a closed door. That needs SMTP (#26); `idp-email-verification` then
+takes the refusal's place in the same subflow.
 
-**The mirror of this rule is not enforced, and the accepted risk is therefore larger than the one
-written above.** The condition asks what the arriving Identity's source affirmed; nothing asks
-whether the Person being joined holds that address verified. So the takeover still works by arriving
-*first*: create a Person at somebody else's address through a source that affirms nothing, and the
-Broker joins their genuine verified arrival to it. Measured, and the vector in our own configuration
-is ORCID, which affirms no address — the Person is asked for one and nothing confirms it. What this
-ADR accepted was "whoever controls a mailbox can become that Person"; what holds today is weaker,
-because no mailbox is needed. Closing it is the same sentence this ADR already contains — a source
-that affirms nothing causes the Broker to ask for an address and confirm it by mail — so it waits on
-SMTP (#26) rather than on a new decision. The hole is `issue #88`, which that ticket blocks.
-
-Today an Identity the condition refuses is **turned away**, told that the service it came from did
-not confirm its address. That is less than this ADR promises above: the Broker should ask that Person for an
-address and confirm it by mail, which is what would give them a Person of their own instead of a
-closed door. It takes SMTP (#26), and when SMTP lands, `idp-email-verification` replaces the refusal
-inside that same subflow — the condition stays as it is. Until then the pilot refuses, because
-refusing is what keeps the promise that an unverified email joins nothing.
+**The mirror of the rule is unenforced, so the accepted risk is larger than the one written above.**
+Nothing asks whether the Person being joined holds that address verified, so the takeover still works
+by arriving *first*: create a Person at somebody else's address through a source that affirms nothing
+— ORCID affirms none — and the Broker joins their genuine verified arrival to it. This ADR accepted
+"whoever controls a mailbox can become that Person". Today no mailbox is needed. `issue #88` owns it,
+blocked by #26.

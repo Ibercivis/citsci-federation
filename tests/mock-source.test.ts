@@ -95,10 +95,8 @@ describe("a Person arriving through the Mock Identity Source", () => {
 
 describe("the Mock Identity Source on the Broker's sign-in page", () => {
   it("tells a Person every one of them is not a launch source", async () => {
-    // Several, because ADR-0004's merge and its refusal can only be staged
-    // across two sources, and one of the three affirms no address at all.
-    // Whichever a Person is offered, it has to say so in the name they read:
-    // this source vouches for nobody.
+    // There are several of them now. Whichever one a Person is offered has to
+    // say in the name they read that it vouches for nobody.
     const { asked } = await authenticate(CONFIDENTIAL_CLIENT);
     const signInPage = asked.find((page) => page.kind === "sign-in");
 
@@ -111,10 +109,9 @@ describe("the Mock Identity Source on the Broker's sign-in page", () => {
   });
 
   it("offers each of them under the name the mock declares", async () => {
-    // The realm file spells these names a second time, because JSON can
-    // import nothing. This is what notices when the two drift — a Person
-    // choosing a source reads the realm's name, and a case looking for a
-    // source by the mock's name would otherwise silently find nothing.
+    // The realm spells these names a second time, because JSON imports
+    // nothing. If the two drift, every case that picks a source by name finds
+    // nothing and fails somewhere else; this fails here instead.
     const { asked } = await authenticate(CONFIDENTIAL_CLIENT);
     const signInPage = asked.find((page) => page.kind === "sign-in");
 

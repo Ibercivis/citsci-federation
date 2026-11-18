@@ -148,11 +148,10 @@ citation, not the authority.
   on risk. Open it before folding the two passes into one, or before putting `tsrs` in the gate —
   `issue #83` watches that.
 - **Conditional subflows and the brokered `email_verified`**
-  (`conditional-subflow-and-brokered-email-verified.md`) — no condition authenticator Keycloak
-  ships can read what an arriving Identity's source said about its address, so ADR-0004's negative
-  direction is enforced by our own condition in `broker/verified-email/`. Open it before reaching
-  for `conditional-user-attribute`, or to cost anything else that would need the brokered context
-  inside a first broker login flow.
+  (`conditional-subflow-and-brokered-email-verified.md`) — no condition Keycloak ships can see what
+  an arriving Identity's source said about its address, which is why `broker/verified-email/` is our
+  code. Open it before reaching for `conditional-user-attribute`, or to cost anything else that
+  needs the brokered context inside a first broker login flow.
 
 ### Internal notes
 

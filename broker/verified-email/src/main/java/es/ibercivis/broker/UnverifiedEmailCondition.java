@@ -136,9 +136,9 @@ public class UnverifiedEmailCondition
   @Override
   public String getHelpText() {
     return "True when the email address this Identity arrives with was not"
-        + " verified by the identity provider it came from, or when that"
-        + " provider is not trusted to verify addresses. An address nobody"
-        + " verified must not reach an account that already holds it.";
+        + " verified by the Identity Source it came from, or when that source"
+        + " is not trusted to verify addresses. Such an address must not reach"
+        + " a Person who already holds it.";
   }
 
   /** Nothing to configure. A setting here would be a way to switch the rule

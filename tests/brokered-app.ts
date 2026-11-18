@@ -268,11 +268,8 @@ function question(page: Page, arrival: Arrival): Question | null {
   return null;
 }
 
-/**
- * What a Person would read on a page: its markup taken out, and the parts a
- * browser never shows — scripts and stylesheets — taken out first, since the
- * provider's pages carry both and neither is anything a Person was told.
- */
+/** What a Person would read on a page: the markup stripped, and the scripts
+ *  and stylesheets a browser never shows stripped first. */
 const readableTextOf = (html: string): string =>
   visibleText(
     html
@@ -291,11 +288,9 @@ function pageComplaint({ html }: Page): string {
     heading?.[1] ? `Page: ${heading[1].trim()}` : "",
     messages.length ? `Errors: ${messages.join(" | ")}` : "",
     asksFor?.[1] ? `Asks for field: ${asksFor[1]}` : "",
-    // Everything a Person would read, because a refusal the Broker states in
-    // its own words — a message declared in the realm rather than one of this
-    // provider's — appears nowhere above. A case asserting that the Broker
-    // said why has only this to read it from, and it is also what makes the
-    // last line unconditional: there is always something a Person was shown.
+    // Everything a Person was shown. A refusal the realm words itself appears
+    // in none of the lines above, so this is the only place a case can read it
+    // from — and the reason this last line needs no guard.
     `Says: ${readableTextOf(html)}`,
   ]
     .filter(Boolean)

@@ -17,28 +17,25 @@ import { Browser, createPkce, follow, formsOn } from "./brokered-app.ts";
 import declaration from "../mock-source/mock.json" with { type: "json" };
 
 /**
- * Every Identity Source this one server stands behind, by the alias the
- * Broker knows it under: the name a Person reads on the sign-in page, and
- * whether the Broker trusts this source's word on an address (`trustEmail`,
- * set per source and never on the realm — ADR-0004).
+ * Every Identity Source this one server stands behind, by its alias: the name a
+ * Person reads on the sign-in page, and whether the Broker trusts that source's
+ * word on an address.
  *
- * There is more than one because a Person cannot hold two Identities from the
- * same source: `federated_identity` keeps one link per source per Person, so
- * both halves of ADR-0004 — the merge and its refusal — can only be staged
- * across two of them.
+ * Several, because a Person cannot hold two Identities from the same source —
+ * `federated_identity` keeps one link per source per Person — and the join is
+ * about their second one.
  */
 export const MOCK_SOURCES = declaration.sources;
 
 type MockSourceAlias = keyof typeof MOCK_SOURCES;
 
 /**
- * A source by the name a Person reads, asked for by what the Broker does with
- * its word on an address rather than by its alias. A case needs *a source that
- * affirms addresses*, not `mock-affirming-a` in particular.
+ * A source by the name a Person reads, asked for by what it does with
+ * addresses rather than by its alias.
  *
- * `affirmsAddresses` is `mock.json` repeating the realm's `trustEmail`, so the
- * two can disagree. This is what says so, instead of leaving a case to fail
- * somewhere further on with nothing to point at.
+ * `affirmsAddresses` repeats the realm's `trustEmail`, so the two can disagree.
+ * This is what says so, instead of a case failing further on with nothing to
+ * point at.
  */
 function sourceNamed(alias: MockSourceAlias, affirming: boolean): string {
   const source = MOCK_SOURCES[alias];
@@ -62,8 +59,8 @@ export const AFFIRMING_SOURCE_B = sourceNamed("mock-affirming-b", true);
 export const SOURCE_AFFIRMING_NOTHING = sourceNamed("mock", false);
 
 export const MOCK_SOURCE = {
-  /** The source that affirms nothing, which is the one the cases that predate
-   *  ADR-0004's two halves arrive through. */
+  /** The source that affirms nothing, which is what the older cases arrive
+   *  through. */
   name: SOURCE_AFFIRMING_NOTHING,
   issuer: configured("MOCK_ISSUER"),
 } as const;
