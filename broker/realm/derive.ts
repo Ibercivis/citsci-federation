@@ -1,13 +1,16 @@
 /**
  * The one step between the Broker's declaration and what Keycloak imports.
  *
- * It runs inside the image build (`broker/Dockerfile`):
+ * Keycloak imports one complete realm per file and cannot layer two, so the
+ * layering happens here, inside the image build (`broker/Dockerfile`):
  *
- *   node derive.ts > realm-citsci.json
+ *   node derive.ts <testing|production> > realm-citsci.json
  *
- * `base.json` is the realm, and `user-profile.json` becomes its user profile.
- * What comes out is never written into this repository, so there is nothing
- * to edit by hand.
+ * `base.json` is the whole Broker anywhere it runs. `testing.json` only adds
+ * to it, and only in `testing`. `user-profile.json` becomes the realm's user
+ * profile. What comes out is never written into this repository, so there is
+ * nothing to edit by hand. `broker/README.md` says which layer an addition
+ * belongs in.
  */
 
 import { readFileSync } from "node:fs";
@@ -17,14 +20,59 @@ export type Realm = Record<string, unknown>;
 
 export interface Declaration {
   base: Realm;
+  testing: Realm;
   userProfile: object;
 }
 
-export function derive(declaration: Declaration): Realm {
-  return {
-    ...declaration.base,
-    components: userProfileComponent(declaration.userProfile),
-  };
+/** The two ways the Broker runs. Anything else is refused, so a typo cannot
+ *  quietly build the base alone. */
+const MODES = ["testing", "production"];
+
+export function derive(mode: string, declaration: Declaration): Realm {
+  if (!MODES.includes(mode)) {
+    throw new Error(
+      `Unknown BROKER_MODE "${mode}": it is "testing" or "production".`,
+    );
+  }
+  const realm: Realm = { ...declaration.base };
+  if (mode === "testing") {
+    for (const [field, entries] of Object.entries(declaration.testing)) {
+      realm[field] = added(field, realm[field] ?? [], entries);
+    }
+  }
+  realm["components"] = userProfileComponent(declaration.userProfile);
+  return realm;
+}
+
+/**
+ * The base's entries with the layer's after them. A layer only adds: it may
+ * not set a value of the base, nor declare an entry under a key the base
+ * already uses, because either would make the base mean something different
+ * depending on the mode.
+ */
+function added(field: string, declared: unknown, entries: unknown): unknown[] {
+  if (!Array.isArray(entries) || !Array.isArray(declared)) {
+    throw new Error(
+      `The testing layer sets "${field}", which is not a list of entries. A layer only adds.`,
+    );
+  }
+  const taken = new Set(declared.map(keyOf));
+  for (const entry of entries) {
+    const key = keyOf(entry);
+    if (key !== undefined && taken.has(key)) {
+      throw new Error(
+        `The testing layer re-declares ${field} "${key}", which the base declares. A layer only adds.`,
+      );
+    }
+  }
+  return [...declared, ...entries];
+}
+
+/** The field an entry of the realm is known by, whichever kind it is. */
+function keyOf(entry: unknown): string | undefined {
+  const fields = entry as Record<string, unknown>;
+  const key = fields["clientId"] ?? fields["alias"] ?? fields["username"];
+  return typeof key === "string" ? key : undefined;
 }
 
 /**
@@ -49,8 +97,9 @@ const read = (name: string) =>
   JSON.parse(readFileSync(join(import.meta.dirname, name), "utf8"));
 
 if (import.meta.main) {
-  const realm = derive({
+  const realm = derive(process.argv[2] ?? "", {
     base: read("base.json"),
+    testing: read("testing.json"),
     userProfile: read("user-profile.json"),
   });
   process.stdout.write(`${JSON.stringify(realm, null, 2)}\n`);

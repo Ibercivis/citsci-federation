@@ -135,110 +135,6 @@
       "optionalClientScopes": [],
       "clientAuthenticatorType": "client-secret",
       "secret": "brokered-app-confidential-development-secret"
-    },
-    {
-      "clientId": "misconfigured-client",
-      "name": "Misconfigured client",
-      "description": "Testing only: see MISCONFIGURED_CLIENT in tests/clients.ts.",
-      "enabled": true,
-      "protocol": "openid-connect",
-      "publicClient": true,
-      "standardFlowEnabled": true,
-      "implicitFlowEnabled": true,
-      "directAccessGrantsEnabled": false,
-      "serviceAccountsEnabled": false,
-      "consentRequired": true,
-      "redirectUris": ["http://localhost:3001/*"],
-      "webOrigins": [],
-      "attributes": {},
-      "defaultClientScopes": ["acr", "basic", "email", "web-origins"],
-      "optionalClientScopes": []
-    }
-  ],
-  "identityProviders": [
-    {
-      "alias": "mock",
-      "displayName": "Mock source (not for launch)",
-      "providerId": "oidc",
-      "enabled": true,
-      "trustEmail": false,
-      "storeToken": false,
-      "addReadTokenRoleOnCreate": false,
-      "linkOnly": false,
-      "hideOnLogin": false,
-      "config": {
-        "issuer": "${MOCK_ISSUER}",
-        "authorizationUrl": "${MOCK_ISSUER}/auth",
-        "tokenUrl": "${MOCK_ISSUER}/token",
-        "userInfoUrl": "${MOCK_ISSUER}/me",
-        "jwksUrl": "${MOCK_ISSUER}/jwks",
-        "useJwksUrl": "true",
-        "validateSignature": "true",
-        "disableUserInfo": "false",
-        "clientId": "citsci-broker",
-        "clientSecret": "mock-source-development-secret",
-        "clientAuthMethod": "client_secret_post",
-        "defaultScope": "openid email",
-        "pkceEnabled": "true",
-        "pkceMethod": "S256",
-        "syncMode": "IMPORT"
-      }
-    },
-    {
-      "alias": "mock-affirming-a",
-      "displayName": "Mock source A, affirms addresses (not for launch)",
-      "providerId": "oidc",
-      "enabled": true,
-      "trustEmail": true,
-      "storeToken": false,
-      "addReadTokenRoleOnCreate": false,
-      "linkOnly": false,
-      "hideOnLogin": false,
-      "config": {
-        "issuer": "${MOCK_ISSUER}",
-        "authorizationUrl": "${MOCK_ISSUER}/auth",
-        "tokenUrl": "${MOCK_ISSUER}/token",
-        "userInfoUrl": "${MOCK_ISSUER}/me",
-        "jwksUrl": "${MOCK_ISSUER}/jwks",
-        "useJwksUrl": "true",
-        "validateSignature": "true",
-        "disableUserInfo": "false",
-        "clientId": "citsci-broker",
-        "clientSecret": "mock-source-development-secret",
-        "clientAuthMethod": "client_secret_post",
-        "defaultScope": "openid email",
-        "pkceEnabled": "true",
-        "pkceMethod": "S256",
-        "syncMode": "IMPORT"
-      }
-    },
-    {
-      "alias": "mock-affirming-b",
-      "displayName": "Mock source B, affirms addresses (not for launch)",
-      "providerId": "oidc",
-      "enabled": true,
-      "trustEmail": true,
-      "storeToken": false,
-      "addReadTokenRoleOnCreate": false,
-      "linkOnly": false,
-      "hideOnLogin": false,
-      "config": {
-        "issuer": "${MOCK_ISSUER}",
-        "authorizationUrl": "${MOCK_ISSUER}/auth",
-        "tokenUrl": "${MOCK_ISSUER}/token",
-        "userInfoUrl": "${MOCK_ISSUER}/me",
-        "jwksUrl": "${MOCK_ISSUER}/jwks",
-        "useJwksUrl": "true",
-        "validateSignature": "true",
-        "disableUserInfo": "false",
-        "clientId": "citsci-broker",
-        "clientSecret": "mock-source-development-secret",
-        "clientAuthMethod": "client_secret_post",
-        "defaultScope": "openid email",
-        "pkceEnabled": "true",
-        "pkceMethod": "S256",
-        "syncMode": "IMPORT"
-      }
     }
   ],
   "authenticatorConfig": [
@@ -359,13 +255,20 @@
         "executors": [
           {
             "executor": "pkce-enforcer",
-            "configuration": { "auto-configure": "false" }
+            "configuration": {
+              "auto-configure": "false"
+            }
           },
           {
             "executor": "reject-implicit-grant",
-            "configuration": { "auto-configure": "false" }
+            "configuration": {
+              "auto-configure": "false"
+            }
           },
-          { "executor": "secure-session", "configuration": {} }
+          {
+            "executor": "secure-session",
+            "configuration": {}
+          }
         ]
       }
     ]
@@ -376,23 +279,14 @@
         "name": "code-flow-only",
         "description": "Applies the code-flow-only profile to every client.",
         "enabled": true,
-        "conditions": [{ "condition": "any-client", "configuration": {} }],
+        "conditions": [
+          {
+            "condition": "any-client",
+            "configuration": {}
+          }
+        ],
         "profiles": ["code-flow-only"]
       }
     ]
-  },
-  "users": [
-    {
-      "username": "demo",
-      "enabled": true,
-      "email": "demo@example.org",
-      "emailVerified": true,
-      "credentials": [
-        {
-          "type": "password",
-          "value": "demo"
-        }
-      ]
-    }
-  ]
+  }
 }

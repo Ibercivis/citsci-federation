@@ -49,7 +49,10 @@ services:
   keycloak:
     # Keycloak at a pinned version plus our extensions and the realm, built
     # from broker/Dockerfile, which is where the version is pinned and why.
-    build: ./broker
+    build:
+      context: ./broker
+      args:
+        BROKER_MODE: ${BROKER_MODE:?declare it in .env}
     # The channel for a value that must not be typed into a tracked file. It
     # is absent on most machines, and absent is not an error: nothing in this
     # stack needs a live credential yet.
@@ -76,7 +79,8 @@ services:
       BROKER_ISSUER: ${BROKER_ISSUER:?declare it in .env}
       # Read by the realm import, which substitutes it into the Mock
       # Identity Source's endpoints rather than spelling its address twice.
-      MOCK_ISSUER: ${MOCK_ISSUER:?declare it in .env}
+      # Only the testing layer names it, so the base starts without it.
+      MOCK_ISSUER: ${MOCK_ISSUER:-}
       # Behind the proxy, over HTTP, in production mode: the shape the ADR
       # asks for, with TLS terminated in front rather than absent.
       KC_HTTP_ENABLED: "true"

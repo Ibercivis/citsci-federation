@@ -17,19 +17,55 @@ Discovery: `$BROKER_ISSUER/.well-known/openid-configuration`, where
 hostname means the same thing to a browser and to a container on the compose
 network, and `.env` says why.
 
-The one Identity the realm declares: `demo` / `demo`. Its sign-in page also
-offers the Mock Identity Source, whose Identities are declared in
-`mock-source/mock.json` (password `mock`).
+In `testing`, the one Identity the realm declares is `demo` / `demo`, and its
+sign-in page also offers the Mock Identity Sources, whose Identities are
+declared in `mock-source/mock.json` (password `mock`). In `production` there
+are neither.
 
 Admin console: under the same origin, at `/admin` (`admin` / `admin`) — **for
 looking, not for changing.** A change made there is configuration no reviewer
 can see, and `pnpm broker:reset` throws it away. Anything that needs to change
 belongs in the declaration.
 
-## The realm is applied from the declaration, and from nowhere else
+## Two layers, one realm
 
-`realm/derive.ts` turns `realm/` into the one file Keycloak imports, inside the
-image build. That file exists only in the image, so nobody can edit it by hand.
+`realm/base.json` is the Broker anywhere it runs. `realm/testing.json` is
+what exists only so that it can be tested. `BROKER_MODE` in `.env` picks one of
+two Brokers: `testing` is the base plus the testing layer, and `production`
+is the base alone. The development stack and CI run `testing`, and anything
+meant to be deployed runs `production`.
+
+Keycloak imports one complete realm per file and cannot layer two, so
+`realm/derive.ts` does it inside the image build and writes the one file
+Keycloak imports. That file exists only in the image, so nobody can edit it by
+hand. The same step turns `realm/user-profile.json` into the realm's user
+profile.
+
+**A layer only adds.** The testing layer may append entries to the base's
+lists. It may not set a value of the base, nor declare an entry under a
+`clientId`, `alias` or `username` the base already uses: `derive.ts` refuses
+both, and so does a `BROKER_MODE` that is neither of the two. A case that needs
+a variant of a base entry declares a new one beside it under its own key, the
+way `mock-affirming-a` and `mock-affirming-b` sit beside `mock`.
+
+### Which layer an addition belongs in
+
+Ask whether a real deployment would ship it. Three kinds of thing never
+should, and they are the testing layer:
+
+- **A credential anybody can read here**, like the `demo` Identity's password.
+- **An Identity Source that vouches for nobody**, like the Mock Identity
+  Sources, which say whatever `mock-source/mock.json` tells them to.
+- **A client registered so that it can be refused**, like
+  `misconfigured-client`.
+
+Everything else is base, including what was added *for* a case and that the
+Broker needs anyway. The first broker login flow arrived with the tests for
+ADR-0004, and it is base because it is how every Identity Source joins a
+Person. A stand-in client that a Brokered App will replace is base too, until
+the real registration takes its place.
+
+## The realm is applied from the declaration, and from nowhere else
 
 `--import-realm` applies the realm the image carries when the realm is not yet
 in the database. That is what makes the declaration reproducible rather than
@@ -40,9 +76,9 @@ declaration is the whole configuration, and the image built from this
 directory the whole of the code.
 
 The cost is stated plainly: an edit to the declaration does **not** reach a
-stack that is already up. A `reset` is how it lands, and a Broker holding
-state worth keeping will need a migration path that this pilot does not have
-yet.
+stack that is already up, and neither does a change of `BROKER_MODE`. A
+`reset` is how either lands. A Broker holding state worth keeping will need a migration path that this pilot
+does not have yet.
 
 **Re-applying the file on every start was considered and rejected.** Keycloak
 can be told to import with `--override`, which would make "applied at
@@ -122,8 +158,8 @@ stand-ins: the real applications register their own, with their own redirect
 URIs, when they are integrated. The redirect URIs here are development
 guesses, and the confidential one follows the callback shape django-allauth
 serves, because the applications of the pilot are Django.
-A third, `misconfigured-client`, is a testing fixture and not a Brokered
-App: `tests/clients.ts` says why.
+A third, `misconfigured-client`, is a testing fixture in the testing layer and
+not a Brokered App: `tests/clients.ts` says why.
 
 No Brokered App's infrastructure is declared anywhere in this repository —
 only the clients the Broker knows them by.
@@ -239,9 +275,9 @@ account of their own; that needs the Broker to send mail (#26). When it can,
 
 A test Identity Source this repository runs itself (`mock-source/`), so
 that what a source says about an address can be decided by hand: per Identity,
-and separately for the ID token and for userinfo. Each is declared with a
-display name that says it is not for launch, because that name is what a
-Person reads on the sign-in page.
+and separately for the ID token and for userinfo. All three registrations are
+in the testing layer. Each is declared with a display name that says it is not
+for launch, because that name is what a Person reads on the sign-in page.
 
 **Three of them, over one server.** `federated_identity` holds one link per
 source per Person, so a second Identity from the *same* source is refused by

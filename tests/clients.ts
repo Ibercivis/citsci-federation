@@ -54,8 +54,8 @@ export const CLIENT_TYPES: ReadonlyArray<[string, Client]> = [
  * refusals come from the realm's policy rather than from its own settings.
  * Drop it from those cases and nothing shows the policy works.
  *
- * It lives in the realm the Broker imports until testing-only configuration
- * has a declaration of its own (#65).
+ * It is declared in the testing layer, `broker/realm/testing.json`, so a
+ * Broker built for `production` does not have it.
  */
 export const MISCONFIGURED_CLIENT: Client = {
   id: "misconfigured-client",
@@ -70,7 +70,8 @@ export const EVERY_REGISTERED_CLIENT: ReadonlyArray<[string, Client]> = [
   ["misconfigured", MISCONFIGURED_CLIENT],
 ];
 
-/** The one Identity the realm declares, so a flow has someone to authenticate. */
+/** The one Identity the testing layer declares, so a flow has someone to
+ *  authenticate. */
 export const DEMO_IDENTITY = {
   username: "demo",
   password: "demo",

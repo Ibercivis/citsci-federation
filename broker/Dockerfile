@@ -26,13 +26,16 @@ RUN mvn --batch-mode --quiet dependency:go-offline
 COPY verified-email/src ./src
 RUN mvn --batch-mode --quiet package
 
-# The realm Keycloak imports, derived from the declaration in `realm/`. The
-# same Node as the Mock Identity Source's, which runs TypeScript by stripping
-# the types.
+# The realm Keycloak imports, derived from the declaration in `realm/` for one
+# mode: `testing` or `production`, from BROKER_MODE in `.env`. There is no
+# default, and `derive.ts` refuses anything else, so an image cannot be built
+# without saying which Broker it is. The same Node as the Mock Identity
+# Source's, which runs TypeScript by stripping the types.
 FROM node:24.22.3-alpine AS realm
+ARG BROKER_MODE
 WORKDIR /realm
 COPY realm/ ./
-RUN node derive.ts > realm-citsci.json
+RUN node derive.ts "$BROKER_MODE" > realm-citsci.json
 
 # The version is pinned and does not move on its own. Two reasons:
 #
