@@ -13,6 +13,7 @@ import {
   SOURCE_AFFIRMING_NOTHING,
   type MockIdentity,
 } from "./mock-source.ts";
+import { declaredRefusal } from "./realm.ts";
 
 /**
  * Arrive at an address a Person already holds and you become that Person — but
@@ -31,6 +32,9 @@ import {
 
 const PERSON_IDENTIFIER =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}@ibercivis\.es$/;
+
+/** The refusal as the realm words it. */
+const REFUSAL = declaredRefusal("citsci-refuse-an-unverified-join");
 
 /** An arrival: who signs in, and through which Identity Source. */
 const arriving = (through: string, identity: MockIdentity) => ({
@@ -78,9 +82,7 @@ describe("an unverified address joins no existing Person", () => {
     expect(JSON.stringify(takeover)).not.toContain(person);
     // Refused for the declared reason. Without this, any page the stand-in app
     // could not answer would pass the case — a missing `nonce`, for instance.
-    expect(whatThePersonWasTold(takeover)).toMatch(
-      /did not confirm your email address/i,
-    );
+    expect(whatThePersonWasTold(takeover)).toContain(REFUSAL);
   });
 
   it("refuses an affirmed address when the Broker does not trust that source", async () => {
@@ -96,9 +98,7 @@ describe("an unverified address joins no existing Person", () => {
 
     expect(throughUntrusted.outcome).toBe("refused-in-the-browser");
     expect(JSON.stringify(throughUntrusted)).not.toContain(person);
-    expect(whatThePersonWasTold(throughUntrusted)).toMatch(
-      /did not confirm your email address/i,
-    );
+    expect(whatThePersonWasTold(throughUntrusted)).toContain(REFUSAL);
   });
 
   it("leaves the Person it refused to join exactly as they were", async () => {

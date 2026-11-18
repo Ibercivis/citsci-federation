@@ -104,20 +104,21 @@ describe("the Mock Identity Source on the Broker's sign-in page", () => {
       /mock/i.test(text),
     );
 
-    expect(offered).toHaveLength(Object.keys(MOCK_SOURCES).length);
+    expect(offered).toHaveLength(MOCK_SOURCES.length);
     for (const name of offered) expect(name).toMatch(/not for launch/i);
   });
 
-  it("offers each of them under the name the mock declares", async () => {
-    // The realm spells these names a second time, because JSON imports
-    // nothing. If the two drift, every case that picks a source by name finds
-    // nothing and fails somewhere else; this fails here instead.
+  it("offers every source the mock stands behind", async () => {
+    // Nothing here guards a second spelling of the names any more: a case reads
+    // them from the realm that decides them. What is still worth asserting is
+    // that each alias the mock answers for reaches a Person at all — an alias
+    // the realm disabled, or never enabled, is a sign-in nobody can start.
     const { asked } = await authenticate(CONFIDENTIAL_CLIENT);
     const signInPage = asked.find((page) => page.kind === "sign-in");
 
     const offered = linkTextsOn(signInPage?.html ?? "");
 
-    for (const source of Object.values(MOCK_SOURCES)) {
+    for (const source of MOCK_SOURCES) {
       expect(offered.some((text) => text.includes(source.name))).toBe(true);
     }
   });

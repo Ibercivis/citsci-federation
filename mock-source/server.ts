@@ -45,7 +45,7 @@ const ISSUER = required("MOCK_ISSUER");
  * `federated_identity` refuses the second by primary key, before any rule of
  * ours is reached.
  */
-const BROKER_CALLBACKS = Object.keys(declaration.sources).map(
+const BROKER_CALLBACKS = declaration.sources.map(
   (alias) => `${required("BROKER_ISSUER")}/broker/${alias}/endpoint`,
 );
 

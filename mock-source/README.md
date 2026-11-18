@@ -13,21 +13,19 @@ client it serves — the Broker — and its Identities.
 
 ### Three sources, one server
 
-| Alias | Affirms addresses (`trustEmail`) |
-|---|---|
-| `mock` | no — everything through it is unverified, whatever it claims |
-| `mock-affirming-a` | yes |
-| `mock-affirming-b` | yes |
-
 Three, because a Person holds **one Identity per source** — `federated_identity`
 says so with a primary key — and the join is about their *second* Identity. Two
 affirming sources to stage it, one affirming nothing to stage its refusal.
 
-The keys of `sources` are where the aliases are declared: `server.ts` registers
-one Broker callback per key, and the realm repeats them because JSON imports
-nothing. `affirmsAddresses` repeats the realm's `trustEmail` and decides
-nothing; it lets a case ask for *a source that affirms addresses* instead of
-naming one. If the two ever disagree, `tests/mock-source.ts` throws and says so.
+`sources` is the list of aliases and nothing more: `server.ts` registers one
+Broker callback per alias, and the realm repeats them because JSON imports
+nothing.
+
+What each source is **called** and whether the Broker takes its **word on an
+address** are the realm's to decide, declared there as `displayName` and
+`trustEmail` and read by `tests/realm.ts`. They are not restated here: when they
+were, flipping a `trustEmail` was caught by a behavioural case failing somewhere
+else, rather than by the guard that claimed to catch it.
 
 ### The Identities
 
