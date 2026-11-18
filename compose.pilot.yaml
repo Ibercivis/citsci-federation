@@ -1,0 +1,457 @@
+# The Brokered Apps of the Pilot Composition (ADR-0009), on top of the Broker
+# that compose.yaml declares. Both files together are the composition, and
+# `pnpm pilot:up` is the one command that brings it up:
+#
+#     docker compose -f compose.yaml -f compose.pilot.yaml up -d --build --wait
+#
+# `name:` below replaces the Broker-only project's, so the composition is its
+# own set of containers: `pnpm broker:up` keeps starting the four services the
+# test suite needs and nothing else, and the two cannot be confused for each
+# other. They cannot run at the same time either — one proxy, one port 8080 —
+# and that is right, because this one contains the other.
+#
+# **`pnpm test` wants the Broker-only stack, not this one.** The suite runs one
+# case from inside the compose network, through `docker compose run` with no
+# `-f` of its own, which lands in that project — and in this one it fails on a
+# name it cannot resolve rather than on anything it asserts. So `pnpm
+# pilot:down`, then `pnpm broker:up`, before running the suite.
+#
+# **No application's code is declared or vendored here.** Each service below
+# builds from `apps/<repository>`, which scripts/checkout-apps.sh checks out at
+# that repository's `federation` branch; the Dockerfile it builds with belongs
+# to the application and lives on that branch (ADR-0009). What this file holds
+# is the composition: which applications are in it, what each one is told, and
+# the datastores each one needs.
+#
+# **Nothing here publishes a port.** Every service is reached through the proxy
+# by the hostname `.env` declares for it, so cookies, redirect URIs and CORS
+# take the shape they will have in production. The databases are not published
+# either: a laptop running these applications' own stacks already has 5432 and
+# 5436 taken, and nothing outside this network needs to read them.
+#
+# **Early-stage on purpose** (ADR-0009). Every credential here is a development
+# constant, the Django development server serves every request, DEBUG is on,
+# and the data is invented. Nothing in this state reaches production — which is
+# not the same as being written to be thrown away.
+#
+# What is NOT here yet, and the ticket that brings it:
+#
+#   * Geonity's Flutter client and OpenRed's React front end and Flutter client.
+#     `openred.localhost` is reserved for the React one.
+#   * The schedulers and the queues that carry no mail. The composition exists
+#     to try signing in; a recurring weather job is scenery.
+
+name: citsci-pilot
+
+# ----------------------------------------------------------------- shared
+#
+# What every Brokered App in the composition is told about the Broker
+# (ADR-0001): where it is, which client it is registered as, and the secret
+# it authenticates with. Configuration, read from `.env`, never compiled in.
+#
+# The names here are this file's. Which name an application reads each value
+# under is settled by its own integration — that change lands on its
+# `federation` branch, in that application's words.
+#
+# The address is the issuer, reachable from inside this network as well as
+# from a browser: the proxy answers to `broker.localhost` on both sides of
+# the port mapping, and `.env` says why it has to.
+x-broker: &broker
+  BROKER_ISSUER: ${BROKER_ISSUER:?declare it in .env}
+
+# The catcher every application here sends to; the service itself is declared
+# in compose.yaml, where the Broker's own stack is. All three applications keep
+# email verification mandatory, as production does, so a sign-up cannot be
+# finished without reading the message — and nothing in the composition can
+# deliver one to a real address.
+x-mail: &mail
+  EMAIL_HOST: mailpit
+  EMAIL_PORT: "1025"
+
+# What every LostAtNight process is told, worker included. Its datastores and
+# the host validation the proxy makes safe — but not the client credentials:
+# those are given to the service that runs the sign-in and to nothing else.
+x-lostatnight: &lostatnight
+  DJANGO_SETTINGS_MODULE: gdalface.settings_local
+  DEBUG: "True"
+  # Host validation is left open because the proxy is the only way in and it
+  # forwards nothing but the hostnames it serves. The alternative is to repeat
+  # an address `.env` already declares, in a form Django can parse, which is
+  # the duplication ADR-0001 exists to prevent.
+  ALLOWED_HOSTS: "*"
+  DB_NAME: gdalface
+  DB_USER: gdalface
+  DB_PASSWORD: gdalface
+  DB_HOST: lostatnight-db
+  DB_PORT: "5432"
+  REDIS_HOST: lostatnight-redis
+
+# The port answering, which is all a port check proves: a development server
+# binds it after its own system checks pass, and a 500 on a page is not this
+# check's business. They are here so that `up --wait` returns when the
+# composition is reachable rather than merely created — each service keeps its
+# own patience, which is what differs between them, and shares the command,
+# which does not.
+x-django-port-check:
+  &django-port-check [
+    "CMD-SHELL",
+    'python -c "import socket; socket.create_connection((''127.0.0.1'', 8000), 5)"',
+  ]
+
+x-vite-port-check:
+  &vite-port-check [
+    "CMD-SHELL",
+    'node -e "require(''net'').connect(5173, ''127.0.0.1'').on(''connect'', () => process.exit(0)).on(''error'', () => process.exit(1))"',
+  ]
+
+# Every queue in the composition is backed by its application's own Redis, and
+# nothing distinguishes one of them from another.
+x-redis-check: &redis-check
+  test: ["CMD", "redis-cli", "ping"]
+  interval: 5s
+  timeout: 5s
+  retries: 20
+
+services:
+  # ------------------------------------------------------- LostAtNight
+  #
+  # Ibercivis/gdalface: Django with templates, PostgreSQL, Redis and GDAL. A
+  # server-rendered site, so LOSTATNIGHT_BASE_URL is the whole application.
+
+  lostatnight-db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: gdalface
+      POSTGRES_USER: gdalface
+      POSTGRES_PASSWORD: gdalface
+    volumes:
+      - lostatnight-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U gdalface -d gdalface"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  lostatnight-redis:
+    image: redis:7-alpine
+    healthcheck: *redis-check
+
+  lostatnight:
+    build:
+      context: ./apps/gdalface
+      dockerfile: Dockerfile.local
+    # The one bind mount in this file, and it is load-bearing rather than for
+    # convenience: that image installs the dependencies and copies no code, so
+    # the application is the checkout. Everything else here is built into its
+    # image from the checkout instead.
+    volumes:
+      - ./apps/gdalface:/app
+    command: python manage.py runserver 0.0.0.0:8000
+    environment:
+      <<: [*broker, *mail, *lostatnight]
+      # The origin a form is posted from, which Django needs in full and which
+      # is exactly the string `.env` declares.
+      CSRF_TRUSTED_ORIGINS: ${LOSTATNIGHT_BASE_URL:?declare it in .env}
+      BROKER_CLIENT_ID: ${LOSTATNIGHT_CLIENT_ID:?declare it in .env}
+      BROKER_CLIENT_SECRET: ${LOSTATNIGHT_CLIENT_SECRET:?declare it in .env}
+    depends_on:
+      lostatnight-db:
+        condition: service_healthy
+      lostatnight-redis:
+        condition: service_healthy
+      mailpit:
+        condition: service_started
+    healthcheck:
+      test: *django-port-check
+      interval: 5s
+      timeout: 5s
+      retries: 40
+      start_period: 20s
+
+  # The queue the site hands its slow work to, mail included.
+  lostatnight-worker:
+    build:
+      context: ./apps/gdalface
+      dockerfile: Dockerfile.local
+    volumes:
+      - ./apps/gdalface:/app
+    command: python manage.py rqworker default
+    environment:
+      <<: [*broker, *mail, *lostatnight]
+    depends_on:
+      lostatnight-db:
+        condition: service_healthy
+      lostatnight-redis:
+        condition: service_healthy
+
+  # ----------------------------------------------------------- Geonity
+  #
+  # Ibercivis/citsci-api is the API; Ibercivis/Geonity holds the web app and
+  # the admin panel, which are Vite dev servers in front of it. Three
+  # addresses, one client: the API is the part that holds the secret.
+
+  geonity-db:
+    # PostGIS, from the same maintainer's multi-arch build rather than
+    # postgis/postgis, which is amd64 only — the application's own compose file
+    # says so and this follows it.
+    image: imresamu/postgis:16-3.5
+    environment:
+      POSTGRES_DB: citsci
+      POSTGRES_USER: citsci
+      POSTGRES_PASSWORD: citsci
+    volumes:
+      - geonity-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U citsci -d citsci"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  geonity-redis:
+    image: redis:7-alpine
+    healthcheck: *redis-check
+
+  geonity-api:
+    build: ./apps/citsci-api
+    command: python manage.py runserver 0.0.0.0:8000
+    environment: &geonity-env
+      <<: [*broker, *mail]
+      # Set explicitly rather than left to the default: that settings file
+      # infers DEBUG from whether `runserver` is on the command line, so the
+      # worker would start with DEBUG=False and try to reach SES with the
+      # filler credentials below.
+      DEBUG: "True"
+      ALLOWED_HOSTS: "*"
+      BASE_URL: ${GEONITY_API_BASE_URL:?declare it in .env}
+      BROKER_CLIENT_ID: ${GEONITY_CLIENT_ID:?declare it in .env}
+      BROKER_CLIENT_SECRET: ${GEONITY_CLIENT_SECRET:?declare it in .env}
+      DB_NAME: citsci
+      DB_USER: citsci
+      DB_PASSWORD: citsci
+      DB_HOST: geonity-db
+      REDIS_HOST: geonity-redis
+      # Filler, and it has to be present: that settings file reads these
+      # without a default. Nothing is sent to SES — the mail goes to the
+      # catcher above.
+      FROM_EMAIL: geonity@geonity.invalid
+      AWS_ACCESS_KEY_ID: dev
+      AWS_SECRET_ACCESS_KEY: dev
+      AWS_SES_REGION_NAME: eu-west-1
+      AWS_SES_REGION_ENDPOINT: https://email.eu-west-1.amazonaws.com
+      # The keys its two front ends identify themselves with, which the web
+      # app below is given the web half of.
+      CLIENT_API_KEY_MOBILE: dev-mobile
+      CLIENT_API_KEY_WEB: dev-web
+    depends_on:
+      geonity-db:
+        condition: service_healthy
+      geonity-redis:
+        condition: service_healthy
+      mailpit:
+        condition: service_started
+    healthcheck:
+      test: *django-port-check
+      interval: 5s
+      timeout: 5s
+      retries: 40
+      start_period: 20s
+
+  # The queue that sends half of this application's mail; a view sends the
+  # other half inline, which is why both need the catcher.
+  geonity-worker:
+    build: ./apps/citsci-api
+    command: python manage.py rqworker citisciapi
+    environment: *geonity-env
+    depends_on:
+      geonity-db:
+        condition: service_healthy
+      geonity-redis:
+        condition: service_healthy
+
+  # The web app: a Vite dev server, so the application is the checkout and the
+  # image is a plain Node.
+  #
+  # So this is the one place in the composition where a service's recipe is
+  # here rather than on the application's `federation` branch, which is what
+  # ADR-0009 asks for. It is not an omission to correct: these two front ends
+  # need no recipe — a stock Node, the checkout and `--host` is all either one
+  # is, and Vite answers to a `.localhost` hostname without being configured
+  # to. `docs/local-development.md` records that, from `issue #93`.
+  #
+  # `npm install` rather than `npm ci` — this
+  # repository's lock file is out of step with its package.json, which its
+  # LOCAL-DEV.md records as pre-existing and not ours to fix. node_modules is a
+  # volume so the install survives a restart and stays out of the checkout.
+  #
+  # `--no-package-lock` because the checkout is somebody else's repository and
+  # this composition does not write to it: an install that resolved the lock
+  # file afresh would leave `apps/geonity` dirty, and
+  # scripts/checkout-apps.sh refuses to update a dirty checkout — so running
+  # the composition once would quietly stop it from ever updating this one
+  # again. The lock file is already not what is installed from.
+  #
+  # Debian rather than Alpine on purpose: musl resolves every name under
+  # `.localhost` to the loopback and never asks Docker's DNS, so an Alpine
+  # container could not reach the Broker at its issuer (`.env` says why).
+  geonity-web:
+    image: node:24-bookworm-slim
+    working_dir: /app
+    volumes:
+      - ./apps/geonity/react:/app
+      - geonity-web-node-modules:/app/node_modules
+    command: sh -c "npm install --no-package-lock --no-audit --no-fund && exec npm run dev -- --host 0.0.0.0 --port 5173"
+    environment:
+      # The API through this dev server's own proxy, not from the browser: the
+      # API sends no CORS headers, so a browser calling it cross-origin is
+      # blocked before the request leaves. In production the reverse proxy does
+      # the same job for `geonity.ibercivis.es`.
+      VITE_DEV_PROXY_TARGET: http://geonity-api:8000
+      VITE_API_URL: /api-proxy/api
+      # Read by the browser, so this one is the address the proxy serves.
+      VITE_MEDIA_URL: ${GEONITY_API_BASE_URL:?declare it in .env}
+      VITE_OBSERVATIONS_API_KEY: dev-web
+      # Mapbox needs an access token nobody has locally. The map area stays
+      # blank and every other screen works, which is deliberate: what has to
+      # work here is signing in (docs/local-development.md).
+      VITE_MAPBOX_TOKEN: ""
+    depends_on:
+      geonity-api:
+        condition: service_healthy
+    healthcheck:
+      test: *vite-port-check
+      interval: 5s
+      timeout: 5s
+      retries: 60
+      start_period: 30s
+
+  # The admin panel, the other Vite dev server. Its own default API is the live
+  # site, which is why every target below is set: unconfigured, this panel
+  # reads and writes production (its LOCAL-DEV.md says so).
+  geonity-admin:
+    image: node:24-bookworm-slim
+    working_dir: /app
+    volumes:
+      - ./apps/geonity/admin:/app
+      - geonity-admin-node-modules:/app/node_modules
+    command: sh -c "npm install --no-package-lock --no-audit --no-fund && exec npm run dev -- --host 0.0.0.0 --port 5173"
+    environment:
+      VITE_API_BASE_URL: ""
+      VITE_API_PROXY_TARGET: http://geonity-api:8000
+      VITE_API_COLUMNS_PROXY_TARGET: http://geonity-api:8000
+      VITE_API_ADMIN_FIELDS_PROXY_TARGET: http://geonity-api:8000
+      VITE_MAPBOX_TOKEN: ""
+      VITE_GOOGLE_CLIENT_ID: ""
+    depends_on:
+      geonity-api:
+        condition: service_healthy
+    healthcheck:
+      test: *vite-port-check
+      interval: 5s
+      timeout: 5s
+      retries: 60
+      start_period: 30s
+
+  # ----------------------------------------------------------- OpenRed
+  #
+  # Ibercivis/OpenRed: the API. Its React front end is not in the composition
+  # yet — its `federation` branch carries no local environment — and
+  # `openred.localhost` is held for it.
+
+  openred-db:
+    # PostgreSQL with PostGIS *and* h3, built by the application: its raw SQL
+    # calls a server-side h3 function, and no postgis/postgis tag can have
+    # h3-pg added to it. Its LOCAL-DEV.md carries the measurement.
+    build: ./apps/openred/local_dev/postgis-h3
+    environment:
+      POSTGRES_DB: openred_db
+      POSTGRES_USER: openred_user
+      POSTGRES_PASSWORD: openred
+    volumes:
+      - openred-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U openred_user -d openred_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  openred-redis:
+    image: redis:7-alpine
+    healthcheck: *redis-check
+
+  openred-api:
+    build: ./apps/openred
+    # Its own entrypoint, which waits for the database, migrates, collects the
+    # admin's static files and then serves. One image, four roles, chosen by
+    # this argument.
+    command: ["api"]
+    environment: &openred-env
+      <<: [*broker, *mail]
+      # No default in that settings file, so it has to be given.
+      SECRET_KEY: local-development-only-not-a-secret
+      DEBUG: "True"
+      ALLOWED_HOSTS: "*"
+      CSRF_TRUSTED_ORIGINS_EXTRA: ${OPENRED_API_BASE_URL:?declare it in .env}
+      # Where its mail links send a Person: the address `.env` reserves for the
+      # front end that is not in the composition yet (`issue #96`).
+      FRONTEND_URL: ${OPENRED_WEB_BASE_URL:?declare it in .env}
+      BROKER_CLIENT_ID: ${OPENRED_CLIENT_ID:?declare it in .env}
+      BROKER_CLIENT_SECRET: ${OPENRED_CLIENT_SECRET:?declare it in .env}
+      # Session authentication off, as in its own local stack: with it on, a
+      # signed-in admin session makes DRF demand a CSRF token the
+      # token-authenticated front end never sends.
+      ENABLE_SESSION_AUTH: "False"
+      DB_NAME: openred_db
+      DB_USER: openred_user
+      DB_PASSWORD: openred
+      DB_HOST: openred-db
+      DB_PORT: "5432"
+      REDIS_HOST: openred-redis
+      REDIS_PORT: "6379"
+      REDIS_DB: "4"
+      EMAIL_BACKEND: django.core.mail.backends.smtp.EmailBackend
+      DEFAULT_FROM_EMAIL: openred@openred.invalid
+      SERVER_EMAIL: openred@openred.invalid
+      # That settings file names three real staff addresses as the default.
+      # Emptied here so nothing in the composition can try to mail anybody.
+      TRACK_UPLOAD_NOTIFY_EMAILS: ""
+      REPORT_DEFAULT_LANGUAGE: en
+      # Its settings log every SQL query at DEBUG, which buries the output of
+      # `seed_local` and of every other management command.
+      DB_LOG_LEVEL: INFO
+    volumes:
+      - openred-media:/app/media
+    depends_on:
+      openred-db:
+        condition: service_healthy
+      openred-redis:
+        condition: service_healthy
+      mailpit:
+        condition: service_started
+    healthcheck:
+      test: *django-port-check
+      interval: 5s
+      timeout: 5s
+      retries: 60
+      start_period: 30s
+
+  # The one queue of the three that sends mail. The other two carry track
+  # processing and weather, which no sign-in waits for.
+  openred-worker:
+    build: ./apps/openred
+    command: ["worker", "openred-emails"]
+    environment: *openred-env
+    volumes:
+      - openred-media:/app/media
+    depends_on:
+      openred-db:
+        condition: service_healthy
+      openred-redis:
+        condition: service_healthy
+
+volumes:
+  lostatnight-pgdata:
+  geonity-pgdata:
+  geonity-web-node-modules:
+  geonity-admin-node-modules:
+  openred-pgdata:
+  openred-media:

@@ -1,8 +1,21 @@
-# The reverse proxy in front of the Broker's OpenID provider, in every
-# environment including local (ADR-0001). It holds no policy and terminates no
-# TLS here: its whole job in the pilot is to make the deployment shape the same
+# The reverse proxy in front of everything, in every environment including
+# local (ADR-0001, ADR-0012). It holds no policy and terminates no TLS here:
+# its whole job in the pilot is to make the deployment shape the same
 # everywhere, so that the failures which depend on that shape show up on a
 # laptop rather than for the first time in production.
+#
+# One site block per hostname, and a hostname is the only way in. Nothing in
+# the composition publishes a port of its own, so there is no route to the
+# Broker or to a Brokered App that does not carry the Host header production
+# will send.
+#
+# Every address below is read from `.env`, which declares each one once
+# (ADR-0001) — `{$NAME}` is substituted from this container's environment when
+# the file is loaded, and compose.yaml passes them in. The Brokered Apps'
+# blocks are served by this same file in the Broker-only stack, where the
+# containers behind them do not exist: such a request answers 502, which names
+# the application that is not up. Bringing them up is `pnpm pilot:up`, and
+# compose.pilot.yaml is where they are declared.
 
 {
 	# Nothing to obtain a certificate for: the pilot runs on HTTP locally and
@@ -14,19 +27,69 @@
 	admin off
 }
 
+# The Broker. BROKER_SITE is the issuer with the realm path dropped off the
+# end of it, derived in this container by compose.yaml the same way Keycloak's
+# own hostname is: the issuer is the configuration, and nothing assembles it
+# from parts.
+#
+# The whole host, not just the realm path: `/realms/<name>` is where discovery
+# and the login pages are, and `/resources/` — which those pages load their
+# stylesheet from — is not under it. Nothing is stripped or rewritten here
+# either, so what a Brokered App is told by discovery is what it can call.
+# Caddy adds the X-Forwarded-* headers Keycloak is configured to trust.
+{$BROKER_SITE} {
+	reverse_proxy keycloak:8080
+}
+
+# LostAtNight: one server-rendered Django site, so this address is the whole
+# application.
+{$LOSTATNIGHT_BASE_URL} {
+	reverse_proxy lostatnight:8000
+}
+
+# Geonity: an API, and two Vite dev servers in front of it. Each front end
+# calls the API through its own origin and lets its dev server forward it, as
+# in production behind nginx, so nothing here depends on the API answering a
+# cross-origin request — which it does not.
+{$GEONITY_API_BASE_URL} {
+	reverse_proxy geonity-api:8000
+}
+
+{$GEONITY_WEB_BASE_URL} {
+	reverse_proxy geonity-web:5173
+}
+
+{$GEONITY_ADMIN_BASE_URL} {
+	reverse_proxy geonity-admin:5173
+}
+
+# OpenRed: the API. Its React front end is not in the composition yet, and
+# `openred.localhost` is reserved for it.
+{$OPENRED_API_BASE_URL} {
+	reverse_proxy openred-api:8000
+}
+
+# The mail catcher's inbox: every message any of them sends. It is the only way
+# to finish a sign-up, because email verification is mandatory in all three
+# applications as it is in production.
+{$MAIL_BASE_URL} {
+	reverse_proxy mailpit:8025
+}
+
+# Anything addressed by something other than one of the names above — by
+# `localhost`, by an IP address, or by a name nobody configured.
+#
+# It answers the proxy's own readiness, so that `docker compose up --wait` can
+# tell the difference between the proxy not listening and what is behind it not
+# being up yet, and refuses everything else. The refusal is the point: a
+# request that reached the Broker as `localhost:8080` would succeed, and would
+# succeed with cookies and a `redirect_uri` of a shape production never sees.
 :8080 {
-	# The proxy's own readiness, so that `docker compose up --wait` can tell
-	# the difference between the proxy not listening and the Broker behind it
-	# not being up yet.
 	handle /healthz {
 		respond "ok" 200
 	}
 
 	handle {
-		# `/realms/<name>` stays in the path (ADR-0001): nothing is stripped
-		# or rewritten here, so what a Brokered App is told by discovery is
-		# what it can call. Caddy adds the X-Forwarded-* headers Keycloak is
-		# configured to trust.
-		reverse_proxy keycloak:8080
+		respond `Not a hostname this composition serves. The Broker answers at the issuer and each Brokered App at its own name under .localhost; .env declares all of them.` 404
 	}
 }

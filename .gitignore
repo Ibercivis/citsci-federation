@@ -23,3 +23,9 @@ playwright-report/
 # image.
 broker/person-identifier/target/
 broker/verified-email/target/
+
+# The Brokered Apps' own repositories, checked out at their `federation`
+# branch by scripts/checkout-apps.sh so that the Pilot Composition can build
+# them. No application's code is vendored here: this folder is a working copy
+# and is rebuilt from the remotes by that script (ADR-0009).
+apps/

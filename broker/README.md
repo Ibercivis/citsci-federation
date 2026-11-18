@@ -162,15 +162,40 @@ nothing about what was issued to another application.
 
 A public client for a single-page application, which cannot hold a secret, and
 a confidential one for a server-rendered backend, which can. Both are
-stand-ins, so both are in the testing layer: a `production` Broker registers no
-client until a real application is integrated. The redirect URIs are
-development guesses, and the confidential one follows the callback shape
-django-allauth serves, because the applications of the pilot are Django.
-A third, `misconfigured-client`, sits beside them and is not a Brokered App:
+stand-ins, so both are in the testing layer: a `production` Broker registers
+the applications below and nothing else. The redirect URIs are development
+guesses, and the confidential one follows the callback shape django-allauth
+serves, because the applications of the pilot are Django. A third,
+`misconfigured-client`, sits beside them and is not a Brokered App:
 `tests/clients.ts` says why.
 
-No Brokered App's infrastructure is declared anywhere in this repository —
-only the clients the Broker knows them by.
+### And one client per Brokered App of the Pilot Composition
+
+`LostAtNight`, `Geonity` and `OpenRed`: the applications `compose.pilot.yaml`
+brings up (ADR-0009). Each one's id, secret and address are read from `.env`
+and substituted into the realm by the import, so the Broker and the
+application's own container are told the same three values from one
+declaration. The application reads them as configuration (ADR-0001) and holds
+none of them in its code.
+
+**They are in the base layer**, not in the testing one. A stand-in exists for
+the tests and stops existing in `production`; these three are the applications
+themselves, and a Broker that did not know them would have nothing to broker
+for. What is development-only about them is the value of each `${NAME}`, which
+is `.env`'s business and not the realm's.
+
+**Each registration asserts less than it looks.** The redirect URI is
+`<the application's address>/accounts/oidc/*` — the namespace django-allauth
+serves its callback under, with the provider id left open because the
+integration of each application is what settles it (#30, #31, #94). That
+integration narrows the URI to the one path it uses; until then this is a
+development guess like the stand-ins above, and the registration exists so
+that the composition can hand each application a client that answers.
+
+An unset name survives the import as the literal `${NAME}`, so a client whose
+secret is that string is the signature of a missing variable rather than of a
+mistake in this file. `compose.yaml` passes all nine, and fails to start if
+`.env` declares none of them.
 
 ### Code flow only, for every client
 
@@ -192,10 +217,13 @@ advertises `plain` in `code_challenge_methods_supported` and that list cannot
 be trimmed, so discovery is not evidence of what this Broker allows; the cases
 in `tests/hardening.test.ts` that drive a flow and get turned away are.
 
-### Consent required on both clients
+### Consent required on every client
 
 `consentRequired: true` is what puts a page in front of a Person naming the
-application that is asking. A grant is remembered per application, so they see
+application that is asking. It is on the stand-ins, on the three applications
+of the composition and on the testing fixture alike: the spec requires it of
+every client, and a client registered without it is the one place that rule
+could be lost. A grant is remembered per application, so they see
 it once per application rather than once per session.
 
 Measured against this pinned version: a client that does **not** require

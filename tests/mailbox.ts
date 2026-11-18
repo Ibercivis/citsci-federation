@@ -9,7 +9,10 @@
 
 import { ISSUER, configured } from "./broker.ts";
 
-const MAILBOX = configured("MAILBOX");
+// The inbox is declared once, as the address the proxy serves it at: the
+// composition's applications send here too, and a second variable for the
+// same URL is a variable that can disagree with the one the proxy reads.
+const MAILBOX = configured("MAIL_BASE_URL");
 
 /** How long a mail may take to arrive before a case calls it never sent. */
 const PATIENCE_MS = 10_000;

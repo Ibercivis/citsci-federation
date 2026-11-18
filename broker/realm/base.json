@@ -53,6 +53,191 @@
       "config": {}
     }
   ],
+  "clients": [
+    {
+      "clientId": "${LOSTATNIGHT_CLIENT_ID}",
+      "name": "LostAtNight",
+      "description": "A Brokered App of the Pilot Composition: Ibercivis/gdalface, on its federation branch. The consent screen names it.",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "consentRequired": true,
+      "redirectUris": ["${LOSTATNIGHT_BASE_URL}/accounts/oidc/*"],
+      "webOrigins": [],
+      "attributes": {
+        "pkce.code.challenge.method": "S256"
+      },
+      "protocolMappers": [
+        {
+          "name": "sub",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-person-identifier-mapper",
+          "config": {
+            "person.identifier.scope": "ibercivis.es",
+            "claim.name": "sub",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true",
+            "introspection.token.claim": "true"
+          }
+        },
+        {
+          "name": "voperson_id",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-person-identifier-mapper",
+          "config": {
+            "person.identifier.scope": "ibercivis.es",
+            "claim.name": "voperson_id",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true",
+            "introspection.token.claim": "true"
+          }
+        },
+        {
+          "name": "audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "config": {
+            "included.client.audience": "${LOSTATNIGHT_CLIENT_ID}",
+            "id.token.claim": "false",
+            "access.token.claim": "true",
+            "introspection.token.claim": "true"
+          }
+        }
+      ],
+      "defaultClientScopes": ["acr", "basic", "email", "web-origins"],
+      "optionalClientScopes": [],
+      "clientAuthenticatorType": "client-secret",
+      "secret": "${LOSTATNIGHT_CLIENT_SECRET}"
+    },
+    {
+      "clientId": "${GEONITY_CLIENT_ID}",
+      "name": "Geonity",
+      "description": "A Brokered App of the Pilot Composition: Ibercivis/citsci-api, on its federation branch. The consent screen names it.",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "consentRequired": true,
+      "redirectUris": ["${GEONITY_API_BASE_URL}/accounts/oidc/*"],
+      "webOrigins": [],
+      "attributes": {
+        "pkce.code.challenge.method": "S256"
+      },
+      "protocolMappers": [
+        {
+          "name": "sub",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-person-identifier-mapper",
+          "config": {
+            "person.identifier.scope": "ibercivis.es",
+            "claim.name": "sub",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true",
+            "introspection.token.claim": "true"
+          }
+        },
+        {
+          "name": "voperson_id",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-person-identifier-mapper",
+          "config": {
+            "person.identifier.scope": "ibercivis.es",
+            "claim.name": "voperson_id",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true",
+            "introspection.token.claim": "true"
+          }
+        },
+        {
+          "name": "audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "config": {
+            "included.client.audience": "${GEONITY_CLIENT_ID}",
+            "id.token.claim": "false",
+            "access.token.claim": "true",
+            "introspection.token.claim": "true"
+          }
+        }
+      ],
+      "defaultClientScopes": ["acr", "basic", "email", "web-origins"],
+      "optionalClientScopes": [],
+      "clientAuthenticatorType": "client-secret",
+      "secret": "${GEONITY_CLIENT_SECRET}"
+    },
+    {
+      "clientId": "${OPENRED_CLIENT_ID}",
+      "name": "OpenRed",
+      "description": "A Brokered App of the Pilot Composition: Ibercivis/OpenRed, on its federation branch. The consent screen names it.",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "consentRequired": true,
+      "redirectUris": ["${OPENRED_API_BASE_URL}/accounts/oidc/*"],
+      "webOrigins": [],
+      "attributes": {
+        "pkce.code.challenge.method": "S256"
+      },
+      "protocolMappers": [
+        {
+          "name": "sub",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-person-identifier-mapper",
+          "config": {
+            "person.identifier.scope": "ibercivis.es",
+            "claim.name": "sub",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true",
+            "introspection.token.claim": "true"
+          }
+        },
+        {
+          "name": "voperson_id",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-person-identifier-mapper",
+          "config": {
+            "person.identifier.scope": "ibercivis.es",
+            "claim.name": "voperson_id",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true",
+            "introspection.token.claim": "true"
+          }
+        },
+        {
+          "name": "audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "config": {
+            "included.client.audience": "${OPENRED_CLIENT_ID}",
+            "id.token.claim": "false",
+            "access.token.claim": "true",
+            "introspection.token.claim": "true"
+          }
+        }
+      ],
+      "defaultClientScopes": ["acr", "basic", "email", "web-origins"],
+      "optionalClientScopes": [],
+      "clientAuthenticatorType": "client-secret",
+      "secret": "${OPENRED_CLIENT_SECRET}"
+    }
+  ],
   "authenticatorConfig": [
     {
       "alias": "citsci-review-what-is-missing",

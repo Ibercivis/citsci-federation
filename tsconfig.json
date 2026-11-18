@@ -16,5 +16,12 @@
     "allowImportingTsExtensions": true
   },
   "include": ["**/*.ts"],
-  "exclude": ["node_modules"]
+  // `apps/` holds the Brokered Apps' own repositories, checked out by
+  // scripts/checkout-apps.sh for the Pilot Composition. TypeScript walks it
+  // like any other folder — it reads no `.gitignore`, unlike the linter and
+  // the formatter — so without this line `pnpm check` type-checks somebody
+  // else's front end against our settings, fails, and fails only on a machine
+  // that has run the composition. CI, which never checks the applications out,
+  // would stay green.
+  "exclude": ["node_modules", "apps"]
 }
