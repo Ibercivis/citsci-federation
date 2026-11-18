@@ -32,9 +32,8 @@ belongs in the declaration.
 `realm/base.json` is the Broker anywhere it runs. `realm/testing.json` is
 what exists only so that it can be tested. `BROKER_MODE` in `.env` picks one of
 two Brokers: `testing` is the base plus the testing layer, with the Mock
-Identity Source running, and `production` is the base alone. The development
-stack and CI run `testing`. A CI job also runs `production`, and so does
-anything meant to be deployed.
+Identity Source running, and `production` is the base alone. Anything meant to
+be deployed runs `production`.
 
 Keycloak imports one complete realm per file and cannot layer two, so
 `realm/derive.ts` does it inside the image build and writes the one file
@@ -43,11 +42,11 @@ hand. The same step turns `realm/user-profile.json` into the realm's user
 profile.
 
 **A layer only adds.** The testing layer may append entries to the base's
-lists. It may not set a value of the base, nor declare an entry under a
-`clientId`, `alias` or `username` the base already uses: `derive.ts` refuses
-both, and so does a `BROKER_MODE` that is neither of the two. A case that needs
-a variant of a base entry declares a new one beside it under its own key, the
-way `mock-affirming-a` and `mock-affirming-b` sit beside `mock`.
+lists. It may not set a value of the base, nor declare an entry under a key the
+base already uses: either would make the base mean something different
+depending on the mode, and `derive.ts` refuses both. A case that needs a
+variant of a base entry declares a new one beside it under its own key, the way
+`mock-affirming-a` and `mock-affirming-b` sit beside `mock`.
 
 ### Which layer an addition belongs in
 
@@ -70,11 +69,6 @@ An entry in the base that refers to an entry in the testing layer is a sign
 that one of them is in the wrong layer: the `production` CI job is where that
 shows, because the base has to start on its own.
 
-Seam 2, `tests/declaration.test.ts`, checks that the running Broker is the mode
-it claims to be. It looks for every entry in both layers the way a Brokered
-App or a Person meets it, and expects the testing layer's exactly when the
-mode is `testing`.
-
 ## The realm is applied from the declaration, and from nowhere else
 
 `--import-realm` applies the realm the image carries when the realm is not yet
@@ -85,9 +79,8 @@ again from scratch. Nothing in this repository calls the Admin API, so the
 declaration is the whole configuration, and the image built from this
 directory the whole of the code.
 
-The cost is stated plainly: an edit to the declaration does **not** reach a
-stack that is already up, and neither does a change of `BROKER_MODE`. A
-`reset` is how either lands. Seam 2 fails on a Broker left in the other mode. A
+An edit to the declaration does **not** reach a stack that is already up, and
+neither does a change of `BROKER_MODE`. A `reset` is how either lands. Seam 2 fails on a Broker left in the other mode. A
 Broker holding state worth keeping will need a migration path that this pilot
 does not have yet.
 

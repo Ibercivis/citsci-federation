@@ -61,12 +61,8 @@ export function derive(
   return realm;
 }
 
-/**
- * The base's entries with the layer's after them. A layer only adds: it may
- * not set a value of the base, nor declare an entry under a key the base
- * already uses, because either would make the base mean something different
- * depending on the mode.
- */
+/** The base's entries with the layer's after them, refusing what "A layer
+ *  only adds" in `broker/README.md` rules out. */
 function added(field: string, declared: unknown, entries: unknown): unknown[] {
   if (!Array.isArray(entries) || !Array.isArray(declared)) {
     throw new Error(
