@@ -54,7 +54,7 @@ export function derive(
     }
     const layer = withIssuer(declaration.testing, mockIssuer) as Realm;
     for (const [field, entries] of Object.entries(layer)) {
-      realm[field] = added(field, realm[field] ?? [], entries);
+      realm[field] = appendLayer(field, realm[field] ?? [], entries);
     }
   }
   realm["components"] = userProfileComponent(declaration.userProfile);
@@ -63,14 +63,14 @@ export function derive(
 
 /** The base's entries with the layer's after them, refusing what "A layer
  *  only adds" in `broker/README.md` rules out. */
-function added(field: string, declared: unknown, entries: unknown): unknown[] {
-  if (!Array.isArray(entries) || !Array.isArray(declared)) {
+function appendLayer(field: string, base: unknown, layer: unknown): unknown[] {
+  if (!Array.isArray(layer) || !Array.isArray(base)) {
     throw new Error(
       `The testing layer sets "${field}", which is not a list of entries. A layer only adds.`,
     );
   }
-  const taken = new Set(declared.map(keyOf));
-  for (const entry of entries) {
+  const taken = new Set(base.map(keyOf));
+  for (const entry of layer) {
     const key = keyOf(entry);
     if (key !== undefined && taken.has(key)) {
       throw new Error(
@@ -78,7 +78,7 @@ function added(field: string, declared: unknown, entries: unknown): unknown[] {
       );
     }
   }
-  return [...declared, ...entries];
+  return [...base, ...layer];
 }
 
 /** The field an entry of the realm is known by, whichever kind it is. `name`
