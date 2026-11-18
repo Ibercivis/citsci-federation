@@ -15,6 +15,12 @@ virtuous is the same in every one of these applications so far:
 Each environment lives on that application's `federation` branch, in a `LOCAL-DEV.md` at the root
 of its repository. This file is the index and holds no instructions of its own.
 
+**Mail is caught, never printed.** Every one of these applications keeps
+`ACCOUNT_EMAIL_VERIFICATION = 'mandatory'`, as production does, so a sign-up cannot be finished
+without reading the message; `mailpit` catches it and shows it in a web inbox. The inboxes hold
+8025, 8026 and 8027, one per stack, because the compose files are meant to come up together — the
+fourth application takes 8028.
+
 **An application missing from this list has no local environment**, not an undocumented one.
 
 ## What these environments are for, and what not to spend time on
@@ -55,9 +61,9 @@ local form would otherwise reach a real person. Site on <http://localhost:8000/>
 - [`Ibercivis/citsci-api`](https://github.com/Ibercivis/citsci-api) · `federation` · `LOCAL-DEV.md` — API, data
 - [`Ibercivis/Geonity`](https://github.com/Ibercivis/Geonity) · `federation` · `LOCAL-DEV.md` — web app, admin panel
 
-Django REST + PostGIS, Redis, an `rq` worker and a scheduler. The container recipe already
-existed; what was added is the dataset. The two front ends are **not** containerised: they are
-`npm run dev` on the host.
+Django REST + PostGIS, Redis, a mail catcher, an `rq` worker and a scheduler. Nothing of it
+existed: the Dockerfile and the compose file are new, as is the dataset. The two front ends are
+**not** containerised: they are `npm run dev` on the host.
 
 ```sh
 docker compose up -d --build
@@ -69,6 +75,13 @@ recorded — from a snapshot committed in `local_dev/`, so seeding never touches
 fetch script keeps an **allow-list** of fields so the observer's name is dropped on download, not
 on seeding. Accounts, organization and photographs invented. Four projects, six accounts, sixty
 observations.
+
+API on <http://localhost:8000/>, inbox on <http://localhost:8027/>.
+
+This application sends mail from two places — inline from a view, and from the `rq` worker — and
+that is what retires the console backend here: its output splits across two containers' logs. An
+earlier version of its `LOCAL-DEV.md` told the reader to follow only the API's, so half the
+messages were unreachable by the instructions given.
 
 Two things to know before starting the front ends: the API sends **no CORS headers**, so both must
 go through their dev server's proxy; and the **admin panel** defaults to production when its `.env`
