@@ -31,7 +31,7 @@ join; `Your account is already linked…` means it let the join through.
 
 The last row closes the route. A mapper runs before the flow but has no user to write to, so what it
 imports lands after the flow has already decided. It needs `unmanagedAttributePolicy` enabled too,
-which `broker/user-profile.json` does not do.
+which `broker/realm/user-profile.json` does not do.
 
 Keycloak reads the claim in exactly one place: `emailVerified` on a **new** Person is `trustEmail AND
 email_verified`. Our condition reads those same two facts, so the two paths cannot drift apart.

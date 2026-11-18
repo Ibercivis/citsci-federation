@@ -1,6 +1,7 @@
 # The Broker's OpenID provider: Keycloak at a pinned version, plus the two
 # extensions this repository adds to it — the Person Identifier mapper, and the
-# condition that refuses to join an address nobody verified.
+# condition that refuses to join an address nobody verified — and the realm it
+# imports.
 #
 # Both are compiled here rather than committed: the repository carries no
 # binaries, and building inside a Maven container means nobody needs Java on
@@ -25,6 +26,19 @@ RUN mvn --batch-mode --quiet dependency:go-offline
 COPY verified-email/src ./src
 RUN mvn --batch-mode --quiet package
 
+# The realm Keycloak imports, derived from the declaration in `realm/` for one
+# mode: `testing` or `production`, from BROKER_MODE in `.env`. There is no
+# default, and `derive.ts` refuses anything else, so an image cannot be built
+# without saying which Broker it is. The same Node as the Mock Identity
+# Source's, which runs TypeScript by stripping the types. MOCK_ISSUER is
+# written into the testing layer here, and a testing build without it fails.
+FROM node:24.22.3-alpine AS realm
+ARG BROKER_MODE
+ARG MOCK_ISSUER
+WORKDIR /realm
+COPY realm/ ./
+RUN node derive.ts "$BROKER_MODE" "$MOCK_ISSUER" > realm-citsci.json
+
 # The version is pinned and does not move on its own. Two reasons:
 #
 # 1. `verified-email/` reads the `email_verified` the identity provider sent
@@ -41,6 +55,9 @@ RUN mvn --batch-mode --quiet package
 FROM quay.io/keycloak/keycloak:26.8.1
 COPY --from=mapper /build/target/person-identifier.jar /opt/keycloak/providers/
 COPY --from=condition /build/target/verified-email.jar /opt/keycloak/providers/
+# Where `--import-realm` looks. The realm is part of the image rather than
+# mounted beside it, so the image is the whole Broker, declaration included.
+COPY --from=realm /realm/realm-citsci.json /opt/keycloak/data/import/
 # Fixes the build-time options into the image, so both providers are installed
 # here and `start` does not have to rebuild on every boot.
 RUN /opt/keycloak/bin/kc.sh build --db=postgres --health-enabled=true

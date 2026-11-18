@@ -6,7 +6,7 @@
 | **The pull request is the merge commit** | `merge_commit_title: PR_TITLE`, `merge_commit_message: PR_BODY` |
 | **The method is set in one place** | The repository's settings, beside the message format it feeds. The ruleset leaves `allowed_merge_methods` open rather than restating it |
 | **One approving review** | GitHub forbids self-approval, so nothing lands on one pair of eyes |
-| **`check`, `tests`, `pr` green** | A check is a gate nobody can rubber-stamp. Not *up to date*: `strict_required_status_checks_policy` is off, below |
+| **`check`, `tests`, `base`, `pr` green** | A check is a gate nobody can rubber-stamp. `base` is the only run of the base alone, so the only one that sees it fail without the testing layer. Not *up to date*: `strict_required_status_checks_policy` is off, below |
 | **No force-push, no deletion** | On `main` |
 | **Bypass: `agorer`, `frasanz`, `agualis`** | `bypass_mode: pull_request` — a merge somebody chose, never a push. GitHub records each use |
 | **Auto-merge off** | Green is the precondition; a human presses the button, and never an agent |

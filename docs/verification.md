@@ -35,7 +35,7 @@ independently — which is why its own `7.0.x` is not a claim about ours.
 | `pre-commit` | format + lint, staged files only, **checks and never fixes** | `--no-verify` |
 | `pre-push` | `pnpm check`; the suite too, when a Broker is up | `--no-verify` |
 | CI | `pnpm check`, then its own Broker and the suite | none for the developer |
-| the merge button | the ruleset on `main`: a pull request, one approving review, `check`, `tests` and `pr` green | three named people, on a pull request only |
+| the merge button | the ruleset on `main`: a pull request, one approving review, `check`, `tests`, `base` and `pr` green | three named people, on a pull request only |
 
 CI cannot be skipped the way a hook can, and since 13 November 2026 **a red CI stops the merge**: a
 ruleset on `main` requires a pull request, one approving review, and those three contexts green.

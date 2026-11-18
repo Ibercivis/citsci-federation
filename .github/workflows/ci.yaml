@@ -73,3 +73,35 @@ jobs:
       - name: The Broker's and the Mock Identity Source's logs, when the suite failed
         if: failure()
         run: docker compose logs keycloak mock-source
+
+  # The base alone, as a real deployment would run it. It is the only run that
+  # shows the base starts without the testing layer, and the only one where
+  # seam 2 can see a testing layer present where it should be absent. So it
+  # runs the one file that asserts that, and none of the suite that needs the
+  # testing layer to sign anyone in.
+  base:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      # Overrides `.env`, for compose and for the suite alike.
+      BROKER_MODE: production
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: package.json
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Start the Broker, base alone
+        run: pnpm broker:up
+
+      - run: pnpm exec vitest run tests/declaration.test.ts
+
+      - name: The Broker's log, when the case failed
+        if: failure()
+        run: docker compose logs keycloak

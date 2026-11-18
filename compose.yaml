@@ -1,5 +1,10 @@
 # The Broker, and the one Identity Source its tests need to steer.
 #
+# BROKER_MODE in `.env` decides which Broker this is: `testing` adds the
+# testing layer to the realm and starts the Mock Identity Source, and
+# `production` does neither. `.env` derives COMPOSE_PROFILES from it, which is
+# how the Mock Identity Source follows the same switch.
+#
 # Three services make up what a Brokered App sees as one frontier: a reverse
 # proxy, the OpenID provider behind it, and the provider's own database. A
 # fourth stands outside that frontier, where Google and GitHub stand: the
@@ -47,15 +52,21 @@ services:
       retries: 20
 
   keycloak:
-    # Keycloak at a pinned version plus the Person Identifier mapper, built
+    # Keycloak at a pinned version plus our extensions and the realm, built
     # from broker/Dockerfile, which is where the version is pinned and why.
-    build: ./broker
+    build:
+      context: ./broker
+      args:
+        BROKER_MODE: ${BROKER_MODE:?declare it in .env}
+        # Written into the testing layer by the build, which refuses a
+        # testing image without it. Production does not read it.
+        MOCK_ISSUER: ${MOCK_ISSUER:-}
     # The channel for a value that must not be typed into a tracked file. It
     # is absent on most machines, and absent is not an error: nothing in this
     # stack needs a live credential yet.
     #
     # What reads it is the realm import. A `${NAME}` in
-    # broker/realm-citsci.json is replaced from this container's environment,
+    # broker/realm/ is replaced from this container's environment,
     # on the version pinned in broker/Dockerfile; `${env.NAME}` is not, and
     # survives the import as a literal. So the first client secret is
     # referenced in the realm and valued here.
@@ -74,9 +85,6 @@ services:
       # the realm path it serves under comes from the realm's own name, and
       # the discovery case fails loudly if the two disagree.
       BROKER_ISSUER: ${BROKER_ISSUER:?declare it in .env}
-      # Read by the realm import, which substitutes it into the Mock
-      # Identity Source's endpoints rather than spelling its address twice.
-      MOCK_ISSUER: ${MOCK_ISSUER:?declare it in .env}
       # Behind the proxy, over HTTP, in production mode: the shape the ADR
       # asks for, with TLS terminated in front rather than absent.
       KC_HTTP_ENABLED: "true"
@@ -88,16 +96,12 @@ services:
       KC_HEALTH_ENABLED: "true"
       KC_BOOTSTRAP_ADMIN_USERNAME: admin
       KC_BOOTSTRAP_ADMIN_PASSWORD: admin
-    # The realm is imported from the versioned file and configured nowhere
-    # else: the admin console takes no part in it. The user profile is the one
-    # piece kept beside it, in broker/user-profile.json, and broker/README.md
-    # says why.
+    # The realm is imported from the one the image carries, derived from
+    # broker/realm/, and configured nowhere else: the admin console takes no
+    # part in it.
     entrypoint: ["/bin/sh", "-c"]
     command:
-      - exec /opt/keycloak/bin/kc.sh start --import-realm --hostname "$${BROKER_ISSUER%/realms/*}" --spi-user-profile--declarative-user-profile--config-file=/opt/keycloak/conf/user-profile.json
-    volumes:
-      - ./broker/realm-citsci.json:/opt/keycloak/data/import/realm-citsci.json:ro
-      - ./broker/user-profile.json:/opt/keycloak/conf/user-profile.json:ro
+      - exec /opt/keycloak/bin/kc.sh start --import-realm --hostname "$${BROKER_ISSUER%/realms/*}"
     depends_on:
       broker-db:
         condition: service_healthy
@@ -153,13 +157,17 @@ services:
   # declares and runs itself, so that what a source says about an address can
   # be decided by hand (mock-source/). It is not a launch source and not
   # part of the Broker; it stands where Google and GitHub stand, outside it,
-  # and that is why it is not behind the proxy.
+  # and that is why it is not behind the proxy. Only in `testing`.
   mock-source:
+    profiles: [testing]
     build:
       context: .
       dockerfile: mock-source/Dockerfile
     environment:
-      MOCK_ISSUER: ${MOCK_ISSUER:?declare it in .env}
+      # Not `:?`: Compose interpolates a service whose profile is off, and a
+      # production Broker has no Mock Identity Source. The server refuses to
+      # start without it, and the testing image refuses to build without it.
+      MOCK_ISSUER: ${MOCK_ISSUER:-}
       BROKER_ISSUER: ${BROKER_ISSUER:?declare it in .env}
     ports:
       - "8090:8090"

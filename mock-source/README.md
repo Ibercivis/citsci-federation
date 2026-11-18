@@ -3,8 +3,9 @@
 An OpenID provider that says exactly what `mock.json` tells it to, run by
 `compose.yaml` beside the Broker so the tests can steer an Identity Source.
 Google and GitHub cannot be told what to say about an address; this can. It
-vouches for nobody, it is not a launch source, and #65 takes it out of every
-configuration but the testing one.
+vouches for nobody and it is not a launch source, so it runs only when
+`BROKER_MODE` is `testing`, and the Broker registers it only in the testing
+layer (`broker/realm/testing.json`).
 
 ## What it declares
 

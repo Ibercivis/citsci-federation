@@ -5,9 +5,9 @@
   "type": "module",
   "scripts": {
     "broker:up": "docker compose up -d --wait --build",
-    "broker:down": "docker compose down -v",
+    "broker:down": "docker compose --profile \"*\" down -v",
     "broker:logs": "docker compose logs -f keycloak",
-    "broker:reset": "docker compose down -v && docker compose up -d --wait --build",
+    "broker:reset": "docker compose --profile \"*\" down -v && docker compose up -d --wait --build",
     "format": "oxfmt .",
     "format:check": "oxfmt --check .",
     "lint": "oxlint",
