@@ -60,4 +60,8 @@ COPY --from=condition /build/target/verified-email.jar /opt/keycloak/providers/
 COPY --from=realm /realm/realm-citsci.json /opt/keycloak/data/import/
 # Fixes the build-time options into the image, so both providers are installed
 # here and `start` does not have to rebuild on every boot.
-RUN /opt/keycloak/bin/kc.sh build --db=postgres --health-enabled=true
+#
+# `update-email` is on by default in this version and named anyway: it is
+# what makes a new address count only once it is confirmed, and an upgrade
+# that turned it off by default must not turn that off with it (ADR-0004).
+RUN /opt/keycloak/bin/kc.sh build --db=postgres --health-enabled=true --features=update-email

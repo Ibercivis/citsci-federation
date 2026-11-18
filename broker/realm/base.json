@@ -42,6 +42,15 @@
       "defaultAction": false,
       "priority": 30,
       "config": {}
+    },
+    {
+      "alias": "UPDATE_EMAIL",
+      "name": "Update Email",
+      "providerId": "UPDATE_EMAIL",
+      "enabled": true,
+      "defaultAction": false,
+      "priority": 40,
+      "config": {}
     }
   ],
   "authenticatorConfig": [

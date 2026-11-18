@@ -1,6 +1,10 @@
 import { randomUUID } from "node:crypto";
 import { describe, expect, it } from "vitest";
-import { CLIENT_TYPES, CONFIDENTIAL_CLIENT } from "./clients.ts";
+import {
+  ACCOUNT_CONSOLE,
+  CLIENT_TYPES,
+  CONFIDENTIAL_CLIENT,
+} from "./clients.ts";
 import {
   Browser,
   type HtmlForm,
@@ -18,6 +22,7 @@ import {
   requestAuthorization,
   verifyIdToken,
 } from "./brokered-app.ts";
+import { ISSUER } from "./broker.ts";
 import { linkMailedTo, mailCountTo } from "./mailbox.ts";
 import { AFFIRMING_SOURCE_A, MOCK_IDENTITIES } from "./mock-source.ts";
 
@@ -352,5 +357,183 @@ describe("recovering a forgotten password", () => {
     const withOld = await attempt(CONFIDENTIAL_CLIENT, signingIn(address));
     expect(withNew.claims.sub).toBe(sub);
     expect(withOld.outcome).toBe("refused-in-the-browser");
+  });
+});
+
+/** Authorization at the Account Console, in a browser of the Person's. */
+async function toTheConsole(
+  browser: Browser,
+  pkce: Pkce,
+  params: Record<string, string> = {},
+): Promise<Landing> {
+  return follow(
+    browser,
+    await requestAuthorization(browser, ACCOUNT_CONSOLE, {
+      nonce: randomUUID(),
+      code_challenge: pkce.challenge,
+      code_challenge_method: pkce.method,
+      ...params,
+    }),
+    ACCOUNT_CONSOLE,
+  );
+}
+
+/** A Person signed in to the Account Console: the browser holding that
+ *  session, and the access token the console holds. */
+interface InTheConsole {
+  browser: Browser;
+  accessToken: string;
+}
+
+/** Signs a Person in to the Account Console with their Local Credential. */
+async function signedInToTheConsole(address: string): Promise<InTheConsole> {
+  const browser = new Browser();
+  const pkce = createPkce("S256");
+  const shown = await toTheConsole(browser, pkce);
+  const signIn =
+    shown.at === "a page"
+      ? formsOn(shown.page).find((form) => "password" in form.fields)
+      : undefined;
+  if (!signIn) throw new Error("The Account Console asked nobody to sign in.");
+  const code = codeIn(
+    await follow(
+      browser,
+      await browser.postForm(signIn.action, {
+        ...signIn.fields,
+        username: address,
+        password: A_PASSWORD,
+        login: "",
+      }),
+      ACCOUNT_CONSOLE,
+    ),
+  );
+  if (!code) throw new Error("Signing in to the console sent back no code.");
+  const tokens = await redeemCode(ACCOUNT_CONSOLE, {
+    code,
+    code_verifier: pkce.verifier,
+  });
+  return { browser, accessToken: tokens.body.access_token ?? "" };
+}
+
+/**
+ * Asks for a new address the way the console's own button does: by sending
+ * the Person to the Broker's page for one. The Broker takes the address and
+ * mails it, which is not yet a change.
+ */
+async function askToChangeAddress(
+  { browser }: InTheConsole,
+  newAddress: string,
+): Promise<void> {
+  const asked = await toTheConsole(browser, createPkce("S256"), {
+    kc_action: "UPDATE_EMAIL",
+  });
+  const form =
+    asked.at === "a page"
+      ? formsOn(asked.page).find((each) => "email" in each.fields)
+      : undefined;
+  if (!form) throw new Error("The console's request asked for no address.");
+  await browser.postForm(form.action, { ...form.fields, email: newAddress });
+}
+
+/**
+ * Writes a new address straight into the Person's account, through the same
+ * API the console reads it from, with no page and no mail in between — the
+ * route that would exist if changing an address did not require confirming it.
+ */
+async function writeAddress(accessToken: string, newAddress: string) {
+  const headers = {
+    authorization: `Bearer ${accessToken}`,
+    accept: "application/json",
+    "content-type": "application/json",
+  };
+  const account = (await (
+    await fetch(`${ISSUER}/account`, { headers })
+  ).json()) as Record<string, unknown>;
+  await fetch(`${ISSUER}/account`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({ ...account, email: newAddress }),
+  });
+}
+
+/** The address the Account Console shows the Person, read the way the console
+ *  reads it. */
+async function addressShownInTheConsole(accessToken: string): Promise<string> {
+  const response = await fetch(`${ISSUER}/account`, {
+    headers: {
+      authorization: `Bearer ${accessToken}`,
+      accept: "application/json",
+    },
+  });
+  const body = (await response.json()) as { email?: string };
+  return body.email ?? `HTTP ${response.status}, no address`;
+}
+
+describe("changing the address in the Account Console", () => {
+  // Otherwise whoever holds an account could claim any address by typing it,
+  // and be joined by whoever later arrives verified at it (ADR-0004).
+
+  it("takes no address written straight into the account", async () => {
+    const { address } = await personWithALocalCredential();
+    const console = await signedInToTheConsole(address);
+
+    await writeAddress(console.accessToken, freshAddress());
+
+    expect(await addressShownInTheConsole(console.accessToken)).toBe(address);
+  });
+
+  it("keeps the old address until the new one is confirmed", async () => {
+    const { address } = await personWithALocalCredential();
+    const console = await signedInToTheConsole(address);
+
+    await askToChangeAddress(console, freshAddress());
+
+    expect(await addressShownInTheConsole(console.accessToken)).toBe(address);
+  });
+
+  it("keeps the Person Identifier once the new address is confirmed", async () => {
+    const { address, sub } = await personWithALocalCredential();
+    const newAddress = freshAddress();
+
+    await askToChangeAddress(await signedInToTheConsole(address), newAddress);
+    await new Browser().get(await linkMailedTo(newAddress));
+
+    const withNew = await authenticate(
+      CONFIDENTIAL_CLIENT,
+      signingIn(newAddress),
+    );
+    const withOld = await attempt(CONFIDENTIAL_CLIENT, signingIn(address));
+    expect(withNew.claims.sub).toBe(sub);
+    expect(withOld.outcome).toBe("refused-in-the-browser");
+  });
+});
+
+describe("the Account Console", () => {
+  it("shows the Person the Identities they arrived with", async () => {
+    const { accessToken } = await authenticate(ACCOUNT_CONSOLE, {
+      as: {
+        through: AFFIRMING_SOURCE_A,
+        username: "merge-verified",
+        password: MOCK_IDENTITIES["merge-verified"].password,
+      },
+      pkce: createPkce("S256"),
+    });
+
+    const response = await fetch(`${ISSUER}/account/linked-accounts`, {
+      headers: {
+        authorization: `Bearer ${accessToken}`,
+        accept: "application/json",
+      },
+    });
+    const identities = (await response.json()) as Array<{
+      displayName: string;
+      connected: boolean;
+    }>;
+
+    expect(
+      identities
+        .filter((identity) => identity.connected)
+        .map((identity) => identity.displayName),
+    ).toContain(AFFIRMING_SOURCE_A);
   });
 });
