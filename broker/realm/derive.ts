@@ -34,6 +34,11 @@ export function derive(mode: string, declaration: Declaration): Realm {
       `Unknown BROKER_MODE "${mode}": it is "testing" or "production".`,
     );
   }
+  if ("components" in declaration.base) {
+    throw new Error(
+      'The base declares "components", which derive.ts builds from user-profile.json. Declare a component by changing derive.ts.',
+    );
+  }
   const realm: Realm = { ...declaration.base };
   if (mode === "testing") {
     for (const [field, entries] of Object.entries(declaration.testing)) {

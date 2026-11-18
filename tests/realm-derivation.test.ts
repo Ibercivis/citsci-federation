@@ -88,6 +88,19 @@ describe("deriving the realm Keycloak imports", () => {
     );
   });
 
+  it("refuses a base that declares components, which the user profile would overwrite", () => {
+    const base = {
+      ...BASE,
+      components: { "org.keycloak.keys.KeyProvider": [] },
+    };
+
+    expect(() =>
+      derive("production", { base, testing: TESTING, userProfile: PROFILE }),
+    ).toThrow(
+      'The base declares "components", which derive.ts builds from user-profile.json. Declare a component by changing derive.ts.',
+    );
+  });
+
   it("refuses a testing layer that sets a value rather than adding entries", () => {
     expect(() =>
       derive("testing", declaration({ loginWithEmailAllowed: false })),
