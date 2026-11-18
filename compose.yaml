@@ -1,5 +1,10 @@
 # The Broker, and the one Identity Source its tests need to steer.
 #
+# BROKER_MODE in `.env` decides which Broker this is: `testing` adds the
+# testing layer to the realm and starts the Mock Identity Source, and
+# `production` does neither. `.env` derives COMPOSE_PROFILES from it, which is
+# how the Mock Identity Source follows the same switch.
+#
 # Three services make up what a Brokered App sees as one frontier: a reverse
 # proxy, the OpenID provider behind it, and the provider's own database. A
 # fourth stands outside that frontier, where Google and GitHub stand: the
@@ -153,8 +158,9 @@ services:
   # declares and runs itself, so that what a source says about an address can
   # be decided by hand (mock-source/). It is not a launch source and not
   # part of the Broker; it stands where Google and GitHub stand, outside it,
-  # and that is why it is not behind the proxy.
+  # and that is why it is not behind the proxy. Only in `testing`.
   mock-source:
+    profiles: [testing]
     build:
       context: .
       dockerfile: mock-source/Dockerfile

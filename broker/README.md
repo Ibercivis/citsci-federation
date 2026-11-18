@@ -31,9 +31,10 @@ belongs in the declaration.
 
 `realm/base.json` is the Broker anywhere it runs. `realm/testing.json` is
 what exists only so that it can be tested. `BROKER_MODE` in `.env` picks one of
-two Brokers: `testing` is the base plus the testing layer, and `production`
-is the base alone. The development stack and CI run `testing`, and anything
-meant to be deployed runs `production`.
+two Brokers: `testing` is the base plus the testing layer, with the Mock
+Identity Source running, and `production` is the base alone. The development
+stack and CI run `testing`, and anything meant to be deployed runs
+`production`.
 
 Keycloak imports one complete realm per file and cannot layer two, so
 `realm/derive.ts` does it inside the image build and writes the one file
