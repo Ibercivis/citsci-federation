@@ -143,6 +143,10 @@ citation, not the authority.
   predated a model rewrite; `main` was re-pointed on 12 November 2026 and `federation` is cut from
   it like everywhere else. The rule has no exception left: `docs/agents/external-repos.md`. Open the
   note for the measurements, not for its recommendations.
+- **`oxlint --type-check`** (`2026-11-18-oxlint-type-check.md`) — it reproduces `tsc --noEmit`
+  exactly, on the pins we have, and needs neither TypeScript 7 nor `tsrs`. Unadopted on value, not
+  on risk: the whole of the type work is 190 ms of a 1.3 s gate. Open it before folding the two
+  passes into one, or before putting `tsrs` in the gate — `issue #83` watches that.
 
 ### Internal notes
 

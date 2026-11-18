@@ -4,6 +4,10 @@ docs/private/
 
 node_modules/
 
+# macOS Finder's per-directory metadata. It appears in any folder somebody
+# opens and says nothing about this project.
+.DS_Store
+
 # The tracked .env holds the development stack's constants, which are not
 # worth protecting. A local override carrying anything that is stays out of
 # a public repository.
