@@ -16,36 +16,32 @@ import org.keycloak.models.UserModel;
 import org.keycloak.provider.ProviderConfigProperty;
 
 /**
- * True when the Identity in front of the Broker does <em>not</em> arrive with
- * a Verified Email.
+ * True when the Identity arriving from an Identity Source does <em>not</em>
+ * carry an address that source affirmed.
  *
- * <p>This is the mechanism behind ADR-0004's negative direction. The positive
- * direction is Keycloak's: {@code idp-auto-link} matches an arriving Identity
- * against a Person by email address and joins them. It matches on the address
- * alone and never asks whether the source affirmed it, so the configuration
- * that delivers the merge also delivers the account takeover ADR-0004 exists
- * to refuse — register under somebody else's address at a source that affirms
- * nothing, and wait for them to arrive. Issue #75 measured that, and measured
- * that no condition Keycloak ships can see the arriving claim
- * ({@code docs/notes/conditional-subflow-and-brokered-email-verified.md}).
+ * <p>The Broker joins a new Identity to the Person who already holds its email
+ * address, with nothing asked in between. Keycloak's {@code idp-auto-link}
+ * performs that join, and it compares the address and nothing else — it never
+ * asks whether anybody affirmed it. Left alone it therefore hands an account
+ * to whoever registered under somebody else's address at a source that checks
+ * nothing, and then waited for them to arrive.
  *
- * <p>So the rule is stated here instead, in a condition of our own, and the
- * realm puts it in front of {@code idp-auto-link} in a conditional subflow.
- * What the guarded subflow then does to the unverified arrival is the realm's
- * decision and not this class's.
+ * <p>This condition is what stands in front of it. The realm puts it in a
+ * conditional subflow ahead of the join; what that subflow then does with the
+ * refused arrival is the realm's decision, not this class's. No condition
+ * Keycloak ships can take its place: none of them can see what the arriving
+ * source said about the address (measured in issue #75, recorded in
+ * {@code docs/notes/conditional-subflow-and-brokered-email-verified.md}).
  *
- * <p><strong>Verified means the same thing it means to Keycloak.</strong> On
- * the pinned version, the {@code emailVerified} of a Person created by a first
- * arrival is {@code trustEmail AND email_verified}: the source is one the
- * Broker trusts to affirm addresses, <em>and</em> that source affirmed this
- * one. This condition reads those same two facts, so the rule enforced on the
- * join path is the rule Keycloak applies on the create path, rather than a
- * second opinion that could drift from it.
+ * <p>Affirmed means here what it means to Keycloak when it creates a Person:
+ * the Broker trusts this source's word on addresses ({@code trustEmail}), and
+ * the source said it had verified this one ({@code email_verified}). Reading
+ * those same two facts is what keeps the rule on the join path from drifting
+ * away from the one Keycloak applies on the create path.
  *
- * <p>Anything it cannot establish counts as unverified: no brokered context,
- * no claim, an unparseable claim, a source whose word is not trusted. ADR-0004
- * says an unverified email joins nothing, ever, so the failure of this class to
- * find an affirmation has to fall on the side of refusing to join.
+ * <p>Whatever it cannot establish counts as unverified: no brokered context,
+ * no claim, an unparseable claim, a source whose word is not trusted. Refusing
+ * is the safe answer, so uncertainty falls on that side (ADR-0004).
  */
 public class UnverifiedEmailCondition
     implements ConditionalAuthenticator, ConditionalAuthenticatorFactory {
@@ -53,15 +49,16 @@ public class UnverifiedEmailCondition
   public static final String PROVIDER_ID = "citsci-condition-unverified-email";
 
   /**
-   * Where the arriving claim is, on the pinned Keycloak. {@code
-   * OIDCIdentityProvider} reads {@code email_verified} from the source's
-   * response and puts it in the brokered context under this key; its own
-   * {@code setEmailVerified} reads it back from there when it creates a
-   * Person. Nothing in Keycloak's advertised API promises this key, which is
-   * why the version is pinned (broker/Dockerfile) and why the cases in
-   * {@code tests/verified-email-join.test.ts} drive a real sign-in: an upgrade
-   * that renamed it would leave this condition finding nothing, and finding
-   * nothing is indistinguishable from an unverified address.
+   * Where the arriving claim sits. {@code OIDCIdentityProvider} reads
+   * {@code email_verified} off the source's response into the brokered
+   * context under this key, and reads it back from there when it creates a
+   * Person.
+   *
+   * <p>No public API promises the key. That is why the image is pinned
+   * (broker/Dockerfile) and why {@code tests/verified-email-join.test.ts}
+   * drives a real sign-in rather than trusting this constant: an upgrade that
+   * moved it would leave this condition finding nothing, which is
+   * indistinguishable from an address nobody affirmed.
    */
   private static final String EMAIL_VERIFIED = "email_verified";
 
@@ -97,12 +94,11 @@ public class UnverifiedEmailCondition
   }
 
   /**
-   * False, and that is what makes this condition usable at all. The decision
-   * has to be taken <em>before</em> {@code idp-auto-link} runs, and at that
-   * point the flow has no user: the arriving Identity is not a Person yet and
-   * the Person it would be joined to is not in the context. Keycloak's
-   * {@code conditional-user-attribute} requires one, which is why putting it
-   * there makes the flow throw rather than decide (issue #75).
+   * False, which is what makes this condition usable at all. The decision has
+   * to be taken before the join runs, and there is no user in the flow at that
+   * point: the arrival is not a Person yet, and the Person it might be joined
+   * to has not been set. Keycloak's {@code conditional-user-attribute} demands
+   * one, so in this position it makes the flow throw instead of deciding.
    */
   @Override
   public boolean requiresUser() {
@@ -135,15 +131,18 @@ public class UnverifiedEmailCondition
     return "Condition - the Identity arrives without a Verified Email";
   }
 
+  /** Read in the admin console, by somebody who has never heard of our
+   *  decision records. */
   @Override
   public String getHelpText() {
-    return "True when the arriving Identity's address was not affirmed by a"
-        + " source the Broker trusts to affirm addresses. ADR-0004: an"
-        + " unverified email joins no existing Person, ever.";
+    return "True when the email address this Identity arrives with was not"
+        + " verified by the identity provider it came from, or when that"
+        + " provider is not trusted to verify addresses. An address nobody"
+        + " verified must not reach an account that already holds it.";
   }
 
-  /** Nothing to configure. The rule is one rule, and a knob here would be a
-   *  way to turn ADR-0004 off from a console. */
+  /** Nothing to configure. A setting here would be a way to switch the rule
+   *  off from the admin console. */
   @Override
   public boolean isConfigurable() {
     return false;
