@@ -48,8 +48,9 @@ those two strings are published as the merge commit's subject and message, and u
 message they stay editable after review. It asks
 for a title short enough for a subject line and a body that says something, and for an issue
 reference in one of them or the words `No ticket`. The rules live in
-`scripts/check-pr-metadata.sh`, each next to the reason it exists. The issue reference, alone among
-them, does not apply to a pull request opened by `dependabot[bot]`; the script says why.
+`scripts/check-pr-metadata.sh`, each next to the reason it exists. Two of them — the issue
+reference and the title's length — do not apply to a pull request opened by `dependabot[bot]`:
+a generated subject is not the sentence either rule was written to read. The script says why.
 
 Nothing in those rows bumps the pinned versions the checks run at. **Dependabot** does, through the
 same gate as anyone's pull request; `.github/dependabot.yml` holds what it groups and what it must
