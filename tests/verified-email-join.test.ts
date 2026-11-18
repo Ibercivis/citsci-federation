@@ -13,6 +13,7 @@ import {
   SOURCE_AFFIRMING_NOTHING,
   type MockIdentity,
 } from "./mock-source.ts";
+import realm from "../broker/realm-citsci.json" with { type: "json" };
 
 /**
  * Arrive at an address a Person already holds and you become that Person — but
@@ -31,6 +32,31 @@ import {
 
 const PERSON_IDENTIFIER =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}@ibercivis\.es$/;
+
+/**
+ * The refusal as the realm words it, read from the realm itself.
+ *
+ * A case holding a phrase of its own would pass once somebody reworded the
+ * message, and a phrase is free to turn up on a page that means something else.
+ */
+function declaredRefusal(alias: string): string {
+  const declared = realm.authenticatorConfig.find(
+    (entry) => entry.alias === alias,
+  )?.config;
+  const message =
+    declared && "denyErrorMessage" in declared
+      ? declared.denyErrorMessage
+      : undefined;
+  if (!message) {
+    throw new Error(
+      `The realm declares no denyErrorMessage under ${alias}: either that ` +
+        "alias moved, or the refusal stopped being worded by us.",
+    );
+  }
+  return message;
+}
+
+const REFUSAL = declaredRefusal("citsci-refuse-an-unverified-join");
 
 /** An arrival: who signs in, and through which Identity Source. */
 const arriving = (through: string, identity: MockIdentity) => ({
@@ -78,9 +104,7 @@ describe("an unverified address joins no existing Person", () => {
     expect(JSON.stringify(takeover)).not.toContain(person);
     // Refused for the declared reason. Without this, any page the stand-in app
     // could not answer would pass the case — a missing `nonce`, for instance.
-    expect(whatThePersonWasTold(takeover)).toMatch(
-      /did not confirm your email address/i,
-    );
+    expect(whatThePersonWasTold(takeover)).toContain(REFUSAL);
   });
 
   it("refuses an affirmed address when the Broker does not trust that source", async () => {
@@ -96,9 +120,7 @@ describe("an unverified address joins no existing Person", () => {
 
     expect(throughUntrusted.outcome).toBe("refused-in-the-browser");
     expect(JSON.stringify(throughUntrusted)).not.toContain(person);
-    expect(whatThePersonWasTold(throughUntrusted)).toMatch(
-      /did not confirm your email address/i,
-    );
+    expect(whatThePersonWasTold(throughUntrusted)).toContain(REFUSAL);
   });
 
   it("leaves the Person it refused to join exactly as they were", async () => {
