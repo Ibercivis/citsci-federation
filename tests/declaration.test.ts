@@ -54,9 +54,19 @@ const LOOKED_FOR: ReadonlyArray<keyof Layer> = [
 ];
 
 const LAYERS: ReadonlyArray<[string, Layer, boolean]> = [
-  ["base", base, true],
+  // A cast, because the base declares none of the kinds a Layer names, and
+  // TypeScript refuses a value sharing no property with a type whose
+  // properties are all optional.
+  ["base", base as Layer, true],
   ["testing", testing, TESTING_CLAIMED],
 ];
+
+/** The layers holding something to look for. Vitest refuses a suite with no
+ *  case in it, and the base registers no client until a real Brokered App is
+ *  integrated; that client brings the base's suite back. */
+const LOOKED_FOR_IN = LAYERS.filter(([, layer]) =>
+  LOOKED_FOR.some((kind) => (layer[kind]?.length ?? 0) > 0),
+);
 
 const presence = (expected: boolean) => (expected ? "present" : "absent");
 
@@ -103,7 +113,7 @@ describe(`the running Broker is the ${MODE} declaration`, () => {
     ).toEqual([]);
   });
 
-  describe.each(LAYERS)("the %s layer", (_layer, layer, expected) => {
+  describe.each(LOOKED_FOR_IN)("the %s layer", (_layer, layer, expected) => {
     const clients = layer.clients ?? [];
     const sources = layer.identityProviders ?? [];
     const users = layer.users ?? [];

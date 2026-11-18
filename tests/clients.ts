@@ -8,9 +8,9 @@
  *
  * Two of them, because the pilot has to serve both shapes a Brokered App
  * comes in: a single-page application that cannot hold a secret, and a
- * server-rendered backend that can. They are stand-ins — the real
- * applications register their own, with their own redirect URIs, when they
- * are integrated. No Brokered App's infrastructure is declared here or in
+ * server-rendered backend that can. They are stand-ins, declared in the
+ * realm's testing layer — the real applications register their own in the
+ * base, with their own redirect URIs, when they are integrated. No Brokered App's infrastructure is declared here or in
  * `compose.yaml`.
  */
 

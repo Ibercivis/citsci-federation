@@ -50,7 +50,7 @@ variant of a base entry declares a new one beside it under its own key, the way
 
 ### Which layer an addition belongs in
 
-Ask whether a real deployment would ship it. Three kinds of thing never
+Ask whether a real deployment would ship it. Four kinds of thing never
 should, and they are the testing layer:
 
 - **A credential anybody can read here**, like the `demo` Identity's password.
@@ -58,12 +58,15 @@ should, and they are the testing layer:
   Sources, which say whatever `mock-source/mock.json` tells them to.
 - **A client registered so that it can be refused**, like
   `misconfigured-client`.
+- **A client standing in for a Brokered App**, like `brokered-app-public` and
+  `brokered-app-confidential`: its callback is a development guess. A real
+  Brokered App declares its own client in the base, with its exact HTTPS
+  callback and its secret as a `${NAME}` placeholder.
 
 Everything else is base, including what was added *for* a case and that the
 Broker needs anyway. The first broker login flow arrived with the tests for
 ADR-0004, and it is base because it is how every Identity Source joins a
-Person. A stand-in client that a Brokered App will replace is base too, until
-the real registration takes its place.
+Person.
 
 An entry in the base that refers to an entry in the testing layer is a sign
 that one of them is in the wrong layer: the `production` CI job is where that
@@ -158,12 +161,12 @@ nothing about what was issued to another application.
 
 A public client for a single-page application, which cannot hold a secret, and
 a confidential one for a server-rendered backend, which can. Both are
-stand-ins: the real applications register their own, with their own redirect
-URIs, when they are integrated. The redirect URIs here are development
-guesses, and the confidential one follows the callback shape django-allauth
-serves, because the applications of the pilot are Django.
-A third, `misconfigured-client`, is a testing fixture in the testing layer and
-not a Brokered App: `tests/clients.ts` says why.
+stand-ins, so both are in the testing layer: a `production` Broker registers no
+client until a real application is integrated. The redirect URIs are
+development guesses, and the confidential one follows the callback shape
+django-allauth serves, because the applications of the pilot are Django.
+A third, `misconfigured-client`, sits beside them and is not a Brokered App:
+`tests/clients.ts` says why.
 
 No Brokered App's infrastructure is declared anywhere in this repository —
 only the clients the Broker knows them by.
