@@ -73,6 +73,21 @@ describe("deriving the realm Keycloak imports", () => {
     );
   });
 
+  it("refuses a testing layer that re-declares an entry known only by its name", () => {
+    const base = { ...BASE, clientScopes: [{ name: "voperson_id" }] };
+    const redeclaring = { clientScopes: [{ name: "voperson_id" }] };
+
+    expect(() =>
+      derive("testing", {
+        base,
+        testing: redeclaring,
+        userProfile: PROFILE,
+      }),
+    ).toThrow(
+      'The testing layer re-declares clientScopes "voperson_id", which the base declares. A layer only adds.',
+    );
+  });
+
   it("refuses a testing layer that sets a value rather than adding entries", () => {
     expect(() =>
       derive("testing", declaration({ loginWithEmailAllowed: false })),

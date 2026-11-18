@@ -68,10 +68,15 @@ function added(field: string, declared: unknown, entries: unknown): unknown[] {
   return [...declared, ...entries];
 }
 
-/** The field an entry of the realm is known by, whichever kind it is. */
+/** The field an entry of the realm is known by, whichever kind it is. `name`
+ *  comes last: a client carries one too, but is known by its `clientId`. */
 function keyOf(entry: unknown): string | undefined {
   const fields = entry as Record<string, unknown>;
-  const key = fields["clientId"] ?? fields["alias"] ?? fields["username"];
+  const key =
+    fields["clientId"] ??
+    fields["alias"] ??
+    fields["username"] ??
+    fields["name"];
   return typeof key === "string" ? key : undefined;
 }
 
