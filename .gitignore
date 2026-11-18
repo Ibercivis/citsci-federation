@@ -25,7 +25,15 @@ broker/person-identifier/target/
 broker/verified-email/target/
 
 # The Brokered Apps' own repositories, checked out at their `federation`
-# branch by scripts/checkout-apps.sh so that the Pilot Composition can build
-# them. No application's code is vendored here: this folder is a working copy
-# and is rebuilt from the remotes by that script (ADR-0009).
+# branch by scripts/checkout-apps.sh so that the Brokered Composition can
+# build them. No application's code is vendored here: this folder is a working
+# copy and is rebuilt from the remotes by that script (ADR-0009).
 apps/
+
+# An agent's worktrees, one per task given an isolated checkout. Each holds a
+# second copy of this repository with its dependencies installed, and every
+# tool that walks the tree reads them: `pnpm lint` stops on the lint config
+# inside one, `pnpm reuse:lint` on a dependency's licence, and `pnpm check`
+# fails for a reason that has nothing to do with the branch being pushed.
+# A worktree commits on its own branch, never through this checkout.
+.claude/worktrees/
