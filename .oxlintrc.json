@@ -37,8 +37,8 @@
 
   "options": {
     // Type-aware rules, which need the `oxlint-tsgolint` package (it is a
-    // devDependency). They work against TypeScript 5.9: the TypeScript 7
-    // upgrade is not a prerequisite, it is a separate decision.
+    // devDependency). That package ships its own checker and never reads the
+    // `typescript` pin, so the two versions move independently.
     "typeAware": true,
 
     // No advisory findings. A warning nothing fails on is a finding everyone

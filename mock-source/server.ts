@@ -13,7 +13,7 @@
  * anybody.
  */
 
-import { type JsonWebKey, createECDH, createHash } from "node:crypto";
+import { type webcrypto, createECDH, createHash } from "node:crypto";
 import { type IncomingMessage, createServer } from "node:http";
 import { type KoaContextWithOIDC, Provider } from "oidc-provider";
 import declaration from "./mock.json" with { type: "json" };
@@ -48,7 +48,7 @@ const BROKER_CALLBACK = `${required("BROKER_ISSUER")}/broker/mock/endpoint`;
  * so a source that restarted with a new key fails every sign-in through it
  * until that window passes, with an error that names no key.
  */
-function derivedSigningKey(seed: string): JsonWebKey {
+function derivedSigningKey(seed: string): webcrypto.JsonWebKey {
   const d = createHash("sha256").update(seed).digest();
   const ecdh = createECDH("prime256v1");
   ecdh.setPrivateKey(d);

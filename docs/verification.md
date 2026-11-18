@@ -23,8 +23,9 @@ that. Every case in the suite reuses one running Broker instead of starting its 
 they cannot run in parallel.
 
 Lint runs `correctness` and `suspicious` only; `.oxlintrc.json` carries the count that decided it.
-Type-aware rules are on, which needs the `oxlint-tsgolint` package and works on TypeScript 5.9 —
-TypeScript 7 is not a prerequisite.
+Type-aware rules are on, which needs the `oxlint-tsgolint` package. That package ships its own
+`typescript-go` binary and never reads the `typescript` pin, so the two versions move
+independently — which is why its own `7.0.x` is not a claim about ours.
 
 ## Layer 1 — where it runs
 
@@ -77,8 +78,8 @@ A row marked *Fired* is decided and not yet built, and carries an issue.
 | **Dead code** — unused files and exports | knip 6.45 | A third pass, but it is the thing that actually rots in a feature-sliced tree | When nobody would notice an orphan |
 | **Mutation testing** | StrykerJS 10.1.1 + `@stryker-mutator/vitest-runner` | The runner forces `threads: true` and one worker, and ignores `coverageAnalysis`. Cost is controlled by `incremental: true`, **not** by `--since`, which does not exist in StrykerJS | One module of pure logic worth really trusting. Never on `pre-commit`, never on every PR |
 | **Faster hooks** | hk 2.12.0 — per-file read/write locks, so fixers can run concurrently; ships `ox-lint` and `oxfmt` builtins | Config is Pkl, and it is not on npm. Only published benchmark is the vendor's: ~1.2× ahead of lefthook on a small commit | When `pre-commit` stops feeling instant |
-| **Faster type check** | TypeScript 7 — `tsc` *is* the Go port, ~8–12× on full builds | No compiler API until 7.1 | When `tsc --noEmit` is the slow part of `pnpm check` |
-| ↳ and then three passes become two | `oxlint --type-check` — reports compiler errors from the same TypeScript program it lints with, and oxc documents it as replacing a separate `tsc --noEmit` in CI | Requires TypeScript 7, so it is the row above or nothing. Keep `tsc --noEmit` until both have run on this tree and the output has been compared | The row above. Neither alone |
+| **Three passes, where two would do** | `oxlint --type-check` — one TypeScript program both lints and reports compiler errors, which oxc documents as replacing a separate `tsc --noEmit` in CI | Nothing technical: it already matches `tsc` exactly on this tree, on the pins we have. What it costs is the cross-check — `tsc` is the reference implementation, and a divergence in oxlint's checker is invisible once it is the only checker | When the type passes are what `pnpm check` waits on. The licence container dwarfs them today; `docs/notes/2026-11-18-oxlint-type-check.md` has the measurement |
+| ↳ and a faster checker under it | `tsrs` — the Rust port of the TypeScript compiler, a drop-in for `oxlint-tsgolint` since oxlint 1.92.0 | A `0.x` checker pinned to a TypeScript 7.1 beta, inside the pass that decides whether a commit lands. It also takes over silently when installed beside `oxlint-tsgolint`, so there is no side-by-side | [issue #83](https://github.com/Ibercivis/citsci-federation/issues/83) watches it. A `tsrs` release with no prerelease suffix, against a stable TypeScript |
 | **Coverage** | `@vitest/coverage-v8` | — | A number we would act on. We do not have one yet |
 | **The plugin image's own base images** — nothing watches `broker/Dockerfile` ([issue #71](https://github.com/Ibercivis/citsci-federation/issues/71)) | Dependabot's `docker` ecosystem, ignoring `keycloak/keycloak` as the `docker-compose` rule already does | Four lines. The `maven` stage is ordinary and unwatched; the other is the pinned Keycloak image | Fired. The Dockerfile is on `main`, which is the condition this row waited for |
 
@@ -88,4 +89,5 @@ and its rules are Feature-Sliced Design whatever the billing says).
 
 There is no Rust-based mutation tester for JS/TS, and no Vitest-native one.
 
-_Versions and claims checked 13 November 2026; the Dependabot rows 17 November 2026._
+_Versions and claims checked 13 November 2026; the Dependabot rows 17 November 2026; the
+TypeScript rows 18 November 2026._
