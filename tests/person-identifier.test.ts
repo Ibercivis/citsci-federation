@@ -1,11 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { CLIENT_TYPES, CONFIDENTIAL_CLIENT, PUBLIC_CLIENT } from "./clients.ts";
-import {
-  authenticate,
-  introspect,
-  userinfo,
-  verifyAccessToken,
-} from "./brokered-app.ts";
+import { authenticate, everyPlace, introspect } from "./brokered-app.ts";
 
 /**
  * The Person Identifier (ADR-0002): one opaque UUID per Person, scoped with
@@ -61,23 +56,6 @@ const PROFILE_CLAIMS = [
   "address",
   "phone_number",
 ];
-
-/** Every place a Brokered App can read the Person from, for one sign-in. */
-async function everyPlace(client: (typeof CLIENT_TYPES)[number][1]) {
-  const { claims, accessToken } = await authenticate(client);
-  const places: Array<[string, Record<string, unknown>]> = [
-    ["the ID token", claims],
-    ["the access token", await verifyAccessToken(accessToken, client)],
-    ["the userinfo response", (await userinfo(accessToken)).body],
-  ];
-  if (client.secret) {
-    places.push([
-      "the introspection response",
-      (await introspect(client, accessToken)).body,
-    ]);
-  }
-  return { idToken: claims, places };
-}
 
 describe.each(CLIENT_TYPES)(
   "a %s Brokered App knows the Person by their Person Identifier",

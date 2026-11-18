@@ -207,7 +207,7 @@ function anchorsIn(html: string): Array<{ text: string; href: string }> {
  * and follows, so that is how it is found: by the name it shows, never by an
  * element id this provider's templates happen to give it.
  */
-function linksOn(page: Page): Array<{ text: string; href: string }> {
+export function linksOn(page: Page): Array<{ text: string; href: string }> {
   return anchorsIn(page.html).map((link) => ({
     text: link.text,
     href: new URL(link.href, page.url).href,
@@ -741,4 +741,31 @@ export async function authenticate(
     accessToken: result.accessToken,
     asked: result.asked,
   };
+}
+
+/**
+ * Every place a Brokered App can read the Person from, for one sign-in: the ID
+ * token, the access token, userinfo, and introspection where the client holds
+ * a secret to ask with.
+ */
+export async function everyPlace(
+  client: Client,
+  options: AttemptOptions = {},
+): Promise<{
+  idToken: Record<string, unknown>;
+  places: Array<[string, Record<string, unknown>]>;
+}> {
+  const { claims, accessToken } = await authenticate(client, options);
+  const places: Array<[string, Record<string, unknown>]> = [
+    ["the ID token", claims],
+    ["the access token", await verifyAccessToken(accessToken, client)],
+    ["the userinfo response", (await userinfo(accessToken)).body],
+  ];
+  if (client.secret) {
+    places.push([
+      "the introspection response",
+      (await introspect(client, accessToken)).body,
+    ]);
+  }
+  return { idToken: claims, places };
 }
