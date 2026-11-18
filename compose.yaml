@@ -164,7 +164,10 @@ services:
       context: .
       dockerfile: mock-source/Dockerfile
     environment:
-      MOCK_ISSUER: ${MOCK_ISSUER:?declare it in .env}
+      # Not `:?`: Compose interpolates a service whose profile is off, and a
+      # production Broker has no Mock Identity Source. The server refuses to
+      # start without it, and the testing image refuses to build without it.
+      MOCK_ISSUER: ${MOCK_ISSUER:-}
       BROKER_ISSUER: ${BROKER_ISSUER:?declare it in .env}
     ports:
       - "8090:8090"
