@@ -1,18 +1,5 @@
 {
-  "sources": {
-    "mock": {
-      "name": "Mock source (not for launch)",
-      "affirmsAddresses": false
-    },
-    "mock-affirming-a": {
-      "name": "Mock source A, affirms addresses (not for launch)",
-      "affirmsAddresses": true
-    },
-    "mock-affirming-b": {
-      "name": "Mock source B, affirms addresses (not for launch)",
-      "affirmsAddresses": true
-    }
-  },
+  "sources": ["mock", "mock-affirming-a", "mock-affirming-b"],
   "client": {
     "id": "citsci-broker",
     "secret": "mock-source-development-secret"

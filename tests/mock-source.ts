@@ -1,9 +1,12 @@
 /**
- * The Mock Identity Source as the tests know it: the name a Person sees
- * it under on the Broker's sign-in page, where it answers, and the Identities
- * it declares. All of it is read from `mock-source/mock.json`, the
- * same file the source itself serves, so a case and the source cannot disagree
- * about who exists or what the source is called.
+ * The Mock Identity Source as the tests know it: where it answers, the
+ * Identities it declares, and what the Broker was told about it.
+ *
+ * Split by who decides what. `mock-source/mock.json` is the file the source
+ * itself serves, so it owns the aliases it stands behind and the Identities
+ * that exist. What each source is *called* and whether its word on an address
+ * is trusted are the Broker's configuration, so those are read from the realm
+ * (`./realm.ts`). Neither fact is written twice, so neither can drift.
  */
 
 import { createRemoteJWKSet, jwtVerify } from "jose";
@@ -15,35 +18,39 @@ import {
 import type { Client } from "./clients.ts";
 import { Browser, createPkce, follow, formsOn } from "./brokered-app.ts";
 import declaration from "../mock-source/mock.json" with { type: "json" };
+import { declaredSource } from "./realm.ts";
 
 /**
- * Every Identity Source this one server stands behind, by its alias: the name a
- * Person reads on the sign-in page, and whether the Broker trusts that source's
- * word on an address.
+ * Every Identity Source this one server stands behind: the alias it answers
+ * for, joined to what the realm says that alias is called and whether its word
+ * on an address is trusted.
  *
  * Several, because a Person cannot hold two Identities from the same source —
  * `federated_identity` keeps one link per source per Person — and the join is
  * about their second one.
  */
-export const MOCK_SOURCES = declaration.sources;
-
-type MockSourceAlias = keyof typeof MOCK_SOURCES;
+export const MOCK_SOURCES = declaration.sources.map((alias) => ({
+  alias,
+  ...declaredSource(alias),
+}));
 
 /**
  * A source by the name a Person reads, asked for by what it does with
  * addresses rather than by its alias.
  *
- * `affirmsAddresses` repeats the realm's `trustEmail`, so the two can disagree.
- * This is what says so, instead of a case failing further on with nothing to
- * point at.
+ * The guard is what a case gets instead of a silent swap. Ask for a source that
+ * affirms addresses and the realm says that one does not, and this says so —
+ * at import, naming the alias — rather than letting the case go on to assert
+ * the opposite of what it meant. Flipping a `trustEmail` in the realm is caught
+ * here, by the thing that claims to catch it.
  */
-function sourceNamed(alias: MockSourceAlias, affirming: boolean): string {
-  const source = MOCK_SOURCES[alias];
+function sourceNamed(alias: string, affirming: boolean): string {
+  const source = declaredSource(alias);
   if (source.affirmsAddresses !== affirming) {
     throw new Error(
-      `${alias} ${source.affirmsAddresses ? "affirms" : "does not affirm"} ` +
-        `addresses, and this case asked for one that ${affirming ? "does" : "does not"}. ` +
-        "Either mock.json or the realm's trustEmail has moved without the other.",
+      `The realm says ${alias} ` +
+        `${source.affirmsAddresses ? "affirms" : "does not affirm"} addresses, ` +
+        `and this case asked for one that ${affirming ? "does" : "does not"}.`,
     );
   }
   return source.name;
