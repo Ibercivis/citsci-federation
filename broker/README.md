@@ -2,13 +2,13 @@
 
 Keycloak at a pinned version with two extensions of ours — the Person
 Identifier mapper and the Verified Email condition — behind the reverse proxy
-`compose.yaml` puts in front of it, and configured entirely by
-`realm-citsci.json`. `Dockerfile` builds all three into one image.
+`compose.yaml` puts in front of it, and configured entirely by the declaration
+in `realm/`. `Dockerfile` builds all three into one image.
 
 ```sh
 pnpm broker:up      # docker compose up -d --wait --build
 pnpm test           # drives the real protocol against it
-pnpm broker:reset   # throws the realm away and applies it again from the file
+pnpm broker:reset   # throws the realm away and applies it again from the declaration
 pnpm broker:down    # and removes the volume
 ```
 
@@ -24,18 +24,22 @@ offers the Mock Identity Source, whose Identities are declared in
 Admin console: under the same origin, at `/admin` (`admin` / `admin`) — **for
 looking, not for changing.** A change made there is configuration no reviewer
 can see, and `pnpm broker:reset` throws it away. Anything that needs to change
-belongs in the realm file.
+belongs in the declaration.
 
-## The realm is applied from the file, and from nowhere else
+## The realm is applied from the declaration, and from nowhere else
 
-`--import-realm` applies `realm-citsci.json` when the realm is not yet in the
-database. That is what makes the declaration reproducible rather than merely
-versioned: the way to change this Broker is to edit the file and run
-`pnpm broker:reset`, which drops the volume and applies it again from scratch.
-Nothing in this repository calls the Admin API, so the file is the whole
-configuration, and the image built from this directory the whole of the code.
+`realm/derive.ts` turns `realm/` into the one file Keycloak imports, inside the
+image build. That file exists only in the image, so nobody can edit it by hand.
 
-The cost is stated plainly: an edit to the realm file does **not** reach a
+`--import-realm` applies the realm the image carries when the realm is not yet
+in the database. That is what makes the declaration reproducible rather than
+merely versioned: the way to change this Broker is to edit `realm/` and run
+`pnpm broker:reset`, which drops the volume, rebuilds the image and applies it
+again from scratch. Nothing in this repository calls the Admin API, so the
+declaration is the whole configuration, and the image built from this
+directory the whole of the code.
+
+The cost is stated plainly: an edit to the declaration does **not** reach a
 stack that is already up. A `reset` is how it lands, and a Broker holding
 state worth keeping will need a migration path that this pilot does not have
 yet.
@@ -180,17 +184,13 @@ attributes optional. They are kept rather than removed: whether the Broker
 should hold a name a source sends at all is a question for the first source
 that sends one (#28).
 
-It is declared in `user-profile.json`, not in the realm file. The realm format
-has no field of its own for a user profile, only a `components` entry whose
-value is the whole profile as one escaped JSON string, which nobody can review.
-So Keycloak is started with
-`--spi-user-profile--declarative-user-profile--config-file` pointing at the
-file instead, which makes it the default for every realm that declares none of
-its own. That option is read by the provider but not in its advertised list,
-so an upgrade could drop it without a word; the cases in
-`tests/mock-source.test.ts` are what notice, stopping on "Update Account
-Information". #65 replaces it: the step that layers the realm generates the
-`components` entry from this file, and the option goes.
+It is declared in `realm/user-profile.json`, not in `realm/base.json`. The
+realm format has no field of its own for a user profile, only a `components`
+entry whose value is the whole profile as one escaped JSON string, which
+nobody can review. So the profile is kept readable in a file of its own, and
+`realm/derive.ts` makes the `components` entry from it. If the profile ever
+stops being applied, the cases in `tests/mock-source.test.ts` notice: they stop
+on "Update Account Information".
 
 ### The first broker login flow, and the one rule in it
 
