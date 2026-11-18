@@ -60,7 +60,7 @@ Persons**, and the pilot offers no merge. A later merge must add an alias, never
 
 | | |
 |---|---|
-| Added | delegated sign-in against the Broker; one `person_identifier` column; a Dockerfile for the Pilot Composition |
+| Added | delegated sign-in against the Broker; one `person_identifier` column; a Dockerfile for the Brokered Composition |
 | Removed | its own registration path on the web front end — not the API endpoint a mobile client shares (ADR-0007) |
 | Untouched | its own session, its own roles, and the existing per-application sign-in, with no sunset date |
 

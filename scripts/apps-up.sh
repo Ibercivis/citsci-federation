@@ -1,5 +1,5 @@
 #!/bin/sh
-# Brings up the whole Pilot Composition (ADR-0009): the Broker, the proxy in
+# Brings up the whole Brokered Composition (ADR-0009): the Broker, the proxy in
 # front of it, the mail catcher, and every Brokered App that has been
 # integrated — each built from its own `federation` branch.
 #
@@ -16,7 +16,7 @@
 #
 # With no arguments it builds. Given any, they replace that default and are
 # passed to `docker compose up` as they are, which is what makes the one worth
-# knowing work: `pilot-up.sh --no-build` skips the image check on a day nothing
+# knowing work: `apps-up.sh --no-build` skips the image check on a day nothing
 # changed. `--build` cannot simply be hardcoded here and added to — compose
 # refuses `--build --no-build` together, and refuses it before anything in this
 # script has run.
@@ -27,7 +27,7 @@ root=$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)
 cd "$root"
 
 compose() {
-  docker compose -f compose.yaml -f compose.pilot.yaml "$@"
+  docker compose -f compose.yaml -f compose.apps.yaml "$@"
 }
 
 # Every address the composition serves is declared in `.env` and read from
@@ -135,6 +135,6 @@ echo "The Broker's admin console: ${BROKER_ISSUER%/realms/*}/admin/ (admin / adm
 echo "Every seeded account's password is printed by the seed above."
 echo "Mail: $MAIL_BASE_URL — nothing in the composition can reach a real address."
 echo
-echo "Logs: pnpm pilot:logs <service>.  Down, keeping the data: pnpm pilot:down."
+echo "Logs: pnpm apps:logs <service>.  Down, keeping the data: pnpm apps:down."
 
 exit "$failed"

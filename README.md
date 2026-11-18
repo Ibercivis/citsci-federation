@@ -28,28 +28,28 @@ included. Nothing else is needed: the realm, the clients, the one demo
 Identity and the mock Identities are declared in this repository and
 applied at start-up.
 
-## Running the whole pilot
+## Running the Brokered Composition
 
-The **Pilot Composition** (ADR-0009): the Broker, the proxy, the mail catcher
+The **Brokered Composition** (ADR-0009): the Broker, the proxy, the mail catcher
 and every Brokered App that has been integrated, as one set of containers.
 This is where single sign-on is tried by hand.
 
 ```sh
-pnpm pilot:up       # checks the applications out, builds, seeds, and says
-                    # what answered
-pnpm pilot:logs     # add a service name for one of them
-pnpm pilot:down     # keeps the data; `pnpm pilot:reset` throws it away
+pnpm apps:up      # checks the applications out, builds, seeds, and says
+                  # what answered
+pnpm apps:logs    # add a service name for one of them
+pnpm apps:down    # keeps the data; `pnpm apps:reset` throws it away
 ```
 
 Docker, `git` and `curl` are what it needs; the two scripts are POSIX shell
 and run without Node, so a machine with no pnpm on it calls
-[`scripts/pilot-up.sh`](scripts/pilot-up.sh) directly.
+[`scripts/apps-up.sh`](scripts/apps-up.sh) directly.
 
 The applications are **not** in this repository:
 [`scripts/checkout-apps.sh`](scripts/checkout-apps.sh) clones each one into
 `apps/`, which is gitignored, at its `federation` branch — the branch that
 carries its container recipe (`docs/agents/external-repos.md`) — and
-[`compose.pilot.yaml`](compose.pilot.yaml) builds from there.
+[`compose.apps.yaml`](compose.apps.yaml) builds from there.
 
 Everything is reached **by hostname through the proxy**, and nothing in it
 publishes a port of its own. The addresses are declared in [`.env`](.env):
@@ -89,12 +89,12 @@ front **in every environment, including local** — the reason is parity of
 form, since the cookie, TLS, redirect-URI and CORS failures that depend on
 deployment shape otherwise appear for the first time in production (ADR-0001).
 
-`compose.pilot.yaml` declares how each Brokered App runs **in the pilot**, and
+`compose.apps.yaml` declares how each Brokered App runs **in the Composition**, and
 that is not the same as declaring that application's infrastructure: its own
 development environment, its Dockerfile and its production deployment all stay
 in its own repository. ADR-0009 made that distinction knowingly, against what
 this repository used to promise, and says what it costs. What this repository
-holds about an application is still only how the pilot runs it, and the client
+holds about an application is still only how the Composition runs it, and the client
 the Broker knows it by.
 
 The Keycloak version is **pinned** and does not move on its own. A security

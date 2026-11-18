@@ -11,9 +11,9 @@
 # Mock Identity Source, which exists only for the tests.
 #
 # This file is the whole of what `pnpm test` needs, and the whole of what CI
-# starts. The Brokered Apps are declared beside it in compose.pilot.yaml, which
-# is the other half of the Pilot Composition (ADR-0009) and is brought up with
-# `pnpm pilot:up`; the one thing this file holds about an application is the
+# starts. The Brokered Apps are declared beside it in compose.apps.yaml, which
+# is the other half of the Brokered Composition (ADR-0009) and is brought up with
+# `pnpm apps:up`; the one thing this file holds about an application is the
 # client the Broker knows it by, in the realm it imports.
 #
 # Every credential here is a development constant on purpose, and `.env` says
@@ -112,11 +112,11 @@ services:
       # the realm path it serves under comes from the realm's own name, and
       # the discovery case fails loudly if the two disagree.
       BROKER_ISSUER: ${BROKER_ISSUER:?declare it in .env}
-      # The client each Brokered App of the Pilot Composition is registered
+      # The client each application of the Brokered Composition is registered
       # as: its id, its redirect URI and the secret it authenticates with, all
       # substituted into the realm by the import. They are declared in `.env`
       # and read from there by the application's own container too
-      # (compose.pilot.yaml), so an id or a secret is written once.
+      # (compose.apps.yaml), so an id or a secret is written once.
       #
       # The Broker-only stack reads them too, and has to: the three clients
       # are in the base layer, so the Broker knows its applications in either
@@ -211,8 +211,8 @@ services:
   # address. Locally it is a catcher, which accepts every message and delivers
   # none — a real server here would mail whatever address somebody typed into
   # a local form. Keycloak is pointed at it by `SMTP_HOST` and `SMTP_PORT`, and
-  # every application of the Pilot Composition sends here too
-  # (compose.pilot.yaml).
+  # every application of the Brokered Composition sends here too
+  # (compose.apps.yaml).
   #
   # Its inbox is at MAIL_BASE_URL through the proxy, like every other address
   # here, and it publishes no port of its own: each application's own local

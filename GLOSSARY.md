@@ -20,14 +20,16 @@ a federation.
 _Avoid_: Federated App (federation is kept for its OpenID Federation sense), client, consumer,
 relying party, RP, app federada
 
-**Pilot Composition**:
+**Brokered Composition**:
 The Broker and every Brokered App already integrated, declared in this repository as one set of
 containers and brought up with a single command. It is where single sign-on is tried by hand and where
 the end-to-end tests run. Built from each application's `federation` branch, and **early-stage by
 design**: not yet the way anything is deployed for real, and meant to be grown into that rather than
 thrown away.
-_Avoid_: staging, the environment, dev environment, deployment, entorno de pruebas, disposable,
-throwaway, desechable (the code is early, not expendable)
+_Avoid_: Pilot Composition (the pilot is circumstantial — this is how the Broker and its
+applications come up afterwards too, which is why no command is named after it), staging, the
+environment, dev environment, deployment, entorno de pruebas, disposable, throwaway, desechable
+(the code is early, not expendable)
 
 ## The subject
 

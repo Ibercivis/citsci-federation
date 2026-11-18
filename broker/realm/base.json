@@ -57,7 +57,7 @@
     {
       "clientId": "${LOSTATNIGHT_CLIENT_ID}",
       "name": "LostAtNight",
-      "description": "A Brokered App of the Pilot Composition: Ibercivis/gdalface, on its federation branch. The consent screen names it.",
+      "description": "An application of the Brokered Composition: Ibercivis/gdalface, on its federation branch. The consent screen names it.",
       "enabled": true,
       "protocol": "openid-connect",
       "publicClient": false,
@@ -118,7 +118,7 @@
     {
       "clientId": "${GEONITY_CLIENT_ID}",
       "name": "Geonity",
-      "description": "A Brokered App of the Pilot Composition: Ibercivis/citsci-api, on its federation branch. The consent screen names it.",
+      "description": "An application of the Brokered Composition: Ibercivis/citsci-api, on its federation branch. The consent screen names it.",
       "enabled": true,
       "protocol": "openid-connect",
       "publicClient": false,
@@ -179,7 +179,7 @@
     {
       "clientId": "${OPENRED_CLIENT_ID}",
       "name": "OpenRed",
-      "description": "A Brokered App of the Pilot Composition: Ibercivis/OpenRed, on its federation branch. The consent screen names it.",
+      "description": "An application of the Brokered Composition: Ibercivis/OpenRed, on its federation branch. The consent screen names it.",
       "enabled": true,
       "protocol": "openid-connect",
       "publicClient": false,

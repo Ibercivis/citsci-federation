@@ -9,7 +9,7 @@
  * Two of them, because the pilot has to serve both shapes a Brokered App
  * comes in: a single-page application that cannot hold a secret, and a
  * server-rendered backend that can. They are stand-ins, declared in the
- * realm's testing layer, and they stay: the applications of the Pilot
+ * realm's testing layer, and they stay: the applications of the Brokered
  * Composition register clients of their own in the base layer, with their own
  * addresses, and nothing here reads those — a case that drove a real
  * application would be testing that application rather than the Broker.

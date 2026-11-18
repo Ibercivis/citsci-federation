@@ -14,8 +14,8 @@
 # the file is loaded, and compose.yaml passes them in. The Brokered Apps'
 # blocks are served by this same file in the Broker-only stack, where the
 # containers behind them do not exist: such a request answers 502, which names
-# the application that is not up. Bringing them up is `pnpm pilot:up`, and
-# compose.pilot.yaml is where they are declared.
+# the application that is not up. Bringing them up is `pnpm apps:up`, and
+# compose.apps.yaml is where they are declared.
 
 {
 	# Nothing to obtain a certificate for: the pilot runs on HTTP locally and

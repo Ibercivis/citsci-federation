@@ -1,11 +1,11 @@
 #!/bin/sh
-# Checks every Brokered App of the Pilot Composition out at its `federation`
+# Checks every application of the Brokered Composition out at its `federation`
 # branch, into apps/, which is gitignored.
 #
 # No application's code is vendored into this repository (ADR-0009). What the
 # composition builds from is a working copy of somebody else's repository, and
 # this script is the only thing that writes it: run it on an empty machine and
-# `pnpm pilot:up` has everything it needs but Docker.
+# `pnpm apps:up` has everything it needs but Docker.
 #
 # `federation` is the branch the pilot deploys from in every one of these
 # repositories, and `docs/agents/external-repos.md` says why it is never `main`
@@ -23,7 +23,7 @@ set -eu
 # the application, because what lands in it is that repository and `git` is run
 # in it by hand afterwards.
 #
-# compose.pilot.yaml builds from these paths, and the two lists have to agree:
+# compose.apps.yaml builds from these paths, and the two lists have to agree:
 # a repository added here without a service there is a slow clone nobody uses.
 APPS="
 gdalface|https://github.com/Ibercivis/gdalface.git

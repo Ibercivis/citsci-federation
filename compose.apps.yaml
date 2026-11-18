@@ -1,8 +1,8 @@
-# The Brokered Apps of the Pilot Composition (ADR-0009), on top of the Broker
+# The applications of the Brokered Composition (ADR-0009), on top of the Broker
 # that compose.yaml declares. Both files together are the composition, and
-# `pnpm pilot:up` is the one command that brings it up:
+# `pnpm apps:up` is the one command that brings it up:
 #
-#     docker compose -f compose.yaml -f compose.pilot.yaml up -d --build --wait
+#     docker compose -f compose.yaml -f compose.apps.yaml up -d --build --wait
 #
 # `name:` below replaces the Broker-only project's, so the composition is its
 # own set of containers: `pnpm broker:up` keeps starting the four services the
@@ -14,7 +14,7 @@
 # case from inside the compose network, through `docker compose run` with no
 # `-f` of its own, which lands in that project — and in this one it fails on a
 # name it cannot resolve rather than on anything it asserts. So `pnpm
-# pilot:down`, then `pnpm broker:up`, before running the suite.
+# apps:down`, then `pnpm broker:up`, before running the suite.
 #
 # **No application's code is declared or vendored here.** Each service below
 # builds from `apps/<repository>`, which scripts/checkout-apps.sh checks out at
@@ -41,7 +41,7 @@
 #   * The schedulers and the queues that carry no mail. The composition exists
 #     to try signing in; a recurring weather job is scenery.
 
-name: citsci-pilot
+name: citsci-apps
 
 # ----------------------------------------------------------------- shared
 #

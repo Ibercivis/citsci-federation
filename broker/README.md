@@ -169,9 +169,9 @@ serves, because the applications of the pilot are Django. A third,
 `misconfigured-client`, sits beside them and is not a Brokered App:
 `tests/clients.ts` says why.
 
-### And one client per Brokered App of the Pilot Composition
+### And one client per application of the Brokered Composition
 
-`LostAtNight`, `Geonity` and `OpenRed`: the applications `compose.pilot.yaml`
+`LostAtNight`, `Geonity` and `OpenRed`: the applications `compose.apps.yaml`
 brings up (ADR-0009). Each one's id, secret and address are read from `.env`
 and substituted into the realm by the import, so the Broker and the
 application's own container are told the same three values from one
