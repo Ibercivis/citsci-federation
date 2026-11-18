@@ -605,8 +605,12 @@ export type Attempt =
 export interface AttemptOptions {
   /** The PKCE pair to offer, or null to offer none at all. */
   pkce?: Pkce | null;
-  /** Redeem with this verifier instead of the pair's own. */
-  verifier?: string;
+  /** The nonce to send, or null to send none. A fresh one by default, as a
+   *  Brokered App sends on every request. */
+  nonce?: string | null;
+  /** Redeem with this verifier instead of the pair's own, or null to redeem
+   *  with none. */
+  verifier?: string | null;
   /** Authorization parameters to add or override. */
   params?: Record<string, string>;
   /** Who signs in, and through which Identity Source; the realm's demo
@@ -620,7 +624,12 @@ export async function attempt(
   options: AttemptOptions = {},
 ): Promise<Attempt> {
   const browser = new Browser();
-  const params: Record<string, string> = { ...options.params };
+  const nonce =
+    options.nonce === undefined ? base64url(randomBytes(16)) : options.nonce;
+  const params: Record<string, string> = {
+    ...(nonce === null ? {} : { nonce }),
+    ...options.params,
+  };
   if (options.pkce) {
     params.code_challenge = options.pkce.challenge;
     params.code_challenge_method = options.pkce.method;
@@ -652,7 +661,8 @@ export async function attempt(
   const code = new URL(dialogue.location).searchParams.get("code");
   if (!code) return refusedAtAuthorization(dialogue.location);
 
-  const verifier = options.verifier ?? options.pkce?.verifier;
+  const verifier =
+    options.verifier === undefined ? options.pkce?.verifier : options.verifier;
   const tokens = await redeemCode(client, {
     code,
     ...(verifier ? { code_verifier: verifier } : {}),
@@ -664,9 +674,19 @@ export async function attempt(
       error: tokens.body.error ?? null,
     };
   }
+  const claims = await verifyIdToken(tokens.body.id_token, client);
+  if (nonce !== null && claims.nonce !== nonce) {
+    // Not a refusal: the Broker issued tokens, but not for this request. A
+    // Brokered App throws such an id_token away, because a nonce it did not
+    // send is what a replayed token looks like.
+    throw new Error(
+      `The id_token carries nonce ${JSON.stringify(claims.nonce)}, not the ` +
+        `${JSON.stringify(nonce)} this request sent.`,
+    );
+  }
   return {
     outcome: "authenticated",
-    claims: await verifyIdToken(tokens.body.id_token, client),
+    claims,
     accessToken: tokens.body.access_token ?? "",
     asked: dialogue.asked,
   };

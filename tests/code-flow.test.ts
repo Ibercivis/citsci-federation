@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ALL_CLIENTS } from "./clients.ts";
+import { CLIENT_TYPES } from "./clients.ts";
 import { authenticate } from "./brokered-app.ts";
 import { ISSUER } from "./broker.ts";
 
@@ -11,7 +11,7 @@ import { ISSUER } from "./broker.ts";
  * for a single-page application or only for a server-rendered backend serves
  * half the applications it exists for.
  */
-describe.each(ALL_CLIENTS)(
+describe.each(CLIENT_TYPES)(
   "a %s Brokered App authenticates a Person at the Broker",
   (_shape, client) => {
     it("completes an authorization code flow with PKCE S256", async () => {

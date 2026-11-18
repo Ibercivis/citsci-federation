@@ -41,10 +41,33 @@ export const CONFIDENTIAL_CLIENT: Client = {
   redirectUri: "http://localhost:8000/accounts/oidc/broker/login/callback/",
 };
 
-/** Every client in the realm, for the cases that must hold for both shapes. */
-export const ALL_CLIENTS: ReadonlyArray<[string, Client]> = [
+/** The public and the confidential client, for cases that hold for both. */
+export const CLIENT_TYPES: ReadonlyArray<[string, Client]> = [
   ["public", PUBLIC_CLIENT],
   ["confidential", CONFIDENTIAL_CLIENT],
+];
+
+/**
+ * Not a Brokered App: a client registered carelessly on purpose, with no PKCE
+ * method and the implicit flow switched on. Every refusal in
+ * `hardening.test.ts` runs against it, and it is the only client there whose
+ * refusals come from the realm's policy rather than from its own settings.
+ * Drop it from those cases and nothing shows the policy works.
+ *
+ * It lives in the realm the Broker imports until testing-only configuration
+ * has a declaration of its own (#65).
+ */
+export const MISCONFIGURED_CLIENT: Client = {
+  id: "misconfigured-client",
+  name: "Misconfigured client",
+  redirectUri: "http://localhost:3001/auth/callback",
+};
+
+/** Every client the realm registers, for the refusals that must hold whatever
+ *  a client's own settings say. */
+export const EVERY_REGISTERED_CLIENT: ReadonlyArray<[string, Client]> = [
+  ...CLIENT_TYPES,
+  ["misconfigured", MISCONFIGURED_CLIENT],
 ];
 
 /** The one Identity the realm declares, so a flow has someone to authenticate. */
