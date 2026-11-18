@@ -133,14 +133,19 @@ function userProfileComponent(profile: object) {
 const read = (name: string) =>
   JSON.parse(readFileSync(join(import.meta.dirname, name), "utf8"));
 
+/** The declaration as this directory holds it. */
+export function readDeclaration(): Declaration {
+  return {
+    base: read("base.json"),
+    testing: read("testing.json"),
+    userProfile: read("user-profile.json"),
+  };
+}
+
 if (import.meta.main) {
   const realm = derive(
     process.argv[2] ?? "",
-    {
-      base: read("base.json"),
-      testing: read("testing.json"),
-      userProfile: read("user-profile.json"),
-    },
+    readDeclaration(),
     process.argv[3],
   );
   process.stdout.write(`${JSON.stringify(realm, null, 2)}\n`);

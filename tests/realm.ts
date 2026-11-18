@@ -1,7 +1,8 @@
 /**
- * The realm as the tests read it: `broker/realm-citsci.json`, the same file the
- * Broker imports. A case that needs to know what the Broker was told reads it
- * from here, so the two cannot disagree about it.
+ * The realm as the tests read it: derived from `broker/realm/` for this
+ * stack's BROKER_MODE, by the same step that derives the realm the Broker
+ * imports. A case that needs to know what the Broker was told reads it from
+ * here, so the two cannot disagree about it.
  *
  * This is the only module that knows the realm's shape. A case asks for a fact
  * by name; where Keycloak keeps it is this file's business, and an upgrade that
@@ -13,7 +14,28 @@
  * pass in silence precisely when the realm had moved under them.
  */
 
-import realm from "../broker/realm-citsci.json" with { type: "json" };
+import { derive, readDeclaration } from "../broker/realm/derive.ts";
+import { configured } from "./broker.ts";
+
+/** The parts of the realm the readers below look at. */
+interface ImportedRealm {
+  identityProviders?: ReadonlyArray<{
+    alias: string;
+    displayName: string;
+    trustEmail: boolean;
+  }>;
+  authenticatorConfig?: ReadonlyArray<{
+    alias: string;
+    config?: Record<string, string>;
+  }>;
+}
+
+const MODE = configured("BROKER_MODE");
+const realm = derive(
+  MODE,
+  readDeclaration(),
+  MODE === "testing" ? configured("MOCK_ISSUER") : "",
+) as ImportedRealm;
 
 /** An Identity Source as the Broker was told about it. */
 export interface DeclaredSource {
@@ -31,7 +53,7 @@ export interface DeclaredSource {
  * is why it is an error here rather than a case failing somewhere further on.
  */
 export function declaredSource(alias: string): DeclaredSource {
-  const provider = realm.identityProviders.find(
+  const provider = realm.identityProviders?.find(
     (candidate) => candidate.alias === alias,
   );
   if (!provider) {
@@ -55,7 +77,7 @@ export function declaredSource(alias: string): DeclaredSource {
  * page that means something else.
  */
 export function declaredRefusal(alias: string): string {
-  const declared = realm.authenticatorConfig.find(
+  const declared = realm.authenticatorConfig?.find(
     (entry) => entry.alias === alias,
   )?.config;
   const message =
