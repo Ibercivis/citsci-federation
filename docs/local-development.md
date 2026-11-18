@@ -62,8 +62,10 @@ local form would otherwise reach a real person. Site on <http://localhost:8000/>
 - [`Ibercivis/Geonity`](https://github.com/Ibercivis/Geonity) · `federation` · `LOCAL-DEV.md` — web app, admin panel
 
 Django REST + PostGIS, Redis, a mail catcher, an `rq` worker and a scheduler. Nothing of it
-existed: the Dockerfile and the compose file are new, as is the dataset. The two front ends are
-**not** containerised: they are `npm run dev` on the host.
+existed: the Dockerfile and the compose file are new, as is the dataset. The two front ends have
+**no container recipe at all**: here they are `npm run dev` on the host, and in the Pilot
+Composition the same thing with `--host` on a stock Node image. Vite needs no host-check
+configuration either: it answers to a `.localhost` hostname as it stands.
 
 ```sh
 docker compose up -d --build
@@ -155,8 +157,6 @@ tags tried: they are Debian bullseye, and `apt.postgresql.org` no longer serves 
 **The map's data is served; only its basemap is blank, for the Mapbox reason above.** Both of the
 map's data paths answer with seeded rows: `…/h3-aggregation/`, which it calls below zoom 15, and
 `…/compact/`, which it calls at zoom 15 and above — for radiation and for light pollution alike.
-OpenRed's own `LOCAL-DEV.md` and openred-react's still give a missing endpoint as the reason the map
-is blank; both are corrected on their `local-dev-environment` branches, awaiting review.
 
 ## Building one for a new application
 
