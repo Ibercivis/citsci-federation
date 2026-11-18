@@ -194,44 +194,46 @@ Information". #65 replaces it: the step that layers the realm generates the
 
 ### The first broker login flow, and the one rule in it
 
-ADR-0004 joins Identities into one Person automatically, by Verified Email.
-Keycloak does the joining: `idp-auto-link`, in a `first broker login` flow of
-ours, matches an arriving Identity against the Person holding that address and
-asks the Person nothing. The built-in flow asks them to confirm the link
-instead, which is the thing ADR-0004 gave up in order to ship.
+The first time somebody arrives from an Identity Source, the Broker either
+creates a Person for them or decides they are a Person it already knows. It
+decides that by email address, and it asks them nothing (ADR-0004). The
+built-in flow asks them to confirm the link instead, which is why this realm
+declares a flow of its own.
 
-**That authenticator reads the address and nothing else**, so the
-configuration that performs the merge also performs the account takeover
-ADR-0004 exists to refuse (issue #75). What refuses it is a conditional
-subflow **ahead** of `idp-auto-link`, carrying a condition of ours from
-`verified-email/` and then `deny-access-authenticator`.
+**The risk this flow exists to handle.** `idp-auto-link`, the authenticator
+that performs the join, compares the address and nothing else. It never checks
+whether the arriving source said it had verified that address. On its own it
+therefore gives away an account: register somewhere that never checks
+addresses, using somebody else's, and wait for its owner to arrive (issue #75).
 
-The condition is ours because **no condition Keycloak ships can see the
-arriving claim** — the one that could name such a flag reads a user's
-attributes, and where this decision has to be taken there is no user in the
-flow at all. The route, and why the alternatives to it were refused, is in
-`docs/notes/conditional-subflow-and-brokered-email-verified.md`.
+So a conditional subflow sits **ahead** of `idp-auto-link`: a condition of ours
+from `verified-email/`, and `deny-access-authenticator` behind it. Unverified
+address, no join.
 
-Ahead of `idp-auto-link` and not after it, because nothing is written to
-`federated_identity` until the flow completes: a subflow that denies before it
-leaves no trace, while one that denies after would be undoing a decision
-already taken.
+Three things about that shape are decisions rather than taste:
 
-`deny-access-authenticator` is the leaf today. ADR-0004 says the Broker should
-instead ask that Person for an address and confirm it by mail, which is
-`idp-email-verification` in the same position and SMTP in the composition
-(#26). The condition does not change when that happens.
+- **The condition is ours because none of Keycloak's can do it.** The only one
+  that could name such a flag reads a user's attributes, and at this point in
+  the flow there is no user yet. The measurements, and the two routes that were
+  refused, are in
+  `docs/notes/conditional-subflow-and-brokered-email-verified.md`.
+- **Ahead of the join, not after it.** Nothing is written to
+  `federated_identity` until the flow finishes, so denying here leaves no trace
+  at all. Denying afterwards would mean undoing a decision already taken.
+- **Bound on the realm, not on each source.** `firstBrokerLoginFlow` is what
+  every Identity Source uses, and no source names a flow of its own, so one
+  added later cannot miss this rule by nobody remembering to attach it.
 
-**It is bound at the realm, not per Identity Source.** `firstBrokerLoginFlow`
-on the realm is what every source uses, and none of them names a flow of its
-own — so a source added later gets this rule without anybody remembering to
-attach it. A source that *did* name one would be opting out of ADR-0004, which
-is not something to be able to do by omission.
+Everything else is the built-in flow's shape, `idp-review-profile` included:
+the only step that decides differently is the join. Declaring these flows does
+not cost the realm its built-in ones — the note says what that was measured
+against.
 
-Everything else in the flow is the built-in one's shape, `idp-review-profile`
-included, so the only thing ours decides differently is the join. Declaring
-these flows does not cost the realm its built-in ones; the note records what
-that was measured against.
+**`deny-access-authenticator` is temporary.** Turning somebody away keeps the
+address from being taken over, but it also leaves them with no way in. They
+should be asked for an address and sent a confirmation link, which gets them an
+account of their own; that needs the Broker to send mail (#26). When it can,
+`idp-email-verification` takes that slot and the condition stays as it is.
 
 ### The Mock Identity Source
 

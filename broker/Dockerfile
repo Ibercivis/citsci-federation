@@ -1,9 +1,10 @@
-# The Broker's OpenID provider: Keycloak at a pinned version, with the one
-# extension this repository adds to it, the Person Identifier mapper.
+# The Broker's OpenID provider: Keycloak at a pinned version, plus the two
+# extensions this repository adds to it — the Person Identifier mapper, and the
+# condition that refuses to join an address nobody verified.
 #
-# Both extensions are compiled here rather than committed: the repository
-# carries no binaries, and building inside a Maven container means nobody needs
-# Java on their machine to work on it.
+# Both are compiled here rather than committed: the repository carries no
+# binaries, and building inside a Maven container means nobody needs Java on
+# their machine to work on it.
 #
 # One stage each, because one jar each: either can be lifted out of this
 # repository on its own.
@@ -24,18 +25,22 @@ RUN mvn --batch-mode --quiet dependency:go-offline
 COPY verified-email/src ./src
 RUN mvn --batch-mode --quiet package
 
-# Pinned, and pinned because a security property of the design rests on how
-# this version treats a verified email address (ADR-0004). It is not allowed to
-# move on its own, and both poms compile against the same version: they move
-# together or not at all.
+# The version is pinned and does not move on its own. Two reasons:
 #
-# The Verified Email condition is the sharper reason the pin matters. It reads
-# the arriving `email_verified` from where this version's OIDC provider puts it
-# — an internal of that provider, not a promised API — so an upgrade is
-# something the suite has to be re-run against before it lands.
+# 1. `verified-email/` reads the `email_verified` the identity provider sent
+#    out of a Keycloak field that no public API promises. A version that
+#    renames or moves it leaves our condition finding nothing — and finding
+#    nothing means "nobody verified this address", so the Broker would start
+#    refusing sign-ins it ought to allow. It breaks safe, and quietly.
+# 2. Whether an address counts as verified is decided by this version, and a
+#    security property of the design rests on that answer (ADR-0004).
+#
+# An upgrade is therefore: change this line, rebuild, run `pnpm test`, and read
+# what it says before trusting it. Both poms compile against the same version,
+# so they move with it or not at all.
 FROM quay.io/keycloak/keycloak:26.8.1
 COPY --from=mapper /build/target/person-identifier.jar /opt/keycloak/providers/
 COPY --from=condition /build/target/verified-email.jar /opt/keycloak/providers/
-# Fixes the build-time options into the image, so the provider is installed
+# Fixes the build-time options into the image, so both providers are installed
 # here and `start` does not have to rebuild on every boot.
 RUN /opt/keycloak/bin/kc.sh build --db=postgres --health-enabled=true

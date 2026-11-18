@@ -15,26 +15,18 @@ import {
 } from "./mock-source.ts";
 
 /**
- * ADR-0004 in both directions: an Identity arriving with a **Verified Email**
- * that a Person already holds becomes an Identity of that Person, and an
- * Identity arriving with anything else joins nothing, ever.
+ * Arrive at an address a Person already holds and you become that Person — but
+ * only if the source you came from verified the address (ADR-0004).
  *
- * The negative direction is the important one. It is the only thing standing
- * between the automatic merge and a one-minute account takeover — register
- * under somebody else's address at a source that affirms nothing and wait for
- * them to arrive — and it is the class of assertion that goes unwritten
- * because the happy path already worked.
+ * **The refusals below are the point.** Without them the Broker gives an
+ * account away: register with somebody else's address somewhere that checks
+ * nothing, wait for its owner to arrive. Nothing refuses it for free — the
+ * authenticator that performs the join never reads `email_verified` — so what
+ * these cases are really holding up is `broker/verified-email/` and the realm's
+ * `citsci first broker login` flow. Take away either and they go red.
  *
- * Nothing enforces it for free. Keycloak's `idp-auto-link`, which performs the
- * merge, matches on the address alone and never reads `email_verified`
- * (issue #75), and no condition it ships can see the arriving claim
- * (`docs/notes/conditional-subflow-and-brokered-email-verified.md`). What
- * enforces it is this repository's own condition, declared in the realm's
- * `citsci first broker login` flow and compiled from
- * `broker/verified-email/`. Remove either and these cases go red.
- *
- * Every case stages its own Person, at an address of its own, because the
- * suite shares one Broker and a Person outlives the case that made them.
+ * Each case makes its own Person at an address of its own: the suite shares one
+ * Broker, and a Person outlives the case that created them.
  */
 
 const PERSON_IDENTIFIER =
@@ -50,19 +42,15 @@ const arriving = (through: string, identity: MockIdentity) => ({
   pkce: createPkce("S256"),
 });
 
-/**
- * What the Broker put in front of the Person, for a flow that ended on one of
- * its pages. Any other ending reports itself instead, so a case asserting on
- * the words the Broker used fails by naming what happened rather than by
- * asserting nothing at all.
- */
+/** What the Broker showed the Person. A flow that ended anywhere else says so,
+ *  so a case asserting on the wording fails by naming what happened instead. */
 const whatThePersonWasTold = (result: Attempt): string =>
   result.outcome === "refused-in-the-browser"
     ? result.complaint
     : `no page: the flow ended as ${result.outcome}`;
 
-/** A Person with a Verified Email, made the only way the Broker makes one:
- *  an Identity arriving from a source that affirms the address. */
+/** A Person whose address was verified — the only kind the Broker will join an
+ *  Identity to. */
 async function personArrivingWithAVerifiedEmail(
   identity: MockIdentity,
 ): Promise<string> {
@@ -78,26 +66,27 @@ describe("an unverified address joins no existing Person", () => {
   it("refuses an Identity whose own source does not affirm its address", async () => {
     const person = await personArrivingWithAVerifiedEmail("takeover-verified");
 
-    // The same address, through another source, which affirms addresses in
-    // general and says nothing for this one.
+    // The same address, from a source that verifies addresses in general and
+    // did not verify this one.
     const takeover = await attempt(
       CONFIDENTIAL_CLIENT,
       arriving(AFFIRMING_SOURCE_B, "takeover-unverified"),
     );
 
     expect(takeover.outcome).toBe("refused-in-the-browser");
-    // It reaches nothing of that Person: no identifier, no token, no data.
+    // Nothing of that Person came back: no identifier, no token, no data.
     expect(JSON.stringify(takeover)).not.toContain(person);
-    // And the Broker says why, in the words the realm declares.
+    // Refused for the declared reason. Without this, any page the stand-in app
+    // could not answer would pass the case — a missing `nonce`, for instance.
     expect(whatThePersonWasTold(takeover)).toMatch(
       /did not confirm your email address/i,
     );
   });
 
   it("refuses an affirmed address when the Broker does not trust that source", async () => {
-    // `trustEmail` is one trust decision about one operator, taken per source
-    // and never on the realm (ADR-0004). A source the Broker has not been
-    // told to trust affirms nothing, whatever its claims say.
+    // Trusting a source's word on addresses is one decision about one operator,
+    // so it is set per source and never on the realm. A source nobody decided
+    // to trust verifies nothing, whatever its claims say.
     const person = await personArrivingWithAVerifiedEmail("untrusted-verified");
 
     const throughUntrusted = await attempt(
@@ -107,18 +96,14 @@ describe("an unverified address joins no existing Person", () => {
 
     expect(throughUntrusted.outcome).toBe("refused-in-the-browser");
     expect(JSON.stringify(throughUntrusted)).not.toContain(person);
-    // For the declared reason, and not because some other page stopped the
-    // flow: a refusal in the browser is only "the Broker asked something this
-    // stand-in app could not answer".
     expect(whatThePersonWasTold(throughUntrusted)).toMatch(
       /did not confirm your email address/i,
     );
   });
 
   it("leaves the Person it refused to join exactly as they were", async () => {
-    // A refusal that damaged the Person would be a denial of service against
-    // whoever holds the address: anyone could spend somebody else's account by
-    // arriving badly.
+    // Otherwise the refusal is a way to break somebody else's account: arrive
+    // badly at their address often enough and they can no longer get in.
     const person = await personArrivingWithAVerifiedEmail("takeover-verified");
 
     await attempt(
@@ -136,8 +121,9 @@ describe("an unverified address joins no existing Person", () => {
 
 describe("a Verified Email joins the Person that holds it", () => {
   it("gives one Person Identifier to the same address through two sources", async () => {
-    // The pilot's reason to exist, and the direction the refusal above must
-    // not have cost us (ADR-0004, #25).
+    // What the pilot exists to demonstrate, and what the refusals above must
+    // not have cost. An enforcement that turned everyone away would pass them
+    // all (#25).
     const person = await personArrivingWithAVerifiedEmail("merge-verified");
 
     const second = await authenticate(
@@ -149,8 +135,9 @@ describe("a Verified Email joins the Person that holds it", () => {
   });
 
   it("asks the Person nothing in between", async () => {
-    // No linking flow, nothing to confirm: ADR-0004 bought the merge by
-    // giving that up, so a page appearing here is the decision undone.
+    // Two pages: choosing the source, and signing in at it. A third one here
+    // means the Broker started asking them to confirm the link, which is the
+    // thing this design gave up in order to ship.
     await personArrivingWithAVerifiedEmail("merge-verified");
 
     const { asked } = await authenticate(
