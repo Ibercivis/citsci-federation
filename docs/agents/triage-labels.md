@@ -13,3 +13,10 @@ The skills speak in terms of five canonical triage roles. This file maps those r
 When a skill mentions a role (e.g. "apply the AFK-ready triage label"), use the corresponding label string from this table.
 
 Edit the "Label in our tracker" column to match whatever vocabulary you actually use.
+
+## The labels Dependabot adds
+
+Dependabot creates its own on first use: `dependencies`, plus one per ecosystem — `javascript`,
+`github_actions`, `docker_compose`. They are not triage roles and no skill asks for them. They stay
+because in triage they say "this is a bump, not work from the script". `labels: []` on an ecosystem
+in `.github/dependabot.yml` stops them.
