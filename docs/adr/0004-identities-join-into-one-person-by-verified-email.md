@@ -84,7 +84,7 @@ is ORCID, which affirms no address — the Person is asked for one and nothing c
 ADR accepted was "whoever controls a mailbox can become that Person"; what holds today is weaker,
 because no mailbox is needed. Closing it is the same sentence this ADR already contains — a source
 that affirms nothing causes the Broker to ask for an address and confirm it by mail — so it waits on
-SMTP (#26) rather than on a new decision.
+SMTP (#26) rather than on a new decision. The hole is `issue #88`, which that ticket blocks.
 
 Today an Identity the condition refuses is **turned away**, told that the service it came from did
 not confirm its address. That is less than this ADR promises above: the Broker should ask that Person for an

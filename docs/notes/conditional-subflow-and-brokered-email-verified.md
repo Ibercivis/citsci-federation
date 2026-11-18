@@ -97,6 +97,9 @@ really holds the address. What closes it is the behaviour ADR-0004 already descr
 that affirms nothing causes the Broker to **ask for an address and confirm it by mail** — so no
 Person is ever created at an unaffirmed address in the first place. That is SMTP, and #26.
 
+The hole has a ticket of its own, `issue #88`, blocked by that one. Take the measurements from here;
+take what is owed from there.
+
 ## The one place Keycloak does read the flag
 
 `emailVerified` on a *new* Person is `trustEmail AND email_verified`, taken from the brokered
