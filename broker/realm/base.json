@@ -3,6 +3,12 @@
   "enabled": true,
   "displayName": "Ibercivis Citizen Science",
   "loginWithEmailAllowed": true,
+  "smtpServer": {
+    "host": "${SMTP_HOST}",
+    "port": "${SMTP_PORT}",
+    "from": "no-reply@ibercivis.es",
+    "fromDisplayName": "Ibercivis Citizen Science"
+  },
   "firstBrokerLoginFlow": "citsci first broker login",
   "requiredActions": [
     {
