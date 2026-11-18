@@ -33,8 +33,8 @@ belongs in the declaration.
 what exists only so that it can be tested. `BROKER_MODE` in `.env` picks one of
 two Brokers: `testing` is the base plus the testing layer, with the Mock
 Identity Source running, and `production` is the base alone. The development
-stack and CI run `testing`, and anything meant to be deployed runs
-`production`.
+stack and CI run `testing`. A CI job also runs `production`, and so does
+anything meant to be deployed.
 
 Keycloak imports one complete realm per file and cannot layer two, so
 `realm/derive.ts` does it inside the image build and writes the one file
@@ -65,6 +65,10 @@ Broker needs anyway. The first broker login flow arrived with the tests for
 ADR-0004, and it is base because it is how every Identity Source joins a
 Person. A stand-in client that a Brokered App will replace is base too, until
 the real registration takes its place.
+
+An entry in the base that refers to an entry in the testing layer is a sign
+that one of them is in the wrong layer: the `production` CI job is where that
+shows, because the base has to start on its own.
 
 Seam 2, `tests/declaration.test.ts`, checks that the running Broker is the mode
 it claims to be. It looks for every entry in both layers the way a Brokered
