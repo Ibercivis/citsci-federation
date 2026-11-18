@@ -10,6 +10,7 @@ import {
 import {
   MOCK_IDENTITIES,
   MOCK_SOURCE,
+  MOCK_SOURCES,
   type MockIdentity,
   signInAtMock,
 } from "./mock-source.ts";
@@ -93,7 +94,9 @@ describe("a Person arriving through the Mock Identity Source", () => {
 });
 
 describe("the Mock Identity Source on the Broker's sign-in page", () => {
-  it("tells a Person it is not a launch source", async () => {
+  it("tells a Person every one of them is not a launch source", async () => {
+    // There are several of them now. Whichever one a Person is offered has to
+    // say in the name they read that it vouches for nobody.
     const { asked } = await authenticate(CONFIDENTIAL_CLIENT);
     const signInPage = asked.find((page) => page.kind === "sign-in");
 
@@ -101,8 +104,22 @@ describe("the Mock Identity Source on the Broker's sign-in page", () => {
       /mock/i.test(text),
     );
 
-    expect(offered).toHaveLength(1);
-    expect(offered[0]).toMatch(/not for launch/i);
+    expect(offered).toHaveLength(Object.keys(MOCK_SOURCES).length);
+    for (const name of offered) expect(name).toMatch(/not for launch/i);
+  });
+
+  it("offers each of them under the name the mock declares", async () => {
+    // The realm spells these names a second time, because JSON imports
+    // nothing. If the two drift, every case that picks a source by name finds
+    // nothing and fails somewhere else; this fails here instead.
+    const { asked } = await authenticate(CONFIDENTIAL_CLIENT);
+    const signInPage = asked.find((page) => page.kind === "sign-in");
+
+    const offered = linkTextsOn(signInPage?.html ?? "");
+
+    for (const source of Object.values(MOCK_SOURCES)) {
+      expect(offered.some((text) => text.includes(source.name))).toBe(true);
+    }
   });
 });
 

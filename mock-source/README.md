@@ -8,16 +8,47 @@ configuration but the testing one.
 
 ## What it declares
 
-`mock.json` holds the client it serves — the Broker — and its
-Identities. Each Identity carries two sets of claims about its address: one for
-the ID token and one for userinfo. They are written out separately even where
-they agree, because making them disagree is what this source is for.
+`mock.json` holds the Identity Sources this one server stands behind, the
+client it serves — the Broker — and its Identities.
+
+### Three sources, one server
+
+| Alias | Affirms addresses (`trustEmail`) |
+|---|---|
+| `mock` | no — everything through it is unverified, whatever it claims |
+| `mock-affirming-a` | yes |
+| `mock-affirming-b` | yes |
+
+Three, because a Person holds **one Identity per source** — `federated_identity`
+says so with a primary key — and the join is about their *second* Identity. Two
+affirming sources to stage it, one affirming nothing to stage its refusal.
+
+The keys of `sources` are where the aliases are declared: `server.ts` registers
+one Broker callback per key, and the realm repeats them because JSON imports
+nothing. `affirmsAddresses` repeats the realm's `trustEmail` and decides
+nothing; it lets a case ask for *a source that affirms addresses* instead of
+naming one. If the two ever disagree, `tests/mock-source.ts` throws and says so.
+
+### The Identities
+
+Each Identity carries two sets of claims about its address: one for the ID
+token and one for userinfo. They are written out separately even where they
+agree, because making them disagree is what this source is for.
 
 | Identity | ID token | userinfo |
 |---|---|---|
 | `mock-verified` | `shared@mock.test`, verified | the same |
 | `mock-unverified` | `shared@mock.test`, **unverified** | the same |
 | `mock-split` | `split@mock.test`, verified | `shared@mock.test`, unverified |
+| `takeover-verified` | `takeover@mock.test`, verified | the same |
+| `takeover-unverified` | `takeover@mock.test`, **unverified** | the same |
+| `merge-verified` | `merge@mock.test`, verified | the same |
+| `untrusted-verified` | `untrusted@mock.test`, verified | the same |
+
+**An address per case.** The suite drives one Broker and a Person outlives the
+case that made them, so two cases at the same address decide each other's
+outcome — and no case can see which of them ran first. The last four addresses
+belong to `tests/verified-email-join.test.ts`.
 
 A case that needs another combination adds an Identity here. The source's
 answer cannot yet change between two sign-ins; #25 needs that, and adds it.

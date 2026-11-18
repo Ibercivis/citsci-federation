@@ -268,6 +268,15 @@ function question(page: Page, arrival: Arrival): Question | null {
   return null;
 }
 
+/** What a Person would read on a page: the markup stripped, and the scripts
+ *  and stylesheets a browser never shows stripped first. */
+const readableTextOf = (html: string): string =>
+  visibleText(
+    html
+      .replace(/<script\b[\s\S]*?<\/script>/g, " ")
+      .replace(/<style\b[\s\S]*?<\/style>/g, " "),
+  );
+
 /** Reads the Broker's own complaint off a page, so a failed step says why. */
 function pageComplaint({ html }: Page): string {
   const messages = [...html.matchAll(/id="input-error[^"]*"[^>]*>([^<]+)</g)]
@@ -275,15 +284,17 @@ function pageComplaint({ html }: Page): string {
     .filter(Boolean);
   const heading = /<h1[^>]*id="kc-page-title"[^>]*>([^<]+)</.exec(html);
   const asksFor = /name="(firstName|lastName|email|password-new)"/.exec(html);
-  return (
-    [
-      heading?.[1] ? `Page: ${heading[1].trim()}` : "",
-      messages.length ? `Errors: ${messages.join(" | ")}` : "",
-      asksFor?.[1] ? `Asks for field: ${asksFor[1]}` : "",
-    ]
-      .filter(Boolean)
-      .join("\n") || html.slice(0, 400)
-  );
+  return [
+    heading?.[1] ? `Page: ${heading[1].trim()}` : "",
+    messages.length ? `Errors: ${messages.join(" | ")}` : "",
+    asksFor?.[1] ? `Asks for field: ${asksFor[1]}` : "",
+    // Everything a Person was shown. A refusal the realm words itself appears
+    // in none of the lines above, so this is the only place a case can read it
+    // from — and the reason this last line needs no guard.
+    `Says: ${readableTextOf(html)}`,
+  ]
+    .filter(Boolean)
+    .join("\n");
 }
 
 /**

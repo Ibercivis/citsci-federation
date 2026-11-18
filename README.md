@@ -31,10 +31,12 @@ applied at start-up.
 ## What is declared here, and what is not
 
 `compose.yaml` declares the Broker — the reverse proxy, the OpenID provider
-behind it, and that provider's own database — and one Identity Source outside
-it, the Mock Identity Source in [`mock-source/`](mock-source/),
-which exists so the tests can decide what a source says about an address. It
-is not a launch source. The proxy is in
+behind it, and that provider's own database — and the Mock Identity Source
+outside it, in [`mock-source/`](mock-source/), which exists so the tests can
+decide what a source says about an address. None of it is a launch source. One
+server stands behind three Identity Sources there, because a Person cannot hold
+two Identities from the same source, and the rule under test is about their
+second one. The proxy is in
 front **in every environment, including local** — the reason is parity of
 form, since the cookie, TLS, redirect-URI and CORS failures that depend on
 deployment shape otherwise appear for the first time in production (ADR-0001).
@@ -43,9 +45,13 @@ No Brokered App's infrastructure is declared here. A Brokered App's
 development environment lives in its own repository, and what this one holds
 about an application is the client the Broker knows it by.
 
-The Keycloak version is **pinned**, because a security property of the design
-rests on how it treats a verified email address (ADR-0004). It does not move
-on its own.
+The Keycloak version is **pinned** and does not move on its own. A security
+property of the design rests on how this version treats a verified email
+address (ADR-0004), and the extension that enforces it —
+[`broker/verified-email/`](broker/verified-email/), which refuses to join an
+address nobody verified — reads that flag out of an undocumented field. An
+upgrade that moved the field would break the refusal silently, so an upgrade
+is something `pnpm test` has to clear first.
 
 ## How this is tested
 

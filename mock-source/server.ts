@@ -35,9 +35,19 @@ function required(name: string): string {
 }
 
 const ISSUER = required("MOCK_ISSUER");
-/** The one client it serves is the Broker, which Keycloak calls back at this
- *  path for an Identity Source with the alias `mock`. */
-const BROKER_CALLBACK = `${required("BROKER_ISSUER")}/broker/mock/endpoint`;
+/**
+ * The one client it serves is the Broker, which calls back at a path per
+ * Identity Source alias. This server stands behind every alias `mock.json`
+ * declares, because a callback it does not serve is a source no sign-in can
+ * finish through.
+ *
+ * Several, because a Person cannot hold two Identities from the same source:
+ * `federated_identity` refuses the second by primary key, before any rule of
+ * ours is reached.
+ */
+const BROKER_CALLBACKS = Object.keys(declaration.sources).map(
+  (alias) => `${required("BROKER_ISSUER")}/broker/${alias}/endpoint`,
+);
 
 /**
  * The signing key, the same on every start: derived from a declared seed, so
@@ -70,7 +80,7 @@ const provider = new Provider(ISSUER, {
     {
       client_id: declaration.client.id,
       client_secret: declaration.client.secret,
-      redirect_uris: [BROKER_CALLBACK],
+      redirect_uris: BROKER_CALLBACKS,
       token_endpoint_auth_method: "client_secret_post",
       id_token_signed_response_alg: "ES256",
     },
@@ -113,12 +123,16 @@ const provider = new Provider(ISSUER, {
 const escapeHtml = (value: string): string =>
   value.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 
+/** What this server calls itself, rather than any one source's name: it
+ *  answers for all of them, and the Person has already chosen. */
+const OWN_NAME = "Mock Identity Source (not for launch)";
+
 /** The sign-in page. It says what it is, so nobody mistakes it for a real one. */
 const signInPage = (uid: string, complaint = ""): string => `<!doctype html>
 <html lang="en">
-<head><meta charset="utf-8"><title>${escapeHtml(declaration.name)}</title></head>
+<head><meta charset="utf-8"><title>${escapeHtml(OWN_NAME)}</title></head>
 <body>
-<h1>${escapeHtml(declaration.name)}</h1>
+<h1>${escapeHtml(OWN_NAME)}</h1>
 <p>A test Identity Source. It vouches for nobody.</p>
 ${complaint ? `<p role="alert">${escapeHtml(complaint)}</p>` : ""}
 <form method="post" action="/interaction/${escapeHtml(uid)}">

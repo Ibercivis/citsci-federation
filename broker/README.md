@@ -1,9 +1,9 @@
 # The Broker's OpenID provider
 
-Keycloak at a pinned version with one extension of ours, the Person
-Identifier mapper, behind the reverse proxy `compose.yaml` puts in front of
-it, and configured entirely by `realm-citsci.json`. `Dockerfile` builds the
-two into one image.
+Keycloak at a pinned version with two extensions of ours — the Person
+Identifier mapper and the Verified Email condition — behind the reverse proxy
+`compose.yaml` puts in front of it, and configured entirely by
+`realm-citsci.json`. `Dockerfile` builds all three into one image.
 
 ```sh
 pnpm broker:up      # docker compose up -d --wait --build
@@ -192,18 +192,69 @@ so an upgrade could drop it without a word; the cases in
 Information". #65 replaces it: the step that layers the realm generates the
 `components` entry from this file, and the option goes.
 
+### The first broker login flow, and the one rule in it
+
+The first time somebody arrives from an Identity Source, the Broker either
+creates a Person for them or decides they are a Person it already knows. It
+decides that by email address, and it asks them nothing (ADR-0004). The
+built-in flow asks them to confirm the link instead, which is why this realm
+declares a flow of its own.
+
+**The risk this flow exists to handle.** `idp-auto-link`, the authenticator
+that performs the join, compares the address and nothing else. It never checks
+whether the arriving source said it had verified that address. On its own it
+therefore gives away an account: register somewhere that never checks
+addresses, using somebody else's, and wait for its owner to arrive (issue #75).
+
+So a conditional subflow sits **ahead** of `idp-auto-link`: a condition of ours
+from `verified-email/`, and `deny-access-authenticator` behind it. Unverified
+address, no join.
+
+Three things about that shape are decisions rather than taste:
+
+- **The condition is ours because none of Keycloak's can do it.** The only one
+  that could name such a flag reads a user's attributes, and at this point in
+  the flow there is no user yet. The measurements, and the two routes that were
+  refused, are in
+  `docs/notes/conditional-subflow-and-brokered-email-verified.md`.
+- **Ahead of the join, not after it.** Nothing is written to
+  `federated_identity` until the flow finishes, so denying here leaves no trace
+  at all. Denying afterwards would mean undoing a decision already taken.
+- **Bound on the realm, not on each source.** `firstBrokerLoginFlow` is what
+  every Identity Source uses, and no source names a flow of its own, so one
+  added later cannot miss this rule by nobody remembering to attach it.
+
+Everything else is the built-in flow's shape, `idp-review-profile` included:
+the only step that decides differently is the join. Declaring these flows does
+not cost the realm its built-in ones — the note says what that was measured
+against.
+
+**`deny-access-authenticator` is temporary.** Turning somebody away keeps the
+address from being taken over, but it also leaves them with no way in. They
+should be asked for an address and sent a confirmation link, which gets them an
+account of their own; that needs the Broker to send mail (#26). When it can,
+`idp-email-verification` takes that slot and the condition stays as it is.
+
 ### The Mock Identity Source
 
 A test Identity Source this repository runs itself (`mock-source/`), so
 that what a source says about an address can be decided by hand: per Identity,
-and separately for the ID token and for userinfo. It is declared under the
-alias `mock`, with a display name that says it is not for launch, because
-that name is what a Person reads on the sign-in page.
+and separately for the ID token and for userinfo. Each is declared with a
+display name that says it is not for launch, because that name is what a
+Person reads on the sign-in page.
 
-- **`trustEmail` is off**, on this source and therefore everywhere: it is set
-  per Identity Source and never on the realm (ADR-0004). A case that needs it
-  on declares a second source over the same server rather than flipping this
-  one.
+**Three of them, over one server.** `federated_identity` holds one link per
+source per Person, so a second Identity from the *same* source is refused by
+the schema — and ADR-0004 is entirely about what happens when a Person's
+second Identity arrives. One source cannot stage either half of it.
+
+- **`mock` affirms nothing**: `trustEmail` off, which is how a source arrives
+  whose word on an address the Broker has not been told to trust. Everything
+  through it is unverified, whatever its claims say.
+- **`mock-affirming-a` and `mock-affirming-b` affirm addresses**:
+  `trustEmail` on. Two, so that one Person can hold an Identity from each —
+  which is what the merge and the refusal both need. `trustEmail` is set per
+  source and never on the realm (ADR-0004).
 - **Userinfo is on**, because the reported advisory this source exists to
   stage is about the address being read from userinfo. Being on is not the
   same as being called: `mock-source/README.md` says what else that

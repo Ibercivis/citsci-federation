@@ -3,6 +3,7 @@
   "enabled": true,
   "displayName": "Ibercivis Citizen Science",
   "loginWithEmailAllowed": true,
+  "firstBrokerLoginFlow": "citsci first broker login",
   "requiredActions": [
     {
       "alias": "VERIFY_PROFILE",
@@ -182,6 +183,172 @@
         "pkceMethod": "S256",
         "syncMode": "IMPORT"
       }
+    },
+    {
+      "alias": "mock-affirming-a",
+      "displayName": "Mock source A, affirms addresses (not for launch)",
+      "providerId": "oidc",
+      "enabled": true,
+      "trustEmail": true,
+      "storeToken": false,
+      "addReadTokenRoleOnCreate": false,
+      "linkOnly": false,
+      "hideOnLogin": false,
+      "config": {
+        "issuer": "${MOCK_ISSUER}",
+        "authorizationUrl": "${MOCK_ISSUER}/auth",
+        "tokenUrl": "${MOCK_ISSUER}/token",
+        "userInfoUrl": "${MOCK_ISSUER}/me",
+        "jwksUrl": "${MOCK_ISSUER}/jwks",
+        "useJwksUrl": "true",
+        "validateSignature": "true",
+        "disableUserInfo": "false",
+        "clientId": "citsci-broker",
+        "clientSecret": "mock-source-development-secret",
+        "clientAuthMethod": "client_secret_post",
+        "defaultScope": "openid email",
+        "pkceEnabled": "true",
+        "pkceMethod": "S256",
+        "syncMode": "IMPORT"
+      }
+    },
+    {
+      "alias": "mock-affirming-b",
+      "displayName": "Mock source B, affirms addresses (not for launch)",
+      "providerId": "oidc",
+      "enabled": true,
+      "trustEmail": true,
+      "storeToken": false,
+      "addReadTokenRoleOnCreate": false,
+      "linkOnly": false,
+      "hideOnLogin": false,
+      "config": {
+        "issuer": "${MOCK_ISSUER}",
+        "authorizationUrl": "${MOCK_ISSUER}/auth",
+        "tokenUrl": "${MOCK_ISSUER}/token",
+        "userInfoUrl": "${MOCK_ISSUER}/me",
+        "jwksUrl": "${MOCK_ISSUER}/jwks",
+        "useJwksUrl": "true",
+        "validateSignature": "true",
+        "disableUserInfo": "false",
+        "clientId": "citsci-broker",
+        "clientSecret": "mock-source-development-secret",
+        "clientAuthMethod": "client_secret_post",
+        "defaultScope": "openid email",
+        "pkceEnabled": "true",
+        "pkceMethod": "S256",
+        "syncMode": "IMPORT"
+      }
+    }
+  ],
+  "authenticatorConfig": [
+    {
+      "alias": "citsci-review-what-is-missing",
+      "config": {
+        "update.profile.on.first.login": "missing"
+      }
+    },
+    {
+      "alias": "citsci-refuse-an-unverified-join",
+      "config": {
+        "denyErrorMessage": "We could not sign you in, because the service you signed in with did not confirm your email address."
+      }
+    }
+  ],
+  "authenticationFlows": [
+    {
+      "alias": "citsci first broker login",
+      "description": "What happens the first time an Identity arrives from a source: a new Person, or the one that already holds this address.",
+      "providerId": "basic-flow",
+      "topLevel": true,
+      "builtIn": false,
+      "authenticationExecutions": [
+        {
+          "authenticator": "idp-review-profile",
+          "authenticatorConfig": "citsci-review-what-is-missing",
+          "requirement": "REQUIRED",
+          "priority": 10,
+          "authenticatorFlow": false,
+          "userSetupAllowed": false
+        },
+        {
+          "flowAlias": "citsci create a Person, or join one",
+          "requirement": "REQUIRED",
+          "priority": 20,
+          "authenticatorFlow": true,
+          "userSetupAllowed": false
+        }
+      ]
+    },
+    {
+      "alias": "citsci create a Person, or join one",
+      "description": "Create a Person, or join the one holding the address. idp-create-user-if-unique decides which.",
+      "providerId": "basic-flow",
+      "topLevel": false,
+      "builtIn": false,
+      "authenticationExecutions": [
+        {
+          "authenticator": "idp-create-user-if-unique",
+          "requirement": "ALTERNATIVE",
+          "priority": 10,
+          "authenticatorFlow": false,
+          "userSetupAllowed": false
+        },
+        {
+          "flowAlias": "citsci join the Person holding this address",
+          "requirement": "ALTERNATIVE",
+          "priority": 20,
+          "authenticatorFlow": true,
+          "userSetupAllowed": false
+        }
+      ]
+    },
+    {
+      "alias": "citsci join the Person holding this address",
+      "description": "The address already belongs to a Person. The refusal is asked before the join, so a refused Identity never reaches idp-auto-link.",
+      "providerId": "basic-flow",
+      "topLevel": false,
+      "builtIn": false,
+      "authenticationExecutions": [
+        {
+          "flowAlias": "citsci refuse an unverified address",
+          "requirement": "CONDITIONAL",
+          "priority": 10,
+          "authenticatorFlow": true,
+          "userSetupAllowed": false
+        },
+        {
+          "authenticator": "idp-auto-link",
+          "requirement": "REQUIRED",
+          "priority": 20,
+          "authenticatorFlow": false,
+          "userSetupAllowed": false
+        }
+      ]
+    },
+    {
+      "alias": "citsci refuse an unverified address",
+      "description": "Refuses an address the arriving source did not verify. Nothing else checks it: idp-auto-link reads the address alone (issue #75).",
+      "providerId": "basic-flow",
+      "topLevel": false,
+      "builtIn": false,
+      "authenticationExecutions": [
+        {
+          "authenticator": "citsci-condition-unverified-email",
+          "requirement": "REQUIRED",
+          "priority": 10,
+          "authenticatorFlow": false,
+          "userSetupAllowed": false
+        },
+        {
+          "authenticator": "deny-access-authenticator",
+          "authenticatorConfig": "citsci-refuse-an-unverified-join",
+          "requirement": "REQUIRED",
+          "priority": 20,
+          "authenticatorFlow": false,
+          "userSetupAllowed": false
+        }
+      ]
     }
   ],
   "clientProfiles": {

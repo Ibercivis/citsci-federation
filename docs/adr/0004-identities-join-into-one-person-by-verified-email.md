@@ -54,3 +54,29 @@ The Keycloak version is pinned, `trustEmail` is set per Identity Source rather t
 seam 1 asserts the **negative** property: an Identity presenting an unverified email does not join an
 existing Person. That inverted test is the only thing standing between this decision and account
 takeover, so it is a first-class assertion and not a nice-to-have.
+
+## What enforces the negative direction
+
+**Not the provider, which this decision read as though it would.** Keycloak performs the merge with
+`idp-auto-link`, and that authenticator compares the address and never reads `email_verified`. So the
+configuration that delivers the paragraph above also delivers the takeover this ADR refuses: a
+verified address, then the same address unverified from a second source, one Person Identifier, no
+page and no error (issue #75). Configuration cannot stop it either — no condition Keycloak ships sees
+what the arriving source claimed.
+
+So the rule is **our code**: a condition in `broker/verified-email/`, which the realm puts in a
+conditional subflow ahead of the join. It reads the two facts Keycloak itself reads when it creates a
+Person — this source is trusted on addresses, and it said it verified this one — so the join path
+cannot drift away from the create path. Whatever it cannot establish counts as unverified.
+
+An Identity it refuses is **turned away** today, told the service it came from did not confirm the
+address. They should instead be asked for an address and sent a confirmation link, which gets them a
+Person of their own rather than a closed door. That needs SMTP (#26); `idp-email-verification` then
+takes the refusal's place in the same subflow.
+
+**The mirror of the rule is unenforced, so the accepted risk is larger than the one written above.**
+Nothing asks whether the Person being joined holds that address verified, so the takeover still works
+by arriving *first*: create a Person at somebody else's address through a source that affirms nothing
+— ORCID affirms none — and the Broker joins their genuine verified arrival to it. This ADR accepted
+"whoever controls a mailbox can become that Person". Today no mailbox is needed. `issue #88` owns it,
+blocked by #26.
