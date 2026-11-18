@@ -147,6 +147,10 @@ citation, not the authority.
   exactly, on the pins we have, and needs neither TypeScript 7 nor `tsrs`. Unadopted on value, not
   on risk. Open it before folding the two passes into one, or before putting `tsrs` in the gate —
   `issue #83` watches that.
+- **The account REST API** (`2026-11-18-account-rest-api-credential-operations.md`) — it reads
+  credentials, Identities and sessions, and changes no password and no address: those are
+  `kc_action` browser steps. It cannot replace the Account Console from a server. Open it before
+  automating a Person's credential operations or building a profile screen.
 - **Conditional subflows and the brokered `email_verified`**
   (`conditional-subflow-and-brokered-email-verified.md`) — no condition Keycloak ships can see what
   an arriving Identity's source said about its address, which is why `broker/verified-email/` is our
