@@ -51,9 +51,8 @@ const LAYERS: ReadonlyArray<[string, Layer, boolean]> = [
 
 const presence = (expected: boolean) => (expected ? "present" : "absent");
 
-/** Whether an authorization request from this client reaches a sign-in form.
- *  A client the Broker does not know gets an error page, and no form. */
-async function offersSignIn(client: Client): Promise<boolean> {
+/** Where an authorization request from this client lands, in a fresh browser. */
+async function landingFor(client: Client) {
   const browser = new Browser();
   const { challenge } = createPkce("S256");
   const response = await requestAuthorization(browser, client, {
@@ -61,7 +60,13 @@ async function offersSignIn(client: Client): Promise<boolean> {
     code_challenge: challenge,
     code_challenge_method: "S256",
   });
-  const landing = await follow(browser, response, client);
+  return follow(browser, response, client);
+}
+
+/** Whether an authorization request from this client reaches a sign-in form.
+ *  A client the Broker does not know gets an error page, and no form. */
+async function offersSignIn(client: Client): Promise<boolean> {
+  const landing = await landingFor(client);
   if (landing.at !== "a page") return false;
   return formsOn(landing.page).some(
     (form) => "username" in form.fields && "password" in form.fields,
@@ -71,14 +76,7 @@ async function offersSignIn(client: Client): Promise<boolean> {
 /** The link texts on the sign-in page a Person meets, which is where the
  *  Identity Sources are offered. */
 async function signInPageLinks(): Promise<string[]> {
-  const browser = new Browser();
-  const { challenge } = createPkce("S256");
-  const response = await requestAuthorization(browser, PUBLIC_CLIENT, {
-    nonce: "seam-2",
-    code_challenge: challenge,
-    code_challenge_method: "S256",
-  });
-  const landing = await follow(browser, response, PUBLIC_CLIENT);
+  const landing = await landingFor(PUBLIC_CLIENT);
   if (landing.at !== "a page") {
     throw new Error("The public client was sent back without a sign-in page.");
   }
