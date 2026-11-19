@@ -98,6 +98,11 @@ x-lostatnight: &lostatnight
   DB_HOST: lostatnight-db
   DB_PORT: "5432"
   REDIS_HOST: lostatnight-redis
+  # Not a key, and nothing here reaches NASA with it. `config('NASA_API_KEY')`
+  # has no default in that application, so the jobs its scheduler registers
+  # raise rather than run without one. Its own LOCAL-DEV.md says the same thing
+  # for the same reason.
+  NASA_API_KEY: "composition-not-a-real-key"
 
 # The port answering, which is all a port check proves: a development server
 # binds it after its own system checks pass, and a 500 on a page is not this
@@ -188,7 +193,11 @@ services:
       dockerfile: Dockerfile.local
     volumes:
       - ./apps/gdalface:/app
-    command: python manage.py rqworker default
+    # `lost_scheduler` is the only queue that application's settings declare,
+    # and the one every `@job` of its own names. `rqworker default` exits 1 with
+    # `KeyError: 'default'` before it listens, and nothing in here waits on the
+    # worker, so the composition comes up with its slow work silently dead.
+    command: python manage.py rqworker lost_scheduler
     environment:
       <<: [*mail, *lostatnight]
     depends_on:

@@ -71,14 +71,16 @@ In order:
    `demo-password`.
 2. The **consent screen**, naming the application. That name comes from the client the realm
    registered for it.
-3. Back to `…/accounts/oidc/callback?code=…`, **which 404s**. No application serves that path yet.
+3. Back to `…/accounts/oidc/callback?code=…`, **which 404s**. That address is this script's
+   own: LostAtNight serves its callback at `/accounts/oidc/ibercivis/login/callback/` and redeems
+   the code itself, which is the step below. Nothing serves the bare `/accounts/oidc/callback`.
 
 The `code=` in the address bar is the Broker having done all of its half. Redeeming it needs the
 client secret, which is not a thing to put in an address bar; `pnpm test` redeems codes, over the
 protocol, with no browser involved.
 
 That page also offers **Register**, which is the Local Credential the Broker holds itself (ADR-0005,
-`issue #26`): the form asks for an address alone, the confirmation lands in the same inbox as step 6,
+`issue #26`): the form asks for an address alone, the confirmation lands in the same inbox as step 7,
 and the link in it is where the password is chosen. `demo` is one of those too, declared in the realm
 instead of registered.
 
@@ -102,7 +104,24 @@ because `demo` signs in with a local credential.
 It is Keycloak's own screen, not ours. Nothing in the pilot links to it and nothing depends on it,
 but it is the shortest answer to "so what does the Broker actually know about me".
 
-### 5. An account that existed before the pilot
+### 5. Signing in to LostAtNight with an Ibercivis account
+
+http://lostatnight.localhost:8080/accounts/login/ → **Sign in with your Ibercivis account**.
+
+The first half of the pilot's claim, clickable: the application sends you to the Broker, the Broker
+signs you in, the application redeems the code itself and you come back signed in. `demo` /
+`demo-password` as in step 2, and the Broker asks for consent on the way, because the client is
+declared `consentRequired`.
+
+Then http://lostatnight.localhost:8080/user-profile/: the personal area names the **Ibercivis
+account** and shows the identifier the Broker minted — the same string every application in the
+composition is told (ADR-0002), and the only thing LostAtNight stores about that account.
+
+`/accounts/signup/` is closed there: it offers the same button and creates nothing. Registration on
+a Brokered App is the Broker's job now (ADR-0007), and LostAtNight is the first application where
+that has landed.
+
+### 6. An account that existed before the pilot
 
 Every seeded account is invented, on a `.invalid` address that can never receive mail, and its
 password is whatever the seed command printed — `devpass12345` unless somebody passed `--password`.
@@ -121,29 +140,32 @@ Everything but Django's own admin signs in by **email address**: all three appli
 This is the half of the pilot's claim that is not about the Broker at all: an account that existed
 before it still signs in, unchanged.
 
-### 6. A sign-up nobody can finish without the mail
+### 7. Mail nobody outside this machine can receive
 
-Register at http://lostatnight.localhost:8080/accounts/signup/ with any invented address. It lands
-on `/accounts/confirm-email/` and goes no further: every application in the composition keeps email
-verification mandatory, as production does.
+Ask for a password reset at http://lostatnight.localhost:8080/accounts/password/reset/ for
+`volunteer1@lostatnight.invalid`, one of the seeded accounts.
 
 The message is at http://mail.localhost:8080. The link in it carries `lostatnight.localhost:8080` —
 the hostname the proxy serves, because django-allauth builds the link from the request rather than
 from the `Site` row, which still says `localhost:8000`.
 
+A sign-up used to be the way to show this, and LostAtNight no longer has one. The applications whose
+registration is still open keep email verification mandatory as production does, so signing up there
+goes no further than `/accounts/confirm-email/` until the message is read.
+
 Nothing in the composition can deliver to a real address.
 
-### 7. The three applications, as the Broker knows them
+### 8. The three applications, as the Broker knows them
 
 http://broker.localhost:8080/admin/, `admin` / `admin`, realm `citsci` → Clients: **lostatnight**,
 **geonity** and **openred**, each with its redirect URI under `/accounts/oidc/*`.
 
 ## What does not work yet, on purpose
 
-- **No application has a sign-in button.** The integrations are `issue #30`, `issue #31` and
-  `issue #94`, and none has landed. So single sign-on *between* two applications is not clickable
-  yet: step 2 is the Broker's half, step 5 is each application's own, and nothing joins them. Say
-  this before anybody asks.
+- **Single sign-on between two applications is not clickable yet.** LostAtNight signs in with an
+  Ibercivis account (step 5, `issue #94`); Geonity and OpenRed do not (`issue #31`, `issue #30`), so
+  there is no second application to arrive at already signed in. One application and the Broker is
+  what there is to show. Say this before anybody asks.
 - **Maps are blank.** They need a Mapbox token nobody has locally, and that is settled:
   [`local-development.md`](local-development.md) says not to spend a minute on it.
 - **`openred.localhost:8080` is declared and not served.** It is where OpenRed's React front end
