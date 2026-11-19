@@ -159,6 +159,11 @@ citation, not the authority.
   credentials, Identities and sessions, and changes no password and no address: those are
   `kc_action` browser steps. It cannot replace the Account Console from a server. Open it before
   automating a Person's credential operations or building a profile screen.
+- **`go-offline` and `package`** (`2026-11-19-what-go-offline-leaves-for-package.md`) —
+  `dependency:go-offline` does not fill the local repository: `package` fetches 217 artifacts after
+  it and fails with `--offline`, so both Maven commands in `broker/Dockerfile` reach Central. Open
+  it before deciding whether `mvn package` loses `--quiet` too, or before costing anything that
+  assumes a Maven stage resolves once.
 - **Conditional subflows and the brokered `email_verified`**
   (`conditional-subflow-and-brokered-email-verified.md`) — no condition Keycloak ships can see what
   an arriving Identity's source said about its address, which is why `broker/verified-email/` is our
