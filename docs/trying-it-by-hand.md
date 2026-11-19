@@ -4,9 +4,6 @@ What somebody with a browser does to see the pilot work: the manual pass before 
 the walkthrough to run in front of people. What the composition *is* and how it is wired is in the
 [README](../README.md) and ADR-0009 — this file is only the clicking.
 
-**Keep it in step.** A step here that no longer matches what the screen does is worse than no step.
-The section that moves is the last one: what does not work yet.
-
 ## Before you start
 
 Docker, `git`, `curl`. No token, no `/etc/hosts` line, no credential to obtain: everything the

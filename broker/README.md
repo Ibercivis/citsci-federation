@@ -169,17 +169,17 @@ serves, because the applications of the pilot are Django. A third,
 `misconfigured-client`, sits beside them and is not a Brokered App:
 `tests/clients.ts` says why.
 
-### And one client per application of the Brokered Composition
+### And one client per Brokered App
 
-`LostAtNight`, `Geonity` and `OpenRed`: the applications `compose.apps.yaml`
-brings up (ADR-0009). Each one's id, secret and address are read from `.env`
-and substituted into the realm by the import, so the Broker and the
-application's own container are told the same three values from one
-declaration. The application reads them as configuration (ADR-0001) and holds
-none of them in its code.
+One per application `compose.apps.yaml` brings up (ADR-0009); which those are
+is that file's business and `.env`'s, not this one's. Each one's id, secret and
+address are read from `.env` and substituted into the realm by the import, so
+the Broker and the application's own container are told the same three values
+from one declaration. The application reads them as configuration (ADR-0001)
+and holds none of them in its code.
 
 **They are in the base layer**, not in the testing one. A stand-in exists for
-the tests and stops existing in `production`; these three are the applications
+the tests and stops existing in `production`; these are the applications
 themselves, and a Broker that did not know them would have nothing to broker
 for. What is development-only about them is the value of each `${NAME}`, which
 is `.env`'s business and not the realm's.
@@ -195,8 +195,8 @@ that the composition can hand each application a client that answers.
 
 An unset name survives the import as the literal `${NAME}`, so a client whose
 secret is that string is the signature of a missing variable rather than of a
-mistake in this file. `compose.yaml` passes all nine, and fails to start if
-`.env` declares none of them.
+mistake in this file. `compose.yaml` passes the three of each, and fails to
+start if `.env` declares none of them.
 
 ### Code flow only, for every client
 
