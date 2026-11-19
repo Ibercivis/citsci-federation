@@ -139,8 +139,13 @@ http://broker.localhost:8080/admin/, `admin` / `admin`, realm `citsci` → Clien
 
 - **No application has a sign-in button.** The integrations are `issue #30`, `#31` and `#94`, and
   none has landed. So single sign-on *between* two applications is not clickable yet: step 2 is the
-  Broker's half, step 4 is each application's own, and nothing joins them. Say this before anybody
+  Broker's half, step 5 is each application's own, and nothing joins them. Say this before anybody
   asks.
+- **And a button alone will not be enough.** The realm applies `secure-session` to every client, so
+  the Broker refuses an authorization request carrying no nonce — and no django-allauth release
+  sends one. Step 2 works because `pnpm sign-in-url` sends a nonce itself. Until `PR #105` narrows
+  that rule to public clients, the first application to ship its button is still refused, with
+  `Missing parameter: nonce`. The day an integration merges, this section wants both numbers.
 - **Maps are blank.** They need a Mapbox token nobody has locally, and that is settled:
   [`local-development.md`](local-development.md) says not to spend a minute on it.
 - **`openred.localhost:8080` is declared and not served.** It is where OpenRed's React front end
