@@ -52,6 +52,17 @@ const PROFILE_CLAIMS = [
   "phone_number",
 ];
 
+/**
+ * Claims that would tell a Brokered App which identity source the Person
+ * signed in with. An application stores every claim it is handed, so the
+ * Broker is where this has to hold.
+ */
+const SOURCE_CLAIMS = [
+  "identity_provider",
+  "identity_provider_identity",
+  "idp",
+];
+
 describe.each(CLIENT_TYPES)(
   "a %s Brokered App knows the Person by their Person Identifier",
   (_shape, client) => {
@@ -95,6 +106,16 @@ describe.each(CLIENT_TYPES)(
 
       for (const [place, body] of places) {
         for (const claim of PROFILE_CLAIMS) {
+          expect(body, `${claim} in ${place}`).not.toHaveProperty(claim);
+        }
+      }
+    });
+
+    it("receives nothing about how the Person signed in, anywhere", async () => {
+      const { places } = await everyPlace(client);
+
+      for (const [place, body] of places) {
+        for (const claim of SOURCE_CLAIMS) {
           expect(body, `${claim} in ${place}`).not.toHaveProperty(claim);
         }
       }
