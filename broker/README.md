@@ -187,7 +187,8 @@ is `.env`'s business and not the realm's.
 **Each registration asserts less than it looks.** The redirect URI is
 `<the application's address>/accounts/oidc/*` — the namespace django-allauth
 serves its callback under, with the provider id left open because the
-integration of each application is what settles it (#30, #31, #94). That
+integration of each application is what settles it (`issue #30`, `issue #31`,
+`issue #94`). That
 integration narrows the URI to the one path it uses; until then this is a
 development guess like the stand-ins above, and the registration exists so
 that the composition can hand each application a client that answers.

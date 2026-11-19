@@ -9,11 +9,11 @@
 #   open "$(pnpm -s sign-in-url)"       # macOS, straight to the browser
 #
 # This exists because no application has a sign-in button yet (`issue #30`,
-# `#31`, `#94`), and the Broker's half is worth exercising before they do. The
-# redirect back lands on a path nothing serves yet, so the browser ends on that
-# application's 404 with `code=` in the address bar — which is the Broker
-# having done everything that is its to do. Delete this script once every
-# application has its own button.
+# `issue #31`, `issue #94`), and the Broker's half is worth exercising before
+# they do. The redirect back lands on a path nothing serves yet, so the browser
+# ends on that application's 404 with `code=` in the address bar — which is the
+# Broker having done everything that is its to do. Delete this script once
+# every application has its own button.
 #
 # Nothing here redeems the code: that needs the client secret, and a URL in an
 # address bar is not where a secret goes. `pnpm test` redeems codes, over the

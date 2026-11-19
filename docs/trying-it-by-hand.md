@@ -143,10 +143,10 @@ http://broker.localhost:8080/admin/, `admin` / `admin`, realm `citsci` → Clien
 
 ## What does not work yet, on purpose
 
-- **No application has a sign-in button.** The integrations are `issue #30`, `#31` and `#94`, and
-  none has landed. So single sign-on *between* two applications is not clickable yet: step 2 is the
-  Broker's half, step 5 is each application's own, and nothing joins them. Say this before anybody
-  asks.
+- **No application has a sign-in button.** The integrations are `issue #30`, `issue #31` and
+  `issue #94`, and none has landed. So single sign-on *between* two applications is not clickable
+  yet: step 2 is the Broker's half, step 5 is each application's own, and nothing joins them. Say
+  this before anybody asks.
 - **Maps are blank.** They need a Mapbox token nobody has locally, and that is settled:
   [`local-development.md`](local-development.md) says not to spend a minute on it.
 - **`openred.localhost:8080` is declared and not served.** It is where OpenRed's React front end
