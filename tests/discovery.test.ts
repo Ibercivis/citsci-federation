@@ -33,6 +33,51 @@ function throughTheProxyAsHost(
 }
 
 /**
+ * The environment to run `docker` in.
+ *
+ * Without `COMPOSE_PROFILES`, deliberately. `.env` declares it as
+ * `${BROKER_MODE}`, and `broker.ts` loads that file into this process with
+ * Node's own loader, which expands nothing — so an inherited literal
+ * `${BROKER_MODE}` reaches compose as a profile name, every service gated
+ * behind a profile disappears, and the project is refused as invalid because
+ * something still depends on one of them. Compose reads `.env` itself, and
+ * resolves it properly when nothing in the environment shadows it.
+ */
+const { COMPOSE_PROFILES: _shadowed, ...DOCKER_ENV } = process.env;
+
+/**
+ * The compose files of the stack that is actually up.
+ *
+ * Two stacks declare this service and they are different compose projects:
+ * `pnpm broker:up` runs the Broker alone, `pnpm apps:up` runs it with every
+ * Brokered App. A throwaway container has to join the network of the one that
+ * is running, or it reaches a network where nothing answers and
+ * `broker.localhost` resolves to nothing at all.
+ *
+ * The Broker-only stack is the default, because that is what CI runs and what
+ * the rest of this file needs nothing more than.
+ */
+function filesOfTheRunningStack(): string[] {
+  const composition = ["-f", "compose.yaml", "-f", "compose.apps.yaml"];
+  const running = execFileSync(
+    "docker",
+    [
+      "compose",
+      ...composition,
+      "ps",
+      "--status",
+      "running",
+      "--quiet",
+      "keycloak",
+    ],
+    { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"], env: DOCKER_ENV },
+  ).trim();
+  return running ? composition : ["-f", "compose.yaml"];
+}
+
+const STACK = filesOfTheRunningStack();
+
+/**
  * Reads the discovery document from inside the compose network, speaking to
  * the authority given — which is how a containerised Brokered App reaches the
  * Broker, and the only place some of these properties are observable at all.
@@ -63,6 +108,7 @@ function fromInsideTheNetwork(hostname: string, port: string): string {
     "docker",
     [
       "compose",
+      ...STACK,
       "run",
       "--rm",
       "-T",
@@ -72,7 +118,7 @@ function fromInsideTheNetwork(hostname: string, port: string): string {
       "-c",
       probeScript,
     ],
-    { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] },
+    { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"], env: DOCKER_ENV },
   );
 }
 
