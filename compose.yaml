@@ -94,6 +94,11 @@ services:
       KC_DB_USERNAME: keycloak
       KC_DB_PASSWORD: keycloak
       KC_HEALTH_ENABLED: "true"
+      # Where the Broker sends its mail. The base needs a mail server in every
+      # mode but cannot name one, so it reads `${SMTP_HOST}` and `${SMTP_PORT}`
+      # from here. `.env` says why it is the mail catcher.
+      SMTP_HOST: ${SMTP_HOST:?declare it in .env}
+      SMTP_PORT: ${SMTP_PORT:?declare it in .env}
       KC_BOOTSTRAP_ADMIN_USERNAME: admin
       KC_BOOTSTRAP_ADMIN_PASSWORD: admin
     # The realm is imported from the one the image carries, derived from
@@ -183,6 +188,29 @@ services:
           "CMD-SHELL",
           "wget -q -O- http://127.0.0.1:8090/.well-known/openid-configuration",
         ]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  # Where the Broker's mail goes here: a mail catcher, which accepts every
+  # message and delivers none. Confirming an address and recovering a
+  # password both arrive by mail (ADR-0004, ADR-0005), so a Broker without
+  # this cannot complete either, and a real server here would mail whatever
+  # address somebody typed into a local form.
+  #
+  # The same image the Brokered Apps' local environments use. Its SMTP port
+  # stays on this network; its API and inbox are published on 8026, because
+  # an application's own catcher may already hold 8025 on the same machine.
+  #
+  # Testing only: a deployment sends real mail, and a catcher beside it would
+  # swallow every confirmation.
+  mailpit:
+    profiles: [testing]
+    image: axllent/mailpit:v1.21.8
+    ports:
+      - "8026:8025"
+    healthcheck:
+      test: ["CMD", "/mailpit", "readyz"]
       interval: 5s
       timeout: 5s
       retries: 20

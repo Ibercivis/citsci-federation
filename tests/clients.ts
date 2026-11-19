@@ -14,6 +14,8 @@
  * `compose.yaml`.
  */
 
+import { ISSUER } from "./broker.ts";
+
 /** A client as registered in the realm. Confidential clients carry a secret. */
 export interface Client {
   id: string;
@@ -70,10 +72,21 @@ export const EVERY_REGISTERED_CLIENT: ReadonlyArray<[string, Client]> = [
   ["misconfigured", MISCONFIGURED_CLIENT],
 ];
 
+/**
+ * Not a Brokered App: the Account Console, the one page of the Broker's own a
+ * Person uses on purpose (ADR-0005). Keycloak registers it in every realm, so
+ * it is named here and not in the realm file.
+ */
+export const ACCOUNT_CONSOLE: Client = {
+  id: "account-console",
+  name: "Account Console",
+  redirectUri: `${ISSUER}/account/`,
+};
+
 /** The one Identity the testing layer declares, so a flow has someone to
  *  authenticate. */
 export const DEMO_IDENTITY = {
   username: "demo",
-  password: "demo",
+  password: "demo-password",
   email: "demo@example.org",
 } as const;

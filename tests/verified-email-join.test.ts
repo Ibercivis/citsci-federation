@@ -1,17 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { CONFIDENTIAL_CLIENT } from "./clients.ts";
-import {
-  type Attempt,
-  attempt,
-  authenticate,
-  createPkce,
-} from "./brokered-app.ts";
+import { type Attempt, attempt, authenticate } from "./brokered-app.ts";
+import { PERSON_IDENTIFIER } from "./broker.ts";
 import {
   AFFIRMING_SOURCE_A,
   AFFIRMING_SOURCE_B,
-  MOCK_IDENTITIES,
   SOURCE_AFFIRMING_NOTHING,
   type MockIdentity,
+  arriving,
 } from "./mock-source.ts";
 import { declaredRefusal } from "./realm.ts";
 
@@ -30,21 +26,8 @@ import { declaredRefusal } from "./realm.ts";
  * Broker, and a Person outlives the case that created them.
  */
 
-const PERSON_IDENTIFIER =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}@ibercivis\.es$/;
-
 /** The refusal as the realm words it. */
 const REFUSAL = declaredRefusal("citsci-refuse-an-unverified-join");
-
-/** An arrival: who signs in, and through which Identity Source. */
-const arriving = (through: string, identity: MockIdentity) => ({
-  as: {
-    through,
-    username: identity,
-    password: MOCK_IDENTITIES[identity].password,
-  },
-  pkce: createPkce("S256"),
-});
 
 /** What the Broker showed the Person. A flow that ended anywhere else says so,
  *  so a case asserting on the wording fails by naming what happened instead. */

@@ -207,7 +207,7 @@ function anchorsIn(html: string): Array<{ text: string; href: string }> {
  * and follows, so that is how it is found: by the name it shows, never by an
  * element id this provider's templates happen to give it.
  */
-function linksOn(page: Page): Array<{ text: string; href: string }> {
+export function linksOn(page: Page): Array<{ text: string; href: string }> {
   return anchorsIn(page.html).map((link) => ({
     text: link.text,
     href: new URL(link.href, page.url).href,
@@ -627,6 +627,9 @@ export interface AttemptOptions {
   /** Who signs in, and through which Identity Source; the realm's demo
    *  Identity, on the Broker's own form, when absent. */
   as?: Arrival;
+  /** The browser to run it in, for a case that goes on using the session the
+   *  sign-in leaves behind. A fresh one when absent. */
+  browser?: Browser;
 }
 
 /** Runs a flow and reports where it died, or that it did not. */
@@ -634,7 +637,7 @@ export async function attempt(
   client: Client,
   options: AttemptOptions = {},
 ): Promise<Attempt> {
-  const browser = new Browser();
+  const browser = options.browser ?? new Browser();
   const nonce =
     options.nonce === undefined ? base64url(randomBytes(16)) : options.nonce;
   const params: Record<string, string> = {
@@ -741,4 +744,31 @@ export async function authenticate(
     accessToken: result.accessToken,
     asked: result.asked,
   };
+}
+
+/**
+ * Every place a Brokered App can read the Person from, for one sign-in: the ID
+ * token, the access token, userinfo, and introspection where the client holds
+ * a secret to ask with.
+ */
+export async function everyPlace(
+  client: Client,
+  options: AttemptOptions = {},
+): Promise<{
+  idToken: Record<string, unknown>;
+  places: Array<[string, Record<string, unknown>]>;
+}> {
+  const { claims, accessToken } = await authenticate(client, options);
+  const places: Array<[string, Record<string, unknown>]> = [
+    ["the ID token", claims],
+    ["the access token", await verifyAccessToken(accessToken, client)],
+    ["the userinfo response", (await userinfo(accessToken)).body],
+  ];
+  if (client.secret) {
+    places.push([
+      "the introspection response",
+      (await introspect(client, accessToken)).body,
+    ]);
+  }
+  return { idToken: claims, places };
 }

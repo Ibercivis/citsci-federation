@@ -43,11 +43,13 @@ agree, because making them disagree is what this source is for.
 | `takeover-unverified` | `takeover@mock.test`, **unverified** | the same |
 | `merge-verified` | `merge@mock.test`, verified | the same |
 | `untrusted-verified` | `untrusted@mock.test`, verified | the same |
+| `renamed-verified` | `renamed@mock.test`, verified | the same |
 
 **An address per case.** The suite drives one Broker and a Person outlives the
 case that made them, so two cases at the same address decide each other's
-outcome — and no case can see which of them ran first. The last four addresses
-belong to `tests/verified-email-join.test.ts`.
+outcome — and no case can see which of them ran first. `takeover`, `merge` and
+`untrusted` belong to `tests/verified-email-join.test.ts`, and `renamed` to
+`tests/local-credential.test.ts`.
 
 A case that needs another combination adds an Identity here. The source's
 answer cannot yet change between two sign-ins; #25 needs that, and adds it.

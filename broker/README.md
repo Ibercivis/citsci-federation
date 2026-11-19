@@ -17,7 +17,8 @@ Discovery: `$BROKER_ISSUER/.well-known/openid-configuration`, where
 hostname means the same thing to a browser and to a container on the compose
 network, and `.env` says why.
 
-In `testing`, the one Identity the realm declares is `demo` / `demo`, and its
+
+In `testing`, the one Identity the realm declares is `demo` / `demo-password`, and its
 sign-in page also offers the Mock Identity Sources, whose Identities are
 declared in `mock-source/mock.json` (password `mock`). In `production` there
 are neither.
@@ -235,6 +236,42 @@ nobody can review. So the profile is kept readable in a file of its own, and
 stops being applied, the cases in `tests/mock-source.test.ts` notice: they stop
 on "Update Account Information".
 
+### The Local Credential
+
+An email address and a password the Broker holds itself (ADR-0005). The address
+is the username, and it counts for nothing until it is confirmed by mail. All
+of it is base: a deployment ships it.
+
+**Every required action the realm uses is named in it.** Importing a
+`requiredActions` list replaces Keycloak's defaults, so an action left out does
+not exist. Without `VERIFY_EMAIL`, an unconfirmed registration signed straight
+in — measured.
+
+**The password is chosen after the address is confirmed.** With `verifyEmail`
+on, this version's registration form asks for the address alone, and the link
+in the mail leads to `UPDATE_PASSWORD`. So until the mailbox answers, there is
+no credential at all. `VERIFY_EMAIL` has the lower priority so that it comes
+first. The registration step's `always_set_password_on_register_form` would
+put the password back on the form; leave it off, or an unconfirmed
+registration holds a password.
+
+**The policy is `length(12)` and nothing else.** No composition rules, no
+expiry. The import validates the realm's own users against it, which is why
+`demo`'s password is long.
+
+**An address changes only once the new one is confirmed.** That is the
+`update-email` feature, which `Dockerfile` turns on and says why, with its
+`UPDATE_EMAIL` action. The console's button sends the
+Person to `kc_action=UPDATE_EMAIL`, and without the feature there is no such
+page. Writing `email` straight into the account API is refused for another
+reason: the address is the username, and `editUsernameAllowed` is off. Leave it
+off. What else that API can and cannot do is in
+`docs/notes/2026-11-18-account-rest-api-credential-operations.md`.
+
+The base names its mail server as `${SMTP_HOST}` and `${SMTP_PORT}`. In
+`testing` they point at the mail catcher `compose.yaml` runs, whose inbox is
+<http://localhost:8026/>.
+
 ### The first broker login flow, and the one rule in it
 
 The first time somebody arrives from an Identity Source, the Broker either
@@ -275,8 +312,9 @@ against.
 **`deny-access-authenticator` is temporary.** Turning somebody away keeps the
 address from being taken over, but it also leaves them with no way in. They
 should be asked for an address and sent a confirmation link, which gets them an
-account of their own; that needs the Broker to send mail (#26). When it can,
-`idp-email-verification` takes that slot and the condition stays as it is.
+account of their own. The Broker can send mail now; putting
+`idp-email-verification` in that slot is issue #88, and the condition stays as
+it is.
 
 ### The Mock Identity Source
 

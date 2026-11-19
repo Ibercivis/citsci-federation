@@ -21,6 +21,18 @@ const ENV_FILE = join(import.meta.dirname, "..", ".env");
 export const ISSUER = configured("BROKER_ISSUER");
 
 /**
+ * The Person Identifier (ADR-0002): one opaque UUID per Person, scoped with
+ * the organisation's domain.
+ *
+ * Any version of UUID will do. Which one the Broker mints is its own
+ * business, and asserting it would turn an upgrade into a false alarm. Written
+ * out rather than read from the realm's `person.identifier.scope`, so a realm
+ * that scopes it wrongly fails here instead of agreeing with itself.
+ */
+export const PERSON_IDENTIFIER =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}@ibercivis\.es$/;
+
+/**
  * A value the stack declares in `.env`, read from the environment when it is
  * set there and from the file when it is not. There is no default to fall
  * back to: an issuer is configuration (ADR-0001), and a guessed one is the one

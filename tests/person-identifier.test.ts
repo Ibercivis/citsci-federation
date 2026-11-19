@@ -1,23 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { CLIENT_TYPES, CONFIDENTIAL_CLIENT, PUBLIC_CLIENT } from "./clients.ts";
-import {
-  authenticate,
-  introspect,
-  userinfo,
-  verifyAccessToken,
-} from "./brokered-app.ts";
+import { authenticate, everyPlace, introspect } from "./brokered-app.ts";
+import { PERSON_IDENTIFIER } from "./broker.ts";
 
-/**
- * The Person Identifier (ADR-0002): one opaque UUID per Person, scoped with
- * the organisation's domain, which is all a Brokered App ever stores about
+/*
+ * The Person Identifier (ADR-0002) is all a Brokered App ever stores about
  * who signed in. Shown here the only way a Brokered App could see it: in what
  * the Broker hands over.
- *
- * Any version of UUID will do. Which one the Broker mints is its own
- * business, and asserting it would turn an upgrade into a false alarm.
  */
-const PERSON_IDENTIFIER =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}@ibercivis\.es$/;
 
 const NOT_SCOPED =
   "The Person Identifier is not <uuid>@ibercivis.es. A bare UUID here means " +
@@ -61,23 +51,6 @@ const PROFILE_CLAIMS = [
   "address",
   "phone_number",
 ];
-
-/** Every place a Brokered App can read the Person from, for one sign-in. */
-async function everyPlace(client: (typeof CLIENT_TYPES)[number][1]) {
-  const { claims, accessToken } = await authenticate(client);
-  const places: Array<[string, Record<string, unknown>]> = [
-    ["the ID token", claims],
-    ["the access token", await verifyAccessToken(accessToken, client)],
-    ["the userinfo response", (await userinfo(accessToken)).body],
-  ];
-  if (client.secret) {
-    places.push([
-      "the introspection response",
-      (await introspect(client, accessToken)).body,
-    ]);
-  }
-  return { idToken: claims, places };
-}
 
 describe.each(CLIENT_TYPES)(
   "a %s Brokered App knows the Person by their Person Identifier",

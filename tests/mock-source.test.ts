@@ -7,11 +7,12 @@ import {
   userinfo,
   verifyAccessToken,
 } from "./brokered-app.ts";
+import { PERSON_IDENTIFIER } from "./broker.ts";
 import {
-  MOCK_IDENTITIES,
-  MOCK_SOURCE,
+  AFFIRMING_SOURCE_A,
   MOCK_SOURCES,
   type MockIdentity,
+  arriving,
   signInAtMock,
 } from "./mock-source.ts";
 
@@ -28,16 +29,11 @@ import {
  * source's, so what the source says can only be read from the source.
  */
 
-const PERSON_IDENTIFIER =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}@ibercivis\.es$/;
-
-const arrivingAs = (identity: MockIdentity) => ({
-  as: {
-    through: MOCK_SOURCE.name,
-    username: identity,
-    password: MOCK_IDENTITIES[identity].password,
-  },
-});
+/** Through a source whose word on the address is trusted. Through one whose
+ *  word is not, the Broker first confirms the address by mail (ADR-0004), and
+ *  these cases are about arriving, not about that. */
+const arrivingAs = (identity: MockIdentity) =>
+  arriving(AFFIRMING_SOURCE_A, identity);
 
 describe("a Person arriving through the Mock Identity Source", () => {
   it("reaches a Brokered App with valid tokens and a Person Identifier", async () => {
