@@ -109,6 +109,14 @@ named `federation`, cut from the latest commit of `main`: PRs target it and the 
 it. **What we add there is named in that application's words, never in ours** — our vocabulary stays
 in this repository. See `docs/agents/external-repos.md`.
 
+### Brokered App integrations
+
+What every integration is held to — security, extensibility, and what it costs the application
+being integrated — and the questions its pull request answers. See
+`docs/agents/brokered-app-integration.md`. The criteria are weighed in that order and the first is
+not traded away; a rule of ours that only hand-written protocol code in each application can
+satisfy is evidence against the rule (ADR-0016).
+
 ### Local environments
 
 **Every Brokered App gets one, built as it is integrated**, and **none takes data from production**:
