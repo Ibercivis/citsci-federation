@@ -43,9 +43,11 @@ case "$app" in
     ;;
 esac
 
-# PKCE, which every client in the realm requires, and a nonce, which the Broker
-# requires of a request carrying `openid`. The verifier is thrown away with
-# this shell: nothing below redeems the code it protects.
+# PKCE, which every client in the realm requires, and a nonce. Which clients the
+# Broker refuses a nonce-less request from is a client policy, and that policy
+# has already moved once; sending a nonce is never wrong, so this sends one and
+# does not track it. The verifier is thrown away with this shell: nothing below
+# redeems the code it protects.
 verifier=$(openssl rand -hex 32)
 challenge=$(
   printf %s "$verifier" | openssl dgst -binary -sha256 | openssl base64 -A |

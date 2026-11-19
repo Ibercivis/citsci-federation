@@ -87,7 +87,19 @@ That source is a server this repository runs ([`mock-source/`](../mock-source/))
 can decide what a source says about an address. It is not a launch source, and it starts only when
 `BROKER_MODE=testing`.
 
-### 4. An account that existed before the pilot
+### 4. The Person, as the Broker holds them
+
+http://broker.localhost:8080/realms/citsci/account, as whoever step 2 or 3 left you signed in as.
+
+The only screen in the composition that shows the **Person** rather than one application's account:
+the profile, the sessions, and — for a Person who arrived from an Identity Source — the source they
+are linked to. Step 3's `mock-verified` is linked to `mock`; `demo` is not linked to anything,
+because `demo` signs in with a local credential.
+
+It is Keycloak's own screen, not ours. Nothing in the pilot links to it and nothing depends on it,
+but it is the shortest answer to "so what does the Broker actually know about me".
+
+### 5. An account that existed before the pilot
 
 Every seeded account is invented, on a `.invalid` address that can never receive mail, and its
 password is whatever the seed command printed — `devpass12345` unless somebody passed `--password`.
@@ -106,7 +118,7 @@ Everything but Django's own admin signs in by **email address**: all three appli
 This is the half of the pilot's claim that is not about the Broker at all: an account that existed
 before it still signs in, unchanged.
 
-### 5. A sign-up nobody can finish without the mail
+### 6. A sign-up nobody can finish without the mail
 
 Register at http://lostatnight.localhost:8080/accounts/signup/ with any invented address. It lands
 on `/accounts/confirm-email/` and goes no further: every application in the composition keeps email
@@ -118,7 +130,7 @@ from the `Site` row, which still says `localhost:8000`.
 
 Nothing in the composition can deliver to a real address.
 
-### 6. The three applications, as the Broker knows them
+### 7. The three applications, as the Broker knows them
 
 http://broker.localhost:8080/admin/, `admin` / `admin`, realm `citsci` → Clients: **lostatnight**,
 **geonity** and **openred**, each with its redirect URI under `/accounts/oidc/*`.
@@ -129,10 +141,6 @@ http://broker.localhost:8080/admin/, `admin` / `admin`, realm `citsci` → Clien
   none has landed. So single sign-on *between* two applications is not clickable yet: step 2 is the
   Broker's half, step 4 is each application's own, and nothing joins them. Say this before anybody
   asks.
-- **The Broker's account console answers "Something went wrong"** at
-  `/realms/citsci/account`, after a sign-in that worked. `demo` is declared with no roles, so it
-  holds no `account: view-profile` and the console's first call to its own API is refused. Nothing
-  the pilot does uses that console.
 - **Maps are blank.** They need a Mapbox token nobody has locally, and that is settled:
   [`local-development.md`](local-development.md) says not to spend a minute on it.
 - **`openred.localhost:8080` is declared and not served.** It is where OpenRed's React front end

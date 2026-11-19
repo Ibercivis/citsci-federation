@@ -243,6 +243,17 @@ client is assigned the scope, as a default or as an option it could ask for.
 Person on the applications' side of the frontier (ADR-0003), so the Broker has
 no roles to hand out and no token of its own carries one.
 
+That is about tokens, and not about Keycloak's own roles, which is why the
+`demo` Identity holds `default-roles-citsci` — the composite Keycloak gives
+every user of a realm so that they can read their own account. Every Person the
+Broker creates from an Identity Source is given it without being asked; only a
+user *declared* in a realm file is not, because the import takes the
+representation literally and adds nothing to it. Without it the account console
+at `/realms/citsci/account` refuses its own API, after a sign-in that worked,
+and says "Something went wrong" — which is a fixture that behaves unlike every
+Person the Broker makes. None of it crosses the frontier: no client is assigned
+the `roles` scope, which is what the paragraph above is about.
+
 `email` stays. The email address belongs to the **Identity** — it is how a
 Person proves who they are, not something they declare about themselves — and
 it is the one key that decides whether a new Identity belongs to an existing
