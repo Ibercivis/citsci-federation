@@ -15,8 +15,10 @@ repository. `federation` is the main branch of our prototype, and it is treated 
 - **Nothing lands on it except through a reviewed pull request.** Changes are written on a topic
   branch cut from `federation` and reach `federation` by a PR with `--base federation`. A commit
   made directly on `federation` is a commit nobody read.
-- Pull requests target `federation`, never `main`.
-- The pilot deploys from `federation`. Production keeps following `main` and this work never touches it.
+- Pull requests target `federation`, never `main` — unless a defect in `main` itself argues for
+  one. See **A pull request against `main`** below; the default is never.
+- The pilot deploys from `federation`. Production keeps following `main`, and the one exception
+  below is the only thing the pilot ever puts there.
 - The application's **container recipe for the pilot** lives here too — a Dockerfile and the
   environment it needs, so the application can join the Brokered Composition (ADR-0009). It is written
   for the pilot and for nothing else, and `main` never sees it.
@@ -24,6 +26,33 @@ repository. `federation` is the main branch of our prototype, and it is treated 
 
 If `federation` already exists in a repository, use it rather than recreating it. Refreshing it from
 `main` is a deliberate act: take `main`'s latest commit, and say in the pull request that you did it.
+
+## A pull request against `main`, exceptionally
+
+**The default is never, and it is there for safety.** `main` is what production follows, and a
+change we put on it is not ours to take back.
+
+One thing lifts the default: **a clear defect in `main` itself** — the application broken on its own
+terms, by the standard of whoever maintains it, with or without a pilot. Not pilot work with a good
+reason behind it, and not an improvement we would like the application to have. A defect we are
+unsure of waits.
+
+The pull request **says what the defect is and argues for itself**, in the application's own words
+(below). One that does not is the rule being broken rather than applied. Merging it is still a human
+reading the diff (ADR-0014).
+
+Two have gone through. [OpenRed#3](https://github.com/Ibercivis/OpenRed/pull/3) fixed a CI workflow
+that failed on Python versions the runners no longer offer, and two dependencies missing from
+`requirements.txt` without which a fresh clone does not start — both states of `main` that were not
+the pilot's doing, though re-pointing `main` is what made the first one visible.
+[OpenRed#4](https://github.com/Ibercivis/OpenRed/pull/4) added a compose file for running the suite
+locally, which is **no defect at all** and would not have opened the door by itself. Convenience
+travels well beside a real fix; that is the thing to watch for.
+
+**A question in the body is not a gate.** `OpenRed#3` put three judgement calls to the owner and
+merged with no reply, so all three stand as it proposed them. A pull request against `main` is
+merged like any other. An answer that matters is obtained before the merge — the body is where it
+gets recorded, not where it gets asked.
 
 ## Vocabulary: the application's words, never ours
 
@@ -88,9 +117,10 @@ the application that actually runs, and `federation` is cut from `main`'s latest
 everywhere else. The deployed tree did not change by a byte; `main` was relabelled, not rebuilt.
 
 This was a one-off on the application's own line of development, **not** a commit of pilot work onto
-`main`, and it is not a precedent — the rule above stands. The two commits the old `main` carried
-are preserved on `legacy-main-user-groups-heatmap` and left to the application owner to accept or
-close in [OpenRed#2](https://github.com/Ibercivis/OpenRed/pull/2).
+`main`, and it is not a precedent. Nor is it the exception above: that one is a pull request, and
+this was not. The two commits the old `main` carried are preserved on
+`legacy-main-user-groups-heatmap` and left to the application owner to accept or close in
+[OpenRed#2](https://github.com/Ibercivis/OpenRed/pull/2).
 
 The measurements that argued for the move are in
 [`docs/notes/openred-live-branch.md`](../notes/openred-live-branch.md), which was written **before**
