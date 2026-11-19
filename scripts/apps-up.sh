@@ -128,6 +128,7 @@ check "$GEONITY_API_BASE_URL/admin/login/"
 check "$GEONITY_WEB_BASE_URL/"
 check "$GEONITY_ADMIN_BASE_URL/"
 check "$OPENRED_API_BASE_URL/admin/login/"
+check "$OPENRED_WEB_BASE_URL/"
 check "$MAIL_BASE_URL/"
 
 echo

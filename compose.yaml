@@ -48,6 +48,7 @@ services:
       GEONITY_WEB_BASE_URL: ${GEONITY_WEB_BASE_URL:?declare it in .env}
       GEONITY_ADMIN_BASE_URL: ${GEONITY_ADMIN_BASE_URL:?declare it in .env}
       OPENRED_API_BASE_URL: ${OPENRED_API_BASE_URL:?declare it in .env}
+      OPENRED_WEB_BASE_URL: ${OPENRED_WEB_BASE_URL:?declare it in .env}
       MAIL_BASE_URL: ${MAIL_BASE_URL:?declare it in .env}
       BROKER_ISSUER: ${BROKER_ISSUER:?declare it in .env}
     # BROKER_SITE is the issuer with its realm path dropped, which is the

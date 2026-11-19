@@ -64,11 +64,15 @@ publishes a port of its own. The addresses are declared in [`.env`](.env):
 | `broker.localhost:8080` | the Broker, at the issuer, realm path included |
 | `lostatnight.localhost:8080` | LostAtNight |
 | `geonity.localhost:8080` | Geonity's web app, `geonity-admin` its admin panel, `geonity-api` its API |
-| `openred-api.localhost:8080` | OpenRed's API |
+| `openred.localhost:8080` | OpenRed's React front end, `openred-api` its API |
 | `mail.localhost:8080` | every message any of them sends |
 
 `.localhost` resolves to the loopback in every browser without an
 `/etc/hosts` line, and to the proxy from inside the composition.
+
+Every map is blank, and OpenRed's Google button cannot work.
+[`docs/trying-it-by-hand.md`](docs/trying-it-by-hand.md) says why, and what
+else does not work yet.
 
 Each application is seeded with accounts that **existed before the pilot** —
 invented, on `.invalid` addresses, from each application's own `seed_local`

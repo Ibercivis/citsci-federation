@@ -112,8 +112,12 @@ filtered one look the same. Checking took access to the machine itself.
 
 Django REST + PostGIS, Redis, **three** `rq` queues and a scheduler. The first one where the
 environment had to be **built rather than reused**: there was no Dockerfile and no compose file, so
-both are new, along with the database image — see below. The React app is not containerised: it is
-`npm ci && npm start` on the host.
+both are new, along with the database image — see below. The React app has **no container recipe
+of its own**: here it is `npm ci && npm start` on the host, and in the Brokered Composition the
+same thing on a stock Node image. It needs no host-check configuration either, though not for
+Vite's reason: `react-scripts` 5.0.1 turns webpack's host check on only when `package.json`
+carries a `proxy` key, and removing that key is what stopped the dev server pointing at
+production.
 
 ```sh
 docker compose up -d --build          # first build compiles an extension, a few minutes
@@ -154,6 +158,15 @@ defaults to the local API and warns on a non-local target — and `npm install` 
 does not compile, so **use `npm ci`** and leave the committed lockfile alone. Maps need a Mapbox
 token; everything else works without one. The Flutter client was not exercised: it talks to the
 devices over BLE and needs hardware.
+
+**Four production addresses stay in that front end's own code, where no configuration reaches
+them**, so an environment built from this branch is not free of them and cannot be made so from
+outside: `setupProxy.js` forwards `/sdgsat_tiles` to `lostatnight.org` and `MapComponent.tsx` names
+a tile layer at `map.open-red.es`, both of which a browser with the app open really calls;
+`config/api.ts` keeps `api.open-red.es` as the fallback for a build given no `REACT_APP_API_URL`,
+which development never reads; and `DevicesPage.tsx` prints it in an example request on screen.
+They are read-only, they are that application's to change, and a change belongs on its own branch
+(ADR-0009).
 
 One deviation worth knowing about, recorded in the application's `LOCAL-DEV.md`. The database
 image is **not** `postgis/postgis`: OpenRed's raw SQL calls a server-side `h3` function for the H3

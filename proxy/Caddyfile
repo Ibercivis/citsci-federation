@@ -63,10 +63,15 @@
 	reverse_proxy geonity-admin:5173
 }
 
-# OpenRed: the API. Its React front end is not in the composition yet, and
-# `openred.localhost` is reserved for it.
+# OpenRed: an API and the React front end in front of it. As with Geonity, the
+# front end calls the API through its own origin and lets its dev server
+# forward it, as in production behind nginx.
 {$OPENRED_API_BASE_URL} {
 	reverse_proxy openred-api:8000
+}
+
+{$OPENRED_WEB_BASE_URL} {
+	reverse_proxy openred-web:3010
 }
 
 # The mail catcher's inbox: every message any of them sends. It is the only way
