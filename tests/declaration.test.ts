@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { configured } from "./broker.ts";
 import { type Client, PUBLIC_CLIENT } from "./clients.ts";
+import { asImported } from "./realm.ts";
 import {
   Browser,
   attempt,
@@ -54,16 +55,13 @@ const LOOKED_FOR: ReadonlyArray<keyof Layer> = [
 ];
 
 const LAYERS: ReadonlyArray<[string, Layer, boolean]> = [
-  // A cast, because the base declares none of the kinds a Layer names, and
-  // TypeScript refuses a value sharing no property with a type whose
-  // properties are all optional.
-  ["base", base as Layer, true],
+  ["base", base, true],
   ["testing", testing, TESTING_CLAIMED],
 ];
 
 /** The layers holding something to look for. Vitest refuses a suite with no
- *  case in it, and the base registers no client until a real Brokered App is
- *  integrated; that client brings the base's suite back. */
+ *  case in it, so a layer emptied of every kind above drops out rather than
+ *  failing the file. */
 const LOOKED_FOR_IN = LAYERS.filter(([, layer]) =>
   LOOKED_FOR.some((kind) => (layer[kind]?.length ?? 0) > 0),
 );
@@ -114,7 +112,13 @@ describe(`the running Broker is the ${MODE} declaration`, () => {
   });
 
   describe.each(LOOKED_FOR_IN)("the %s layer", (_layer, layer, expected) => {
-    const clients = layer.clients ?? [];
+    // Read as Keycloak imported them, so a client the layer references by
+    // `${NAME}` is looked for under the id and the address `.env` declares.
+    const clients = (layer.clients ?? []).map((declared) => ({
+      ...declared,
+      clientId: asImported(declared.clientId),
+      redirectUris: declared.redirectUris?.map(asImported),
+    }));
     const sources = layer.identityProviders ?? [];
     const users = layer.users ?? [];
 

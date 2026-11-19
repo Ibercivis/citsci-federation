@@ -92,3 +92,25 @@ export function declaredRefusal(alias: string): string {
   }
   return message;
 }
+
+/**
+ * One of the declaration's strings as Keycloak imported it: every `${NAME}`
+ * replaced by the value this stack declares for that name.
+ *
+ * A layer file references a Brokered App's client id, address and secret
+ * rather than spelling them, because `.env` declares each one once and the
+ * application's own container is handed the same line (ADR-0001). Keycloak
+ * substitutes them while importing the realm, so a case that looks for one of
+ * those entries has to substitute them too — otherwise it looks for a client
+ * literally called `${LOSTATNIGHT_CLIENT_ID}`, which the Broker has never
+ * heard of, and reads its absence as the entry missing.
+ *
+ * An unset name throws here, as everywhere else this stack reads its
+ * configuration: the Broker would have imported the literal instead.
+ */
+export function asImported(text: string): string {
+  return text.replaceAll(
+    /\$\{(?<name>[A-Z_][A-Z0-9_]*)\}/g,
+    (_match, name: string) => configured(name),
+  );
+}

@@ -28,6 +28,59 @@ included. Nothing else is needed: the realm, the clients, the one demo
 Identity and the mock Identities are declared in this repository and
 applied at start-up.
 
+## Running the Brokered Composition
+
+The **Brokered Composition** (ADR-0009): the Broker, the proxy, the mail catcher
+and every Brokered App that has been integrated, as one set of containers.
+This is where single sign-on is tried by hand.
+
+```sh
+pnpm clean-slate  # every stack down first, and this repository's data with them
+pnpm apps:up      # checks the applications out, builds, seeds, and says
+                  # what answered
+pnpm apps:logs    # add a service name for one of them
+pnpm apps:down    # keeps the data; `pnpm apps:reset` throws it away
+```
+
+**The walkthrough is [`docs/trying-it-by-hand.md`](docs/trying-it-by-hand.md)**: the addresses, the
+seeded accounts, what to click, and what does not work yet. It is also what to run in front of
+people.
+
+Docker, `git` and `curl` are what it needs; the scripts are POSIX shell and run
+without Node, so a machine with no pnpm on it calls
+[`scripts/apps-up.sh`](scripts/apps-up.sh) directly.
+
+The applications are **not** in this repository:
+[`scripts/checkout-apps.sh`](scripts/checkout-apps.sh) clones each one into
+`apps/`, which is gitignored, at its `federation` branch — the branch that
+carries its container recipe (`docs/agents/external-repos.md`) — and
+[`compose.apps.yaml`](compose.apps.yaml) builds from there.
+
+Everything is reached **by hostname through the proxy**, and nothing in it
+publishes a port of its own. The addresses are declared in [`.env`](.env):
+
+| | |
+|---|---|
+| `broker.localhost:8080` | the Broker, at the issuer, realm path included |
+| `lostatnight.localhost:8080` | LostAtNight |
+| `geonity.localhost:8080` | Geonity's web app, `geonity-admin` its admin panel, `geonity-api` its API |
+| `openred-api.localhost:8080` | OpenRed's API |
+| `mail.localhost:8080` | every message any of them sends |
+
+`.localhost` resolves to the loopback in every browser without an
+`/etc/hosts` line, and to the proxy from inside the composition.
+
+Each application is seeded with accounts that **existed before the pilot** —
+invented, on `.invalid` addresses, from each application's own `seed_local`
+command — so that "an existing sign-in keeps working" is something to click
+rather than a claim. No production data and no personal data is in any of it.
+
+**It is early-stage on purpose** (ADR-0009): development constants in plain
+sight, DEBUG on, the Django development server, and parts that are missing on
+purpose. It is not deployed anywhere, it depends on no provisioned machine, and
+nothing in this state reaches production — which is not the same as being
+written to be thrown away.
+
 ## What is declared here, and what is not
 
 `compose.yaml` declares the Broker — the reverse proxy, the OpenID provider
@@ -41,9 +94,13 @@ front **in every environment, including local** — the reason is parity of
 form, since the cookie, TLS, redirect-URI and CORS failures that depend on
 deployment shape otherwise appear for the first time in production (ADR-0001).
 
-No Brokered App's infrastructure is declared here. A Brokered App's
-development environment lives in its own repository, and what this one holds
-about an application is the client the Broker knows it by.
+`compose.apps.yaml` declares how each Brokered App runs **in the Composition**, and
+that is not the same as declaring that application's infrastructure: its own
+development environment, its Dockerfile and its production deployment all stay
+in its own repository. ADR-0009 made that distinction knowingly, against what
+this repository used to promise, and says what it costs. What this repository
+holds about an application is still only how the Composition runs it, and the client
+the Broker knows it by.
 
 The Keycloak version is **pinned** and does not move on its own. A security
 property of the design rests on how this version treats a verified email

@@ -231,6 +231,7 @@
       "enabled": true,
       "email": "demo@example.org",
       "emailVerified": true,
+      "realmRoles": ["default-roles-citsci"],
       "credentials": [
         {
           "type": "password",

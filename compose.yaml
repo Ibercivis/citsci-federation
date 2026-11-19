@@ -8,10 +8,13 @@
 # Three services make up what a Brokered App sees as one frontier: a reverse
 # proxy, the OpenID provider behind it, and the provider's own database. A
 # fourth stands outside that frontier, where Google and GitHub stand: the
-# Mock Identity Source, which exists only for the tests. No Brokered
-# App's infrastructure is declared here: a Brokered App's development
-# environment stays in its own repository, and what this file knows about an
-# application is nothing at all.
+# Mock Identity Source, which exists only for the tests.
+#
+# This file is the whole of what `pnpm test` needs, and the whole of what CI
+# starts. The Brokered Apps are declared beside it in compose.apps.yaml, which
+# is the other half of the Brokered Composition (ADR-0009) and is brought up with
+# `pnpm apps:up`; the one thing this file holds about an application is the
+# client the Broker knows it by, in the realm it imports.
 #
 # Every credential here is a development constant on purpose, and `.env` says
 # why.
@@ -31,6 +34,30 @@ services:
       - "8080:8080"
     volumes:
       - ./proxy/Caddyfile:/etc/caddy/Caddyfile:ro
+    # Every address the proxy serves, read from the one file that declares it
+    # (ADR-0001). The Caddyfile substitutes `{$NAME}` from this environment
+    # when it loads, so a hostname is written once in `.env` and nowhere else.
+    #
+    # The Brokered Apps' addresses are here too, in the Broker-only stack: the
+    # file is one file, and a block whose container is not up answers 502 and
+    # names it. Leaving them out would mean two Caddyfiles disagreeing about
+    # the Broker instead.
+    environment:
+      LOSTATNIGHT_BASE_URL: ${LOSTATNIGHT_BASE_URL:?declare it in .env}
+      GEONITY_API_BASE_URL: ${GEONITY_API_BASE_URL:?declare it in .env}
+      GEONITY_WEB_BASE_URL: ${GEONITY_WEB_BASE_URL:?declare it in .env}
+      GEONITY_ADMIN_BASE_URL: ${GEONITY_ADMIN_BASE_URL:?declare it in .env}
+      OPENRED_API_BASE_URL: ${OPENRED_API_BASE_URL:?declare it in .env}
+      MAIL_BASE_URL: ${MAIL_BASE_URL:?declare it in .env}
+      BROKER_ISSUER: ${BROKER_ISSUER:?declare it in .env}
+    # BROKER_SITE is the issuer with its realm path dropped, which is the
+    # address the proxy serves the Broker at. It is derived here, by the
+    # container's own shell, exactly as Keycloak's `--hostname` is below: the
+    # issuer stays the one declared string, and no second variable can
+    # disagree with it.
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - export BROKER_SITE="$${BROKER_ISSUER%/realms/*}" && exec caddy run --config /etc/caddy/Caddyfile --adapter caddyfile
     networks:
       default:
         aliases:
@@ -85,6 +112,27 @@ services:
       # the realm path it serves under comes from the realm's own name, and
       # the discovery case fails loudly if the two disagree.
       BROKER_ISSUER: ${BROKER_ISSUER:?declare it in .env}
+      # The client each application of the Brokered Composition is registered
+      # as: its id, its redirect URI and the secret it authenticates with, all
+      # substituted into the realm by the import. They are declared in `.env`
+      # and read from there by the application's own container too
+      # (compose.apps.yaml), so an id or a secret is written once.
+      #
+      # The Broker-only stack reads them too, and has to: the three clients
+      # are in the base layer, so the Broker knows its applications in either
+      # mode, and an unset name survives the import as the literal `${NAME}`
+      # — a client whose secret is that string, which is worse than one that
+      # is absent. broker/README.md says what the registration asserts and
+      # what it leaves to the integration.
+      LOSTATNIGHT_BASE_URL: ${LOSTATNIGHT_BASE_URL:?declare it in .env}
+      LOSTATNIGHT_CLIENT_ID: ${LOSTATNIGHT_CLIENT_ID:?declare it in .env}
+      LOSTATNIGHT_CLIENT_SECRET: ${LOSTATNIGHT_CLIENT_SECRET:?declare it in .env}
+      GEONITY_API_BASE_URL: ${GEONITY_API_BASE_URL:?declare it in .env}
+      GEONITY_CLIENT_ID: ${GEONITY_CLIENT_ID:?declare it in .env}
+      GEONITY_CLIENT_SECRET: ${GEONITY_CLIENT_SECRET:?declare it in .env}
+      OPENRED_API_BASE_URL: ${OPENRED_API_BASE_URL:?declare it in .env}
+      OPENRED_CLIENT_ID: ${OPENRED_CLIENT_ID:?declare it in .env}
+      OPENRED_CLIENT_SECRET: ${OPENRED_CLIENT_SECRET:?declare it in .env}
       # Behind the proxy, over HTTP, in production mode: the shape the ADR
       # asks for, with TLS terminated in front rather than absent.
       KC_HTTP_ENABLED: "true"
@@ -158,6 +206,37 @@ services:
       timeout: 5s
       retries: 20
 
+  # The Broker's SMTP endpoint, which the spec stops treating as optional:
+  # ADR-0004 and ADR-0005 both rest on the Broker being able to confirm an
+  # address. Locally it is a catcher, which accepts every message and delivers
+  # none — a real server here would mail whatever address somebody typed into
+  # a local form. Keycloak is pointed at it by `SMTP_HOST` and `SMTP_PORT`, and
+  # every application of the Brokered Composition sends here too
+  # (compose.apps.yaml).
+  #
+  # Its inbox is at MAIL_BASE_URL through the proxy, like every other address
+  # here, and it publishes no port of its own: each application's own local
+  # stack publishes one for a catcher of its own, and docs/local-development.md
+  # has 8025, 8026 and 8027 spoken for already.
+  #
+  # It accepts any SMTP credential, and an insecure one, because the
+  # applications send with the settings their own stacks use: a catcher that
+  # refused them would fail a sign-up for a reason production does not have.
+  #
+  # Testing only: a deployment sends real mail, and a catcher beside it would
+  # swallow every confirmation.
+  mailpit:
+    profiles: [testing]
+    image: axllent/mailpit:v1.21.8
+    environment:
+      MP_SMTP_AUTH_ACCEPT_ANY: "1"
+      MP_SMTP_AUTH_ALLOW_INSECURE: "1"
+    healthcheck:
+      test: ["CMD", "/mailpit", "readyz"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
   # The Mock Identity Source: a test Identity Source this repository
   # declares and runs itself, so that what a source says about an address can
   # be decided by hand (mock-source/). It is not a launch source and not
@@ -188,29 +267,6 @@ services:
           "CMD-SHELL",
           "wget -q -O- http://127.0.0.1:8090/.well-known/openid-configuration",
         ]
-      interval: 5s
-      timeout: 5s
-      retries: 20
-
-  # Where the Broker's mail goes here: a mail catcher, which accepts every
-  # message and delivers none. Confirming an address and recovering a
-  # password both arrive by mail (ADR-0004, ADR-0005), so a Broker without
-  # this cannot complete either, and a real server here would mail whatever
-  # address somebody typed into a local form.
-  #
-  # The same image the Brokered Apps' local environments use. Its SMTP port
-  # stays on this network; its API and inbox are published on 8026, because
-  # an application's own catcher may already hold 8025 on the same machine.
-  #
-  # Testing only: a deployment sends real mail, and a catcher beside it would
-  # swallow every confirmation.
-  mailpit:
-    profiles: [testing]
-    image: axllent/mailpit:v1.21.8
-    ports:
-      - "8026:8025"
-    healthcheck:
-      test: ["CMD", "/mailpit", "readyz"]
       interval: 5s
       timeout: 5s
       retries: 20

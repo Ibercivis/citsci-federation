@@ -18,7 +18,7 @@ repository. `federation` is the main branch of our prototype, and it is treated 
 - Pull requests target `federation`, never `main`.
 - The pilot deploys from `federation`. Production keeps following `main` and this work never touches it.
 - The application's **container recipe for the pilot** lives here too — a Dockerfile and the
-  environment it needs, so the application can join the Pilot Composition (ADR-0009). It is written
+  environment it needs, so the application can join the Brokered Composition (ADR-0009). It is written
   for the pilot and for nothing else, and `main` never sees it.
 - The repository's default branch stays as it is. We don't change it, and we don't ask for it.
 

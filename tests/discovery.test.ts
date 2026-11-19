@@ -3,9 +3,13 @@ import { request } from "node:http";
 import { beforeAll, describe, expect, it } from "vitest";
 import { type Discovery, ISSUER, fetchDiscovery } from "./broker.ts";
 
-/** Reads the discovery document while claiming to be a different host, the way
- *  a containerised Brokered App on the compose network would appear. */
-function discoveryAsHost(host: string): Promise<Discovery> {
+/** Asks the proxy for the discovery path while claiming to be a given host,
+ *  and reports what came back without interpreting it: a hostname the
+ *  composition does not serve is answered by the proxy itself, so there is no
+ *  document to parse. */
+function throughTheProxyAsHost(
+  host: string,
+): Promise<{ status: number; body: string }> {
   const issuer = new URL(ISSUER);
   return new Promise((resolve, reject) => {
     const call = request(
@@ -18,18 +22,58 @@ function discoveryAsHost(host: string): Promise<Discovery> {
       (response) => {
         let body = "";
         response.on("data", (chunk) => (body += chunk));
-        response.on("end", () => {
-          try {
-            resolve(JSON.parse(body) as Discovery);
-          } catch (cause) {
-            reject(new Error(`Not JSON: ${body.slice(0, 200)}`, { cause }));
-          }
-        });
+        response.on("end", () =>
+          resolve({ status: response.statusCode ?? 0, body }),
+        );
       },
     );
     call.on("error", reject);
     call.end();
   });
+}
+
+/**
+ * Reads the discovery document from inside the compose network, speaking to
+ * the authority given — which is how a containerised Brokered App reaches the
+ * Broker, and the only place some of these properties are observable at all.
+ *
+ * It asks compose for a throwaway container of a service this stack declares,
+ * so no image tag and no network name is spelled out twice, and speaks HTTP
+ * over the shell's own TCP redirection, because that image ships no curl.
+ *
+ * It runs in the Keycloak container rather than the proxy's on purpose: that
+ * image is glibc, like the Brokered Apps' images, and musl resolves anything
+ * under .localhost to the loopback itself without ever asking Docker's DNS.
+ * Run from the Alpine-based proxy, a case using this would pass by accident
+ * and say nothing.
+ *
+ * This is the one thing here that names a service of the stack rather than
+ * speaking only the protocol. What the cases below assert is still what a
+ * Brokered App observes from where it will actually run: replacing the
+ * provider would change the service named on this line and nothing else.
+ */
+function fromInsideTheNetwork(hostname: string, port: string): string {
+  const probeScript = [
+    `exec 3<>/dev/tcp/${hostname}/${port}`,
+    `printf 'GET ${new URL(ISSUER).pathname}/.well-known/openid-configuration ` +
+      `HTTP/1.1\r\nHost: ${hostname}:${port}\r\nConnection: close\r\n\r\n' >&3`,
+    "cat <&3",
+  ].join(" && ");
+  return execFileSync(
+    "docker",
+    [
+      "compose",
+      "run",
+      "--rm",
+      "-T",
+      "--entrypoint",
+      "sh",
+      "keycloak",
+      "-c",
+      probeScript,
+    ],
+    { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] },
+  );
 }
 
 describe("the Broker announces itself as one issuer", () => {
@@ -77,15 +121,38 @@ describe("the Broker announces itself as one issuer", () => {
     expect(published.keys?.length).toBeGreaterThan(0);
   });
 
-  it("names the same issuer whoever asks, and from wherever", async () => {
+  it("names the same issuer whoever asks, and from wherever", () => {
     // Unpinned, Keycloak derives the issuer from the host it was asked
     // through: a browser would be told one issuer and a container on the
     // compose network another. Two issuers for one Broker is what a Brokered
     // App must never see, and a Brokered App validates `iss` — so it would
     // break inside the network, with an error that names nothing.
-    const asAContainerWouldAppear = await discoveryAsHost("keycloak:8080");
+    //
+    // Asked at its service name, which is the one address that reaches the
+    // provider without passing the proxy at all. The proxy used to forward
+    // any hostname and this case faked a Host header through it; it now
+    // serves only the names it is configured with (proxy/Caddyfile), so the
+    // question has to be put to the provider directly or not at all.
+    const asAContainerWouldAppear = fromInsideTheNetwork("keycloak", "8080");
 
-    expect(asAContainerWouldAppear.issuer).toBe(ISSUER);
+    expect(asAContainerWouldAppear).toContain("HTTP/1.1 200");
+    expect(asAContainerWouldAppear).toContain(`"issuer":"${ISSUER}"`);
+  }, 120_000);
+
+  it("is not reachable through the proxy by a hostname it does not serve", async () => {
+    // The composition's whole shape rests on a hostname being the only way
+    // in (ADR-0001, ADR-0012): a request that reached the Broker as
+    // `localhost:8080` would succeed, and would succeed with cookies and a
+    // `redirect_uri` production never sees. So the proxy answers for itself
+    // rather than forwarding, and what it answers is a refusal.
+    //
+    // `localhost` rather than an invented name on purpose: it is the address
+    // somebody actually types, and the one a published port would have made
+    // work.
+    const refused = await throughTheProxyAsHost("localhost:8080");
+
+    expect(refused.status).toBe(404);
+    expect(refused.body).not.toContain('"issuer"');
   });
 
   it("answers to that issuer's own hostname from inside the network", () => {
@@ -93,44 +160,9 @@ describe("the Broker announces itself as one issuer", () => {
     // the port mapping, or a Brokered App cannot reach the issuer it is told
     // to trust — a Person would sign in and the application would fail to
     // fetch a key. Nothing on the host can prove that, so this case runs
-    // inside the compose network, where the applications will run. It asks
-    // compose for a throwaway container of a service this file declares, so
-    // no image tag and no network name is spelled out twice, and speaks HTTP
-    // over the shell's own TCP redirection, because that image ships no curl.
-    //
-    // It runs in the Keycloak container rather than the proxy's on purpose:
-    // that image is glibc, like the Brokered Apps' images, and musl resolves
-    // anything under .localhost to the loopback itself without ever asking
-    // Docker's DNS. Run from the Alpine-based proxy, this case would pass by
-    // accident and say nothing.
-    //
-    // This is the one case here that names a service of the stack rather than
-    // speaking only the protocol. What it asserts is still a property a
-    // Brokered App observes from where it will actually run, not a fact about
-    // Keycloak: replacing the provider would change the service named on this
-    // line and nothing else about the case.
-    const { hostname, port, pathname } = new URL(ISSUER);
-    const probeScript = [
-      `exec 3<>/dev/tcp/${hostname}/${port}`,
-      `printf 'GET ${pathname}/.well-known/openid-configuration ` +
-        `HTTP/1.1\\r\\nHost: ${hostname}:${port}\\r\\nConnection: close\\r\\n\\r\\n' >&3`,
-      "cat <&3",
-    ].join(" && ");
-    const probe = execFileSync(
-      "docker",
-      [
-        "compose",
-        "run",
-        "--rm",
-        "-T",
-        "--entrypoint",
-        "sh",
-        "keycloak",
-        "-c",
-        probeScript,
-      ],
-      { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] },
-    );
+    // inside the compose network, where the applications will run.
+    const { hostname, port } = new URL(ISSUER);
+    const probe = fromInsideTheNetwork(hostname, port);
 
     expect(probe).toContain("HTTP/1.1 200");
     expect(probe).toContain(`"issuer":"${ISSUER}"`);

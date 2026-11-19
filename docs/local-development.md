@@ -15,6 +15,13 @@ virtuous is the same in every one of these applications so far:
 Each environment lives on that application's `federation` branch, in a `LOCAL-DEV.md` at the root
 of its repository. This file is the index and holds no instructions of its own.
 
+**This is not the Brokered Composition.** An environment here starts one application on its own, with
+ports on localhost, for building and debugging it. The composition starts the Broker and every
+integrated application together behind one proxy, each at a hostname, and is what single sign-on is
+tried in: `pnpm apps:up`, and [`trying-it-by-hand.md`](trying-it-by-hand.md) is what to click once
+it is up. The two overlap on purpose — the composition builds from the same `federation` branch,
+and reuses the Dockerfile and the `seed_local` command the work below produced.
+
 **Mail is caught, never printed.** Every one of these applications keeps
 `ACCOUNT_EMAIL_VERIFICATION = 'mandatory'`, as production does, so a sign-up cannot be finished
 without reading the message; `mailpit` catches it and shows it in a web inbox. The inboxes hold
@@ -63,7 +70,7 @@ local form would otherwise reach a real person. Site on <http://localhost:8000/>
 
 Django REST + PostGIS, Redis, a mail catcher, an `rq` worker and a scheduler. Nothing of it
 existed: the Dockerfile and the compose file are new, as is the dataset. The two front ends have
-**no container recipe at all**: here they are `npm run dev` on the host, and in the Pilot
+**no container recipe at all**: here they are `npm run dev` on the host, and in the Brokered
 Composition the same thing with `--host` on a stock Node image. Vite needs no host-check
 configuration either: it answers to a `.localhost` hostname as it stands.
 

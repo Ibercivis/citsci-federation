@@ -162,15 +162,41 @@ nothing about what was issued to another application.
 
 A public client for a single-page application, which cannot hold a secret, and
 a confidential one for a server-rendered backend, which can. Both are
-stand-ins, so both are in the testing layer: a `production` Broker registers no
-client until a real application is integrated. The redirect URIs are
-development guesses, and the confidential one follows the callback shape
-django-allauth serves, because the applications of the pilot are Django.
-A third, `misconfigured-client`, sits beside them and is not a Brokered App:
+stand-ins, so both are in the testing layer: a `production` Broker registers
+the applications below and nothing else. The redirect URIs are development
+guesses, and the confidential one follows the callback shape django-allauth
+serves, because the applications of the pilot are Django. A third,
+`misconfigured-client`, sits beside them and is not a Brokered App:
 `tests/clients.ts` says why.
 
-No Brokered App's infrastructure is declared anywhere in this repository —
-only the clients the Broker knows them by.
+### And one client per Brokered App
+
+One per application `compose.apps.yaml` brings up (ADR-0009); which those are
+is that file's business and `.env`'s, not this one's. Each one's id, secret and
+address are read from `.env` and substituted into the realm by the import, so
+the Broker and the application's own container are told the same three values
+from one declaration. The application reads them as configuration (ADR-0001)
+and holds none of them in its code.
+
+**They are in the base layer**, not in the testing one. A stand-in exists for
+the tests and stops existing in `production`; these are the applications
+themselves, and a Broker that did not know them would have nothing to broker
+for. What is development-only about them is the value of each `${NAME}`, which
+is `.env`'s business and not the realm's.
+
+**Each registration asserts less than it looks.** The redirect URI is
+`<the application's address>/accounts/oidc/*` — the namespace django-allauth
+serves its callback under, with the provider id left open because the
+integration of each application is what settles it (`issue #30`, `issue #31`,
+`issue #94`). That
+integration narrows the URI to the one path it uses; until then this is a
+development guess like the stand-ins above, and the registration exists so
+that the composition can hand each application a client that answers.
+
+An unset name survives the import as the literal `${NAME}`, so a client whose
+secret is that string is the signature of a missing variable rather than of a
+mistake in this file. `compose.yaml` passes the three of each, and fails to
+start if `.env` declares none of them.
 
 ### Code flow only, for every client
 
@@ -192,10 +218,13 @@ advertises `plain` in `code_challenge_methods_supported` and that list cannot
 be trimmed, so discovery is not evidence of what this Broker allows; the cases
 in `tests/hardening.test.ts` that drive a flow and get turned away are.
 
-### Consent required on both clients
+### Consent required on every client
 
 `consentRequired: true` is what puts a page in front of a Person naming the
-application that is asking. A grant is remembered per application, so they see
+application that is asking. It is on the stand-ins, on the three applications
+of the composition and on the testing fixture alike: the spec requires it of
+every client, and a client registered without it is the one place that rule
+could be lost. A grant is remembered per application, so they see
 it once per application rather than once per session.
 
 Measured against this pinned version: a client that does **not** require
@@ -214,6 +243,17 @@ client is assigned the scope, as a default or as an option it could ask for.
 `roles` is gone for the same kind of reason: authorisation belongs to the
 Person on the applications' side of the frontier (ADR-0003), so the Broker has
 no roles to hand out and no token of its own carries one.
+
+That is about tokens, and not about Keycloak's own roles, which is why the
+`demo` Identity holds `default-roles-citsci` — the composite Keycloak gives
+every user of a realm so that they can read their own account. Every Person the
+Broker creates from an Identity Source is given it without being asked; only a
+user *declared* in a realm file is not, because the import takes the
+representation literally and adds nothing to it. Without it the account console
+at `/realms/citsci/account` refuses its own API, after a sign-in that worked,
+and says "Something went wrong" — which is a fixture that behaves unlike every
+Person the Broker makes. None of it crosses the frontier: no client is assigned
+the `roles` scope, which is what the paragraph above is about.
 
 `email` stays. The email address belongs to the **Identity** — it is how a
 Person proves who they are, not something they declare about themselves — and

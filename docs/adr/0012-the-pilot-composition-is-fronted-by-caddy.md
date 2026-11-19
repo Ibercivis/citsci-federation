@@ -1,5 +1,8 @@
 # The Pilot Composition's reverse proxy is Caddy, not the nginx production runs
 
+**The term is now Brokered Composition** (`GLOSSARY.md`). This ADR, and its file name, keep the
+words the decision was taken in; nothing else does.
+
 The reverse proxy ADR-0001 puts in front of the Broker in every environment is **Caddy**, in the
 Pilot Composition and nowhere else. The machines that serve the foundation's applications today are
 fronted by nginx, every virtual host of them, and this decision does not propose changing that. If
