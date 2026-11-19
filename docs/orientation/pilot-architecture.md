@@ -31,15 +31,17 @@ business (ADR-0001).
 
 ## A first sign-in, in six moves
 
-1. The Person presses sign in; the app sends them to `/authorize` with a code challenge (S256) and
-   a `nonce`.
+1. The Person presses sign in; the app sends them to `/authorize` with a code challenge (S256), and
+   with a `nonce` if its ID token will reach a browser (ADR-0016).
 2. The Broker shows who is asking and what will be shared — consent is required on every client.
 3. The Person picks an Identity Source; the Broker redirects there and receives a verified Identity.
 4. **Inside the Broker**, invisibly to the app: the Identity resolves to a Person by Verified Email
    (ADR-0004), and a Person Identifier is minted if the Person is new.
 5. The app receives a code, exchanges it at `/token`, and gets an ID token and an access token —
    carrying no role, no entitlement, and no mention of the Identity Source (ADR-0003).
-6. The app verifies the signature against the JWKS from discovery and stores the Person Identifier.
+6. The app stores the Person Identifier. If it reads the ID token it verifies the signature against
+   the JWKS from discovery; a server-rendered app may instead ask `userinfo` over the back channel,
+   which is what LostAtNight's library does (ADR-0016).
 
 The session cookie belongs to the Broker, not to the apps. At the second application, steps 2–4 do
 not happen: that is what makes moving between projects feel like one system.

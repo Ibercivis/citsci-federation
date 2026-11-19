@@ -175,10 +175,17 @@ only the clients the Broker knows them by.
 ### Code flow only, for every client
 
 One client policy holds every client in the realm to the code flow, whatever
-its own settings say: PKCE with S256 and nothing else, no response type that
-hands a token to the browser in a URL, and a `nonce` on every OpenID Connect
-request. A setting has to be remembered on every client registered from now
-on; a policy does not.
+its own settings say: PKCE with S256 and nothing else, and no response type
+that hands a token to the browser in a URL. A setting has to be remembered on
+every client registered from now on; a policy does not.
+
+A second policy requires a `nonce`, and applies to **public clients only** —
+its condition is `client-access-type`. A nonce binds an ID token to the sign-in
+that asked for it, which is worth having where a browser can see that token and
+is nothing a confidential client can use, since it fetches its own tokens over
+a channel no browser is on. ADR-0016 has the argument, and the measurement that
+forced it: no release of `django-allauth` sends a nonce for OpenID Connect, so
+requiring one of every client refuses every Django Brokered App.
 
 The PKCE setting on each client stays anyway. The realm's discovery document
 advertises `plain` in `code_challenge_methods_supported` and that list cannot

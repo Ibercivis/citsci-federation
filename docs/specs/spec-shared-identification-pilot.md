@@ -178,11 +178,16 @@ discarded.
 
 ### Protocol
 
-- **Authorization Code with PKCE (S256)** only. `nonce` required.
+- **Authorization Code with PKCE (S256)** only. `nonce` required of the clients whose ID token
+  reaches a browser — the public ones — and not of a confidential client that fetches its own
+  tokens over a channel no browser is on (ADR-0016).
 - The **implicit grant and any response type that returns an access token from the authorization endpoint are refused**, not merely unused.
 - Public clients for single-page applications, confidential clients for server-rendered backends.
 - **Consent is required on every client.** This is the mechanism behind stories 6 and 7: the consent screen is what names the application asking and lists what it will receive. Keycloak remembers a granted consent per client, so it is seen once per application rather than once per session, and story 14 is unaffected.
-- **OIDC Discovery** is published; Brokered Apps verify tokens against the published JWKS.
+- **OIDC Discovery** is published; a Brokered App that reads the ID token verifies it against the
+  published JWKS. One that takes the identity from `userinfo` over the back channel, as a
+  server-rendered Django application does, verifies no signature and is not asked to
+  (ADR-0016).
 - **Token introspection** (RFC 7662) is available to confidential clients.
 
 ### Configuration

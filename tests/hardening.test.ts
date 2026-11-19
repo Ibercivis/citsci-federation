@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { EVERY_REGISTERED_CLIENT, CONFIDENTIAL_CLIENT } from "./clients.ts";
+import {
+  CONFIDENTIAL_CLIENT,
+  EVERY_REGISTERED_CLIENT,
+  MISCONFIGURED_CLIENT,
+  PUBLIC_CLIENT,
+} from "./clients.ts";
 import { attempt, createPkce } from "./brokered-app.ts";
 
 /**
@@ -105,8 +110,23 @@ describe.each(EVERY_REGISTERED_CLIENT)(
         error: expect.stringMatching(/^(unauthorized_client|invalid_request)$/),
       });
     });
+  },
+);
 
-    it("refuses an authorization request that carries no nonce", async () => {
+describe("the Broker holds a public Brokered App to a nonce", () => {
+  // A nonce is copied into the id_token, and the application compares it with
+  // what it stored. That binding is worth having where the id_token reaches a
+  // browser, which is what a public client is: no secret to hold, so the
+  // tokens are handled where a script can see them.
+  //
+  // The misconfigured client is public too, and it is the one whose refusal
+  // can only come from the realm's policy.
+  it.each([
+    ["public", PUBLIC_CLIENT],
+    ["misconfigured", MISCONFIGURED_CLIENT],
+  ])(
+    "refuses the %s client an authorization request with no nonce",
+    async (_shape, client) => {
       const result = await attempt(client, {
         pkce: createPkce("S256"),
         nonce: null,
@@ -116,9 +136,34 @@ describe.each(EVERY_REGISTERED_CLIENT)(
         outcome: "refused-at-authorization",
         error: "invalid_request",
       });
+    },
+  );
+});
+
+describe("the Broker takes a confidential Brokered App as the libraries write it", () => {
+  // The other half of hardening, and the half a refusal cannot show: that
+  // what is refused is unsafe requests and not ordinary ones.
+  //
+  // This is the request a mainstream library sends — `state`, PKCE S256, the
+  // scopes the client was granted, and no nonce, because no release of
+  // django-allauth sends one for OpenID Connect and it offers no hook that
+  // would check one. A confidential client fetches the id_token itself from
+  // the token endpoint, over a channel no browser is on, so there is nothing
+  // for a nonce to bind; `state`, which the library does send and does verify,
+  // binds the response to the session (ADR-0016).
+  //
+  // Without this case, tightening the realm would lock out every Django
+  // Brokered App and nothing here would say so until somebody tried to
+  // integrate one. That is how `issue #104` was found.
+  it("authenticates a code flow that carries no nonce", async () => {
+    const result = await attempt(CONFIDENTIAL_CLIENT, {
+      pkce: createPkce("S256"),
+      nonce: null,
     });
-  },
-);
+
+    expect(result).toMatchObject({ outcome: "authenticated" });
+  });
+});
 
 describe("the Broker refuses to redeem a confidential Brokered App's code without its secret", () => {
   // The secret is what makes a confidential client confidential. A code it
