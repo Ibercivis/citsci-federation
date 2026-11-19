@@ -54,10 +54,9 @@ name: citsci-apps
 # hands it that name instead.
 #
 # LostAtNight's integration settles it as `IBERCIVIS_ACCOUNT_*` (`issue #94`),
-# and is **open against** that repository's `federation` branch rather than in
-# it. Until it lands there, this composition hands LostAtNight three names its
-# code does not read: the site comes up with the sign-in it always had and no
-# way in through the Broker. Geonity and OpenRed have not chosen theirs.
+# and so does Geonity's (`issue #31`), for its API and its web app alike. Each
+# is handed those names below. OpenRed has not chosen its own, and is handed
+# this one.
 #
 # The address is the issuer, reachable from inside this network as well as
 # from a browser: the proxy answers to `broker.localhost` on both sides of
@@ -103,6 +102,38 @@ x-lostatnight: &lostatnight
   # raise rather than run without one. Its own LOCAL-DEV.md says the same thing
   # for the same reason.
   NASA_API_KEY: "composition-not-a-real-key"
+
+# What every Geonity process is told, worker included: its datastores, the
+# filler that settings file insists on, and where the Broker is. The client
+# credentials go to the API alone.
+x-geonity: &geonity-env
+  <<: *mail
+  # The Broker, under the name Geonity's integration gives it (`issue #31`).
+  IBERCIVIS_ACCOUNT_ISSUER: ${BROKER_ISSUER:?declare it in .env}
+  # Set explicitly rather than left to the default: that settings file
+  # infers DEBUG from whether `runserver` is on the command line, so the
+  # worker would start with DEBUG=False and try to reach SES with the
+  # filler credentials below.
+  DEBUG: "True"
+  ALLOWED_HOSTS: "*"
+  BASE_URL: ${GEONITY_API_BASE_URL:?declare it in .env}
+  DB_NAME: citsci
+  DB_USER: citsci
+  DB_PASSWORD: citsci
+  DB_HOST: geonity-db
+  REDIS_HOST: geonity-redis
+  # Filler, and it has to be present: that settings file reads these
+  # without a default. Nothing is sent to SES — the mail goes to the
+  # catcher above.
+  FROM_EMAIL: geonity@geonity.invalid
+  AWS_ACCESS_KEY_ID: dev
+  AWS_SECRET_ACCESS_KEY: dev
+  AWS_SES_REGION_NAME: eu-west-1
+  AWS_SES_REGION_ENDPOINT: https://email.eu-west-1.amazonaws.com
+  # The keys its two front ends identify themselves with, which the web
+  # app below is given the web half of.
+  CLIENT_API_KEY_MOBILE: dev-mobile
+  CLIENT_API_KEY_WEB: dev-web
 
 # The port answering, which is all a port check proves: a development server
 # binds it after its own system checks pass, and a 500 on a page is not this
@@ -236,34 +267,14 @@ services:
   geonity-api:
     build: ./apps/citsci-api
     command: python manage.py runserver 0.0.0.0:8000
-    environment: &geonity-env
-      <<: [*broker, *mail]
-      # Set explicitly rather than left to the default: that settings file
-      # infers DEBUG from whether `runserver` is on the command line, so the
-      # worker would start with DEBUG=False and try to reach SES with the
-      # filler credentials below.
-      DEBUG: "True"
-      ALLOWED_HOSTS: "*"
-      BASE_URL: ${GEONITY_API_BASE_URL:?declare it in .env}
-      BROKER_CLIENT_ID: ${GEONITY_CLIENT_ID:?declare it in .env}
-      BROKER_CLIENT_SECRET: ${GEONITY_CLIENT_SECRET:?declare it in .env}
-      DB_NAME: citsci
-      DB_USER: citsci
-      DB_PASSWORD: citsci
-      DB_HOST: geonity-db
-      REDIS_HOST: geonity-redis
-      # Filler, and it has to be present: that settings file reads these
-      # without a default. Nothing is sent to SES — the mail goes to the
-      # catcher above.
-      FROM_EMAIL: geonity@geonity.invalid
-      AWS_ACCESS_KEY_ID: dev
-      AWS_SECRET_ACCESS_KEY: dev
-      AWS_SES_REGION_NAME: eu-west-1
-      AWS_SES_REGION_ENDPOINT: https://email.eu-west-1.amazonaws.com
-      # The keys its two front ends identify themselves with, which the web
-      # app below is given the web half of.
-      CLIENT_API_KEY_MOBILE: dev-mobile
-      CLIENT_API_KEY_WEB: dev-web
+    environment:
+      <<: *geonity-env
+      # Only the API holds the secret. The web app sends the browser to the
+      # Broker and brings the code back to its own callback; the API redeems
+      # it, naming that same callback.
+      IBERCIVIS_ACCOUNT_CLIENT_ID: ${GEONITY_CLIENT_ID:?declare it in .env}
+      IBERCIVIS_ACCOUNT_CLIENT_SECRET: ${GEONITY_CLIENT_SECRET:?declare it in .env}
+      IBERCIVIS_ACCOUNT_REDIRECT_URI: ${GEONITY_WEB_BASE_URL:?declare it in .env}/auth/ibercivis/callback
     depends_on:
       geonity-db:
         condition: service_healthy
@@ -332,6 +343,12 @@ services:
       # Read by the browser, so this one is the address the proxy serves.
       VITE_MEDIA_URL: ${GEONITY_API_BASE_URL:?declare it in .env}
       VITE_OBSERVATIONS_API_KEY: dev-web
+      # The Broker's issuer and the client the API is registered as: the web
+      # app reads discovery from the issuer, in the browser, and asks for a
+      # code for that client. The secret is not here, and nothing a browser
+      # loads could keep it.
+      VITE_IBERCIVIS_ACCOUNT_ISSUER: ${BROKER_ISSUER:?declare it in .env}
+      VITE_IBERCIVIS_ACCOUNT_CLIENT_ID: ${GEONITY_CLIENT_ID:?declare it in .env}
       # Mapbox needs an access token nobody has locally. The map area stays
       # blank and every other screen works, which is deliberate: what has to
       # work here is signing in (docs/local-development.md).
