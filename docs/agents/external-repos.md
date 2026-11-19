@@ -49,17 +49,21 @@ This binds the pull request body and the replies to review comments exactly as i
 
 ## Our issues close by hand
 
-A pull request in an application repository says which issue of ours it finishes, in GitHub's
-cross-repository spelling, in its body:
+A pull request in an application repository says what becomes of the issue of ours it serves, in
+GitHub's cross-repository spelling, in its body:
 
-    Closes Ibercivis/citsci-federation#62
+    Closes Ibercivis/citsci-federation#62     the pull request finishes the issue
+    Part of Ibercivis/citsci-federation#62    it advances the issue, which stays open
 
-**That line closes nothing.** A closing keyword is read only when the pull request targets its own
-repository's default branch, and ours target `federation`: the keyword is ignored, no link is made,
-and the merge leaves the issue open. The branch is what disqualifies it, and the branch is not for
-trading — `main` is what production follows.
+An integration ticket here is wider than one pull request there — `Part of` is the usual answer, and
+the acceptance criteria say which it is. Pick the true one, as in this repository.
 
-It earns its place as a mention. The bare `Ibercivis/citsci-federation#62` registers a
+**Neither line closes anything, `Closes` included.** A closing keyword is read only when the pull
+request targets its own repository's default branch, and ours target `federation`: the keyword is
+ignored, no link is made, and the merge leaves the issue open. The branch is what disqualifies it,
+and the branch is not for trading — `main` is what production follows.
+
+The line earns its place as a mention. The bare `Ibercivis/citsci-federation#62` registers a
 cross-reference on that issue's timeline, so the issue shows which external pull request answers it
 without anybody linking them by hand. **Whoever merges closes the issue**, in the pass they already
 read the diff in (ADR-0014).
@@ -135,8 +139,8 @@ moves `HEAD` out from under anyone who is on `federation`.
 
 - `git branch --show-current` prints a **topic branch** — never `federation`, never `main`.
 - `gh pr create` carries `--base federation`.
-- The body carries `Closes Ibercivis/citsci-federation#<n>` when an issue of ours ends with this
-  change. Nothing acts on it; see **Our issues close by hand**.
+- The body carries `Closes Ibercivis/citsci-federation#<n>`, or `Part of` it, when an issue of ours
+  is served by this change. Nothing acts on it; see **Our issues close by hand**.
 - `scripts/check-foreign-vocabulary.sh`, from this repository, run in the external clone, prints
   nothing — or every line it printed has been read and kept deliberately. Give it the pull request
   body as well, before `gh pr create` writes it.
