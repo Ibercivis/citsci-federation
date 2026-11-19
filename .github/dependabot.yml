@@ -54,19 +54,32 @@ updates:
     directory: "/"
     schedule:
       interval: weekly
-    # Keycloak does not move on its own: ADR-0004 rests on how that version
-    # treats a verified email address, so that bump is read against the ADR and
-    # made by hand. The image lives in `broker/Dockerfile` now and not here, so
-    # this rule guards nothing until an image returns to this file — and it is
-    # the rule the `docker` ecosystem will need.
+
+  # The base images in `broker/Dockerfile` and `mock-source/Dockerfile`.
+  #
+  # `directories`, because this ecosystem reads the folder it is pointed at and
+  # not the tree beneath it: one entry at `/` would read neither file.
+  #
+  # Ungrouped, like the rule above: a base-image major is read on its own. That
+  # costs one duplicate, because both files pin the same `node` and a
+  # multi-directory entry bumps it once per directory. `group-by:
+  # dependency-name` would collapse the two, but GitHub documents it for npm
+  # and says nothing about this ecosystem, so it stays out until something
+  # confirms it reaches here.
+  - package-ecosystem: docker
+    directories:
+      - "/broker"
+      - "/mock-source"
+    schedule:
+      interval: weekly
+    # Keycloak does not move on its own, and this rule is what holds it. The
+    # `FROM` line in `broker/Dockerfile` says why; the bump is read against
+    # ADR-0004 and made by hand.
     #
     # The name carries no registry, and that is the trap. `broker/Dockerfile`
-    # says `quay.io/keycloak/keycloak`, but Dependabot keeps only the image as
-    # the dependency's name and files `quay.io` as its source
-    # (`build_dependency` in dependabot-core's `shared/shared_file_parser.rb`).
-    # The fuller spelling matches nothing and silently disables the rule.
+    # says `quay.io/keycloak/keycloak`, but Dependabot names the dependency by
+    # the image alone and files `quay.io` as its source (`build_dependency` in
+    # dependabot-core's `shared/shared_file_parser.rb`). The fuller spelling
+    # matches nothing and silently disables the rule.
     ignore:
       - dependency-name: keycloak/keycloak
-
-# The `docker` ecosystem is off, and `broker/Dockerfile` is what it would read;
-# `docs/verification.md` carries that gap with the other absent tools.

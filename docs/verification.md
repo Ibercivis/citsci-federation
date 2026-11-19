@@ -82,7 +82,7 @@ A row marked *Fired* is decided and not yet built, and carries an issue.
 | **Three passes, where two would do** | `oxlint --type-check` — one TypeScript program both lints and reports compiler errors, which oxc documents as replacing a separate `tsc --noEmit` in CI | Nothing technical: it already matches `tsc` exactly on this tree, on the pins we have. What it costs is the cross-check — `tsc` is the reference implementation, and a divergence in oxlint's checker is invisible once it is the only checker | When the type passes are what `pnpm check` waits on. The licence container dwarfs them today; `docs/notes/2026-11-18-oxlint-type-check.md` has the measurement |
 | ↳ and a faster checker under it | `tsrs` — the Rust port of the TypeScript compiler, a drop-in for `oxlint-tsgolint` since oxlint 1.92.0 | A `0.x` checker pinned to a TypeScript 7.1 beta, inside the pass that decides whether a commit lands. It also takes over silently when installed beside `oxlint-tsgolint`, so there is no side-by-side | [issue #83](https://github.com/Ibercivis/citsci-federation/issues/83) watches it. A `tsrs` release with no prerelease suffix, against a stable TypeScript |
 | **Coverage** | `@vitest/coverage-v8` | — | A number we would act on. We do not have one yet |
-| **The plugin image's pins** — nothing watches `broker/Dockerfile` ([issue #71](https://github.com/Ibercivis/citsci-federation/issues/71)) | Dependabot's `docker` ecosystem, ignoring `keycloak/keycloak` as the `docker-compose` rule already does | Four lines, and they reach the `FROM` lines only: the `maven` stage is unwatched, the other is the pinned Keycloak image. Unwatched either way is `maven-dependency-plugin`, pinned by coordinate in a `RUN` line: the `docker` ecosystem updates container images, and a Maven plugin is not one | Fired. The Dockerfile is on `main`, which is the condition this row waited for |
+| **The extensions' Maven pins** — nothing watches `broker/*/pom.xml`, nor the `maven-dependency-plugin` coordinate pinned in a `RUN` line | Dependabot's `maven` ecosystem, over the two extension directories | It would offer `keycloak.version`, which both poms carry and which moves with the runtime image or not at all, so it arrives needing the `ignore` the image already has | When an extension takes a dependency that is not Keycloak |
 
 Also considered and rejected: **Vite+** (takes too many decisions for us, and its `vp hooks` fights
 lefthook for `core.hooksPath`), **eslint-plugin-boundaries** (requires ESLint), **steiger** (beta,
@@ -90,5 +90,5 @@ and its rules are Feature-Sliced Design whatever the billing says).
 
 There is no Rust-based mutation tester for JS/TS, and no Vitest-native one.
 
-_Versions and claims checked 13 November 2026; the Dependabot rows 17 November 2026; the
-TypeScript rows 18 November 2026; the `broker/Dockerfile` row 19 November 2026._
+_Versions and claims checked 13 November 2026; the TypeScript rows 18 November 2026; the
+Maven row 19 November 2026._
