@@ -45,13 +45,14 @@ name: citsci-apps
 
 # ----------------------------------------------------------------- shared
 #
-# What every Brokered App in the composition is told about the Broker
-# (ADR-0001): where it is, which client it is registered as, and the secret
-# it authenticates with. Configuration, read from `.env`, never compiled in.
+# What a Brokered App that is **not integrated yet** is told about the Broker
+# (ADR-0001): where it is. Configuration, read from `.env`, never compiled in.
 #
-# The names here are this file's. Which name an application reads each value
-# under is settled by its own integration — that change lands on its
-# `federation` branch, in that application's words.
+# The name here is this file's, and it lasts only as long as nothing reads it.
+# An integration settles the name the application reads the value under, in
+# that application's words, on its `federation` branch — and then this file
+# hands it that name instead. LostAtNight is integrated and reads
+# `IBERCIVIS_ACCOUNT_*` (`issue #94`); Geonity and OpenRed have not chosen yet.
 #
 # The address is the issuer, reachable from inside this network as well as
 # from a browser: the proxy answers to `broker.localhost` on both sides of
@@ -74,6 +75,12 @@ x-mail: &mail
 x-lostatnight: &lostatnight
   DJANGO_SETTINGS_MODULE: gdalface.settings_local
   DEBUG: "True"
+  # The Broker, under the name that application reads it by: an Ibercivis
+  # account is what it calls signing in through the Broker, and `Broker` is a
+  # word that names nothing in a Django site that already has a task queue.
+  # Every process is told, so one declaration of the settings answers for all
+  # of them; only the service that runs the sign-in gets the credentials.
+  IBERCIVIS_ACCOUNT_ISSUER: ${BROKER_ISSUER:?declare it in .env}
   # Host validation is left open because the proxy is the only way in and it
   # forwards nothing but the hostnames it serves. The alternative is to repeat
   # an address `.env` already declares, in a form Django can parse, which is
@@ -148,12 +155,12 @@ services:
       - ./apps/gdalface:/app
     command: python manage.py runserver 0.0.0.0:8000
     environment:
-      <<: [*broker, *mail, *lostatnight]
+      <<: [*mail, *lostatnight]
       # The origin a form is posted from, which Django needs in full and which
       # is exactly the string `.env` declares.
       CSRF_TRUSTED_ORIGINS: ${LOSTATNIGHT_BASE_URL:?declare it in .env}
-      BROKER_CLIENT_ID: ${LOSTATNIGHT_CLIENT_ID:?declare it in .env}
-      BROKER_CLIENT_SECRET: ${LOSTATNIGHT_CLIENT_SECRET:?declare it in .env}
+      IBERCIVIS_ACCOUNT_CLIENT_ID: ${LOSTATNIGHT_CLIENT_ID:?declare it in .env}
+      IBERCIVIS_ACCOUNT_CLIENT_SECRET: ${LOSTATNIGHT_CLIENT_SECRET:?declare it in .env}
     depends_on:
       lostatnight-db:
         condition: service_healthy
@@ -177,7 +184,7 @@ services:
       - ./apps/gdalface:/app
     command: python manage.py rqworker default
     environment:
-      <<: [*broker, *mail, *lostatnight]
+      <<: [*mail, *lostatnight]
     depends_on:
       lostatnight-db:
         condition: service_healthy
