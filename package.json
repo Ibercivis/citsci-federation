@@ -19,7 +19,7 @@
     "lint": "oxlint",
     "lint:fix": "oxlint --fix",
     "typecheck": "tsc --noEmit",
-    "reuse:lint": "docker run --rm --user \"$(id -u):$(id -g)\" --volume \"$PWD:/data\" fsfe/reuse:6.3.0@sha256:2748d04c2adeb747c9a44831bc99a9cbfd7bf7ff6fc371a4b63204944e3e47b6 lint",
+    "reuse:lint": "./scripts/reuse-lint.sh",
     "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm reuse:lint",
     "check:fix": "pnpm format && pnpm lint:fix",
     "test": "vitest run",
