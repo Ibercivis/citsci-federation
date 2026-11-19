@@ -3,6 +3,9 @@
   "permissions": {
     "deny": ["Artifact", "ArtifactComments", "ArtifactData"]
   },
+  "worktree": {
+    "symlinkDirectories": ["node_modules"]
+  },
   "hooks": {
     "SessionStart": [
       {
