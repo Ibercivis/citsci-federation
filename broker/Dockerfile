@@ -10,21 +10,45 @@
 # One stage each, because one jar each: either can be lifted out of this
 # repository on its own.
 
+# `maven-dependency-plugin` by full coordinates and an exact version, never as
+# the `dependency:` prefix. Resolving a prefix means downloading two metadata
+# files from Central — one to learn which plugin the prefix names, one to pick
+# its latest version — and that lookup is the only step of this build that has
+# failed on its own, twice in one day, while the same image built in the same
+# CI run. Naming the plugin completely removes both requests, and pins what
+# was whatever Central called latest that morning (`issue #114`).
+ARG DEPENDENCY_PLUGIN=org.apache.maven.plugins:maven-dependency-plugin:3.7.0
+
 FROM maven:3.9.16-eclipse-temurin-21 AS mapper
+ARG DEPENDENCY_PLUGIN
 WORKDIR /build
-# The pom first, so that the dependency download is a cached layer that a
-# change to the Java source does not invalidate.
+# The pom first, so that `go-offline` resolves this module's dependencies
+# before the source exists and a change to the Java does not re-resolve them.
+# What holds them is the cache mount rather than the layer, and both Maven
+# stages mount the same one: they ask Central for the same four Keycloak
+# artifacts, and a runner has no layer cache to reuse, so without it every
+# build fetches each artifact twice.
+#
+# `sharing=locked` and not the default `shared`, which costs wall clock: the
+# two stages build in parallel, so the second waits for the first instead of
+# downloading beside it. It is not an optimisation. Two Maven processes
+# writing one local repository at the same time is the thing Maven does not
+# promise to survive, and a half-written artifact in a cache is a failure that
+# outlives the build that caused it.
 COPY person-identifier/pom.xml .
-RUN mvn --batch-mode --quiet dependency:go-offline
+RUN --mount=type=cache,target=/root/.m2,sharing=locked \
+    mvn --batch-mode --quiet "${DEPENDENCY_PLUGIN}:go-offline"
 COPY person-identifier/src ./src
-RUN mvn --batch-mode --quiet package
+RUN --mount=type=cache,target=/root/.m2,sharing=locked mvn --batch-mode --quiet package
 
 FROM maven:3.9.16-eclipse-temurin-21 AS condition
+ARG DEPENDENCY_PLUGIN
 WORKDIR /build
 COPY verified-email/pom.xml .
-RUN mvn --batch-mode --quiet dependency:go-offline
+RUN --mount=type=cache,target=/root/.m2,sharing=locked \
+    mvn --batch-mode --quiet "${DEPENDENCY_PLUGIN}:go-offline"
 COPY verified-email/src ./src
-RUN mvn --batch-mode --quiet package
+RUN --mount=type=cache,target=/root/.m2,sharing=locked mvn --batch-mode --quiet package
 
 # The realm Keycloak imports, derived from the declaration in `realm/` for one
 # mode: `testing` or `production`, from BROKER_MODE in `.env`. There is no
