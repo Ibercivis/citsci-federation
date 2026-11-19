@@ -151,7 +151,7 @@ services:
       retries: 20
 
   lostatnight-redis:
-    image: redis:7-alpine
+    image: redis:8-alpine
     healthcheck: *redis-check
 
   lostatnight:
@@ -230,7 +230,7 @@ services:
       retries: 20
 
   geonity-redis:
-    image: redis:7-alpine
+    image: redis:8-alpine
     healthcheck: *redis-check
 
   geonity-api:
@@ -397,7 +397,7 @@ services:
       retries: 20
 
   openred-redis:
-    image: redis:7-alpine
+    image: redis:8-alpine
     healthcheck: *redis-check
 
   openred-api:
