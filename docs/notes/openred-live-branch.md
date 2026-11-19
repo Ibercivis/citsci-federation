@@ -1,8 +1,10 @@
 <!-- Research note, not a decision. The sources of truth about our design are `docs/specs/`,
 `GLOSSARY.md` and `docs/adr/`; the rule this note examines lives in `docs/agents/external-repos.md`.
-Nothing here has been adopted. Checked 12 November 2026; every liveness claim carries that date.
-No production host was contacted for this note: every fact below comes from a local git clone, the
-GitHub API, or a file in this repository.
+Nothing here has been adopted. Checked 12 November 2026; every liveness claim carries that date
+unless a dated correction says otherwise. No production host was contacted for the note as written:
+every fact in §1–§7 comes from a local git clone, the GitHub API, or a file in this repository. The
+corrections added later do not all hold to that — §8's question 5 rests on a read of a production
+checkout, taken for `issue #38`.
 
 OVERTAKEN BY EVENTS, 12 November 2026, hours after it was written. `Ibercivis/OpenRed`'s `main` was
 re-pointed to the deployed commit: `main` and `feature/weather-cache-and-stats` are now the same
@@ -36,8 +38,8 @@ committer and the only GitHub account with commits in either repository.
 
 **Read on only if** you are deciding where `federation` is cut from (§1, §5 — and §5 is the section
 that decides it); drafting the proposal to the maintainer (§2, §6, §7); wondering whether this is one
-repository's accident or how Ibercivis works (§3 — it is the accident, with one caveat); looking for
-what production follows (§4, and its open question); or chasing the "endpoint on an unmerged branch"
+repository's accident or how Ibercivis works (§3 — it is the accident, and its caveat is gone: see
+§8's question 5); looking for what production follows (§4, and its open question); or chasing the "endpoint on an unmerged branch"
 sentence in `docs/local-development.md` (§5.3 — measured and settled; the endpoint is served).
 
 ## 1. The shape of the divergence
@@ -241,6 +243,10 @@ gitignored.) **Deploying from a branch is therefore a local habit, not unique to
 unique to OpenRed is that the branch is public, is 18 commits of real work, and has left `main`
 describing a previous version of the data model. If `federation` is ever to be cut from `main` in
 every repository without a caveat, that other case needs its own check — not in scope here.
+
+> **Superseded on 19 November 2026.** "It exists only on the server" was true when it was measured
+> and is not any more. The habit of deploying from a branch is real; the risk this caveat attached to
+> it was not. §8's question 5 has the measurement.
 
 ## 4. What the deploy appears to follow
 
@@ -473,9 +479,10 @@ where it should live tomorrow.
 
 ## 8. Open questions
 
-The first two need the production host and are the user's to answer or delegate; this note did not
-contact any server. **All of them are now tracked**: questions 1 and 2 as issue #37, question 5 as
-issue #38, and the pilot's own share of the dependency question as issue #39. The text below is kept
+The first two need the production host and are the user's to answer or delegate; the note as written
+contacted no server, and question 5's answer says where its own facts come from. **All of them are
+now tracked**: questions 1 and 2 as issue #37, question 5 as issue #38, and the pilot's own share of
+the dependency question as issue #39. The text below is kept
 as the reasoning behind each; the tickets carry the work.
 
 1. **What is in production's `django_migrations` table?** This is the one question that could change
@@ -498,15 +505,12 @@ as the reasoning behind each; the tickets carry the work.
    12 November 2026**: both of its data paths serve the seeded rows, and only the Mapbox basemap is
    blank, which was already expected. See §5.3. `docs/local-development.md` is corrected; the
    application's `LOCAL-DEV.md` is not yet.
-5. **Is the other repository deployed from a server-only branch a problem for its `federation` cut?**
-   §3's caveat. Its `federation` sits on `main`'s tip, which is also the newest commit in that
-   repository, so the shape is not OpenRed's — but "production is on a branch GitHub has never seen"
-   deserves its own look before the composition of ADR-0009 claims to mirror what is deployed.
-
-   **Half answered on 12 November 2026, and it got worse rather than better.** That branch is not on
-   the remote at all: `gh api repos/Ibercivis/gdalface/branches` returns only `federation`,
-   `local-dev-environment`, `main` and five `dependabot/pip/*` branches. So either it was deleted
-   after deployment, leaving production on a commit GitHub no longer names, or the inventory that
-   records it is stale. The `federation` cut is unaffected either way — it is `main`'s tip — but
-   ADR-0009's mirror claim is not. Tracked as issue #38; *settled by* a read of that production
-   checkout, which still needs the host.
+5. ~~**Is the other repository deployed from a server-only branch a problem for its `federation`
+   cut?**~~ **Answered on 19 November 2026**, and the premise dissolved: the branch had never been
+   deleted and the inventory had never been stale — it had simply never been pushed. It was pushed on
+   17 November, a second after the push that moved `main` onto the same commit, and a read of the
+   deployed checkout two days later found it at that commit, with no tracked file modified. So the
+   commit that checkout runs is held on the remote under two names, ADR-0009's claim is not weakened
+   by this case, and the `federation` cut was never in question. On 19 November that checkout was
+   pointed at `main` while the two refs still agreed, so it moved `HEAD` and wrote no file — the same
+   end state OpenRed reached a week earlier, reached without re-pointing anything.
