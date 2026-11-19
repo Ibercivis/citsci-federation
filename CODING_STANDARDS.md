@@ -15,11 +15,12 @@ What is left here is what no tool checks and a reviewer would not notice.
 
 ## `pnpm check` is the definition of a check
 
-Four things run against this repository: the formatter, the linter, the type
-checker and `reuse lint`, which fails when a file's licence cannot be
-established from `REUSE.toml` or its text is missing from `LICENSES/`
-(ADR-0013). `pnpm check` runs all four, the `pre-push` hook runs `pnpm check`,
-and CI runs `pnpm check`. There is one definition and three callers.
+Five things run against this repository: the formatter, the linter, the type
+checker, the cases the `gh pr create` hook has to get right, and `reuse lint`,
+which fails when a file's licence cannot be established from `REUSE.toml` or
+its text is missing from `LICENSES/` (ADR-0013). `pnpm check` runs all five,
+the `pre-push` hook runs `pnpm check`, and CI runs `pnpm check`. There is one
+definition and three callers.
 
 So a new check is added to `pnpm check`, never to the hook or the workflow
 alone. A check that lives only in CI is one nobody can run before pushing, and
@@ -34,7 +35,7 @@ and skips it when none is, CI starts its own and has no such escape, and
 locally it is `pnpm broker:up` then `pnpm test`. `lefthook.yml` holds the
 reasoning.
 
-The pull request check stays out for the same kind of reason: its input is a
+The pull request metadata check stays out for the same kind of reason: its input is a
 pull request's title and body, which do not exist until there is a pull
 request. `.github/workflows/pr.yaml` runs it and
 `scripts/check-pr-metadata.sh` is the check itself, runnable by hand with a

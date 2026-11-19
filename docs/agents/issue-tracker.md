@@ -28,7 +28,7 @@ browser — they bind this harness, not GitHub.
 
 | Script | When | What it does |
 | --- | --- | --- |
-| `scripts/require-issue-link.sh` | `PreToolUse` on Bash | Refuses to open a pull request whose branch is `issue-<n>`, or whose title carries `[#<n>]`, unless the body says `Closes #<n>` or `Part of #<n>`. |
+| `scripts/require-issue-link.sh` | `PreToolUse` on Bash | Refuses to open a pull request that serves an issue unless the body says `Closes #<n>` or `Part of #<n>`. Which issue, in order: the `--head` branch, the `[#<n>]` in the title, this checkout's branch. `pnpm require-issue-link:check` holds the cases. |
 | `scripts/claim-issue.sh` | `PostToolUse` on Bash, and `SessionStart` | On an `issue-<n>` branch, assigns that issue if it is open and unassigned. |
 
 The claim is attempted **once per branch per clone**, recorded in the git directory, which is never
