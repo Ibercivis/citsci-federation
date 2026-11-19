@@ -35,14 +35,19 @@ and every Brokered App that has been integrated, as one set of containers.
 This is where single sign-on is tried by hand.
 
 ```sh
+pnpm clean-slate  # every stack down first, and this repository's data with them
 pnpm apps:up      # checks the applications out, builds, seeds, and says
                   # what answered
 pnpm apps:logs    # add a service name for one of them
 pnpm apps:down    # keeps the data; `pnpm apps:reset` throws it away
 ```
 
-Docker, `git` and `curl` are what it needs; the two scripts are POSIX shell
-and run without Node, so a machine with no pnpm on it calls
+**The walkthrough is [`docs/trying-it-by-hand.md`](docs/trying-it-by-hand.md)**: the addresses, the
+seeded accounts, what to click, and what does not work yet. It is also what to run in front of
+people.
+
+Docker, `git` and `curl` are what it needs; the scripts are POSIX shell and run
+without Node, so a machine with no pnpm on it calls
 [`scripts/apps-up.sh`](scripts/apps-up.sh) directly.
 
 The applications are **not** in this repository:

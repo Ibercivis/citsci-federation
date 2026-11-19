@@ -18,9 +18,9 @@ of its repository. This file is the index and holds no instructions of its own.
 **This is not the Brokered Composition.** An environment here starts one application on its own, with
 ports on localhost, for building and debugging it. The composition starts the Broker and every
 integrated application together behind one proxy, each at a hostname, and is what single sign-on is
-tried in: `pnpm apps:up`, and the README says the rest. The two overlap on purpose — the
-composition builds from the same `federation` branch, and reuses the Dockerfile and the `seed_local`
-command the work below produced.
+tried in: `pnpm apps:up`, and [`trying-it-by-hand.md`](trying-it-by-hand.md) is what to click once
+it is up. The two overlap on purpose — the composition builds from the same `federation` branch,
+and reuses the Dockerfile and the `seed_local` command the work below produced.
 
 **Mail is caught, never printed.** Every one of these applications keeps
 `ACCOUNT_EMAIL_VERIFICATION = 'mandatory'`, as production does, so a sign-up cannot be finished
