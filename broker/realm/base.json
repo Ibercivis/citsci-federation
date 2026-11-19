@@ -142,7 +142,13 @@
             "configuration": {
               "auto-configure": "false"
             }
-          },
+          }
+        ]
+      },
+      {
+        "name": "nonce-where-the-id-token-reaches-a-browser",
+        "description": "A nonce, from the clients whose ID token a browser can see. ADR-0016 says why that is not every client.",
+        "executors": [
           {
             "executor": "secure-session",
             "configuration": {}
@@ -164,6 +170,20 @@
           }
         ],
         "profiles": ["code-flow-only"]
+      },
+      {
+        "name": "nonce-where-the-id-token-reaches-a-browser",
+        "description": "Public clients only: a confidential client fetches its tokens itself, over a channel no browser is on. ADR-0016.",
+        "enabled": true,
+        "conditions": [
+          {
+            "condition": "client-access-type",
+            "configuration": {
+              "type": ["public"]
+            }
+          }
+        ],
+        "profiles": ["nonce-where-the-id-token-reaches-a-browser"]
       }
     ]
   }
