@@ -62,9 +62,31 @@ jobs:
       # it healthy, and the fix was in that file rather than in this one. A
       # cold runner is the only place that race is visible, so this job is
       # where it will show up again.
+      #
+      # Twice, because the image build resolves from Maven Central, Central
+      # rate limits by IP, and a runner's addresses are shared with everybody
+      # else's CI. What it covers is that build: a second `up --wait` waits on
+      # the containers the first one left, so it cannot turn the race above
+      # into a pass. Every failure of this step so far passed on a re-run
+      # minutes later, never on a second try in the same second, which is what
+      # the wait is for. Both attempts stay in the log — the second failure is
+      # the one worth reading, and reading it means having the first beside it
+      # (`issue #116`).
+      #
+      # It stays here rather than inside `broker:up`, because locally a failed
+      # start is something to look at, not something to sit through twice.
       - name: Start the Broker
-        run: pnpm broker:up
+        run: |
+          for attempt in 1 2; do
+            [ "$attempt" = 1 ] || sleep 60
+            echo "Starting the Broker, attempt $attempt"
+            if pnpm broker:up; then exit 0; fi
+          done
+          exit 1
 
+      # Not retried, and that is deliberate: a suite that passes on the second
+      # try is a flaky suite, which is something to fix rather than something
+      # to live with (`issue #116`).
       - run: pnpm test
 
       # Keycloak's own log is the only place that says why a flow was refused,
@@ -97,8 +119,15 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
+      # Twice, for the reason the `tests` job gives.
       - name: Start the Broker, base alone
-        run: pnpm broker:up
+        run: |
+          for attempt in 1 2; do
+            [ "$attempt" = 1 ] || sleep 60
+            echo "Starting the Broker, attempt $attempt"
+            if pnpm broker:up; then exit 0; fi
+          done
+          exit 1
 
       - run: pnpm exec vitest run tests/declaration.test.ts
 
