@@ -25,6 +25,11 @@ jars that `go-offline` had not fetched — `jackson-dataformat-cbor`, `slf4j-api
 `jakarta.xml.bind-api`, `commons-collections4`. The 217 are mostly poms, which is the shape of a
 dependency graph being walked rather than a few jars being missed.
 
+The loud step's own price, measured where it is paid: the first CI run without `--quiet` put 4340
+`Downloading from central:` lines in the log — four `go-offline` invocations across the `tests` and
+`base` jobs, about 1085 each, matching the table above. `issue #116` expected "a few lines of
+download progress". The mechanism is what it predicted; the size is not.
+
 ## What it means
 
 `issue #116` kept `--quiet` on `package` because "`package` on a warm repository prints almost
