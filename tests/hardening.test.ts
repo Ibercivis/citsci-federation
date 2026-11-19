@@ -163,6 +163,25 @@ describe("the Broker takes a confidential Brokered App as the libraries write it
 
     expect(result).toMatchObject({ outcome: "authenticated" });
   });
+
+  // The split shape, which is Geonity's (`issue #31`): a single-page web app
+  // asks for the code from the browser, through oauth4webapi, and its API
+  // redeems it, through dj-rest-auth and allauth's OAuth2Client. The browser's
+  // half is `state`, PKCE S256 and the scopes granted, with no nonce, because
+  // the id_token never reaches the browser. The server's half is the secret
+  // in the form body, `client_secret_post`, and the verifier the browser
+  // kept. One confidential client, so the secret stays on the server.
+  it("authenticates a code asked for by a browser and redeemed by its server", async () => {
+    const result = await attempt(CONFIDENTIAL_CLIENT, {
+      pkce: createPkce("S256"),
+      nonce: null,
+      params: { scope: "openid email" },
+    });
+
+    expect(result).toMatchObject({ outcome: "authenticated" });
+    if (result.outcome !== "authenticated") return;
+    expect(result.claims).toHaveProperty("email");
+  });
 });
 
 describe("the Broker refuses to redeem a confidential Brokered App's code without its secret", () => {
