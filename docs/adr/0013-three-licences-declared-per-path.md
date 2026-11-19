@@ -56,3 +56,18 @@ and not before.
 official image, pinned by digest, rather than adding a Python toolchain beside Node. The Broker
 needed Docker already, but the formatter, the linter and the type checker did not, and now
 `pnpm check` and the `pre-push` hook fail when Docker is not running.
+
+**The lint names the tracked files; it does not let `reuse` walk the tree.** `reuse lint` honours
+`.gitignore` only where git works, and in a worktree it does not: `.git` is a file pointing outside
+`--volume "$PWD:/data"`, so detection fails inside the container and the catch-all `path = "**"`
+adopts `node_modules` — the whole of it declared EUPL-1.2, and the gate failing on the one
+dependency that carries a licence tag of its own. **Adding that licence text is the dead end**: it
+greens the gate and leaves the false declaration standing. `scripts/reuse-lint.sh` hands
+`lint-file` what `git ls-files` prints, which is the same set from a worktree and from a clone.
+Mounting the git common directory beside the working tree also works — measured in issue #113 — and
+was not taken: it puts `.git` inside a container to buy back a report we do not rely on.
+
+**That report is the unused-licence failure named above, and it is gone.** `lint-file` judges only
+the files it is handed, so a text in `LICENSES/` that nothing refers to fails nothing; adding
+Apache-2.0 before the plugin is now untidy rather than red. Bring the whole-project `reuse lint`
+back — by the mount, or in CI, where git always works — if that check has to bite again.
