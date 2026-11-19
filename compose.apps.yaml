@@ -316,7 +316,7 @@ services:
   # `.localhost` to the loopback and never asks Docker's DNS, so an Alpine
   # container could not reach the Broker at its issuer (`.env` says why).
   geonity-web:
-    image: node:24-bookworm-slim
+    image: node:26-bookworm-slim
     working_dir: /app
     volumes:
       - ./apps/geonity/react:/app
@@ -350,7 +350,7 @@ services:
   # site, which is why every target below is set: unconfigured, this panel
   # reads and writes production (its LOCAL-DEV.md says so).
   geonity-admin:
-    image: node:24-bookworm-slim
+    image: node:26-bookworm-slim
     working_dir: /app
     volumes:
       - ./apps/geonity/admin:/app
