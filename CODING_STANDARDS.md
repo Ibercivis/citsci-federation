@@ -56,3 +56,16 @@ paragraph.
 
 Nothing above notices a pin going stale. `.github/dependabot.yml` is what
 does.
+
+## A script's name carries what a directory would
+
+`scripts/` is flat, and the prefix is what groups it. `check-*` is a gate: it
+reads some state, says what is wrong and exits non-zero. A gate is named that
+way wherever it is wired — `lefthook.yml`, `.github/workflows/pr.yaml`, or a
+person's shell — because what the name has to survive is being read in `ls`,
+not being read beside its caller.
+
+Issue [#102](https://github.com/Ibercivis/citsci-federation/issues/102) holds
+why the directory is flat: the split by environment that was refused and why it
+discriminated nothing, the one grouping that would earn a directory of its own,
+and the non-recursive `shellcheck` glob that would have to move with it.

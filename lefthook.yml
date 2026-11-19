@@ -24,7 +24,7 @@ pre-commit:
   parallel: true
   jobs:
     - name: internal notes stay out of this public repository
-      run: ./scripts/guard-private.sh
+      run: ./scripts/check-private.sh
 
     # Markdown is absent from the glob because `.oxfmtrc.json` does not format
     # prose, and `--no-error-on-unmatched-pattern` is here because a commit of
