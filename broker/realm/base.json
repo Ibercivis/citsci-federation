@@ -127,7 +127,7 @@
       "directAccessGrantsEnabled": false,
       "serviceAccountsEnabled": false,
       "consentRequired": true,
-      "redirectUris": ["${GEONITY_API_BASE_URL}/accounts/oidc/*"],
+      "redirectUris": ["${GEONITY_WEB_BASE_URL}/auth/ibercivis/callback"],
       "webOrigins": [],
       "attributes": {
         "pkce.code.challenge.method": "S256"
