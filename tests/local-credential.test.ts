@@ -22,9 +22,13 @@ import {
   requestAuthorization,
   verifyIdToken,
 } from "./brokered-app.ts";
-import { ISSUER } from "./broker.ts";
+import { ISSUER, PERSON_IDENTIFIER } from "./broker.ts";
 import { linkMailedTo, mailCountTo } from "./mailbox.ts";
-import { AFFIRMING_SOURCE_A, MOCK_IDENTITIES } from "./mock-source.ts";
+import {
+  AFFIRMING_SOURCE_A,
+  AFFIRMING_SOURCE_B,
+  arriving,
+} from "./mock-source.ts";
 
 /**
  * The Local Credential (ADR-0005): an email address and a password the Broker
@@ -33,9 +37,6 @@ import { AFFIRMING_SOURCE_A, MOCK_IDENTITIES } from "./mock-source.ts";
  * Each case registers at an address of its own: the suite shares one Broker,
  * and a Person outlives the case that created them.
  */
-
-const PERSON_IDENTIFIER =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}@ibercivis\.es$/;
 
 /** An address nobody has registered yet. */
 const freshAddress = (): string => `${randomUUID()}@local.test`;
@@ -61,10 +62,16 @@ interface Registering {
 }
 
 /**
- * The Broker's registration form, reached the way a Person reaches it: from
- * the sign-in page an application sent them to, by the link that offers it.
+ * A page the Broker's sign-in page links to, reached the way a Person reaches
+ * it: from the sign-in page an application sent them to, by the link whose
+ * text matches. Returns the form on it that carries `field`; `what` names the
+ * page in the failure.
  */
-async function registrationForm(): Promise<Registering> {
+async function offeredOnSignIn(
+  link: RegExp,
+  field: string,
+  what: string,
+): Promise<Registering> {
   const browser = new Browser();
   const pkce = createPkce("S256");
   const signIn = await pageAfter(
@@ -75,14 +82,18 @@ async function registrationForm(): Promise<Registering> {
       code_challenge_method: pkce.method,
     }),
   );
-  const offer = linksOn(signIn).find((link) => /register/i.test(link.text));
-  if (!offer) throw new Error("The sign-in page offers no registration.");
+  const offer = linksOn(signIn).find((each) => link.test(each.text));
+  if (!offer) throw new Error(`The sign-in page offers no ${what}.`);
 
   const page = await pageAfter(browser, await browser.get(offer.href));
-  const form = formsOn(page).find((candidate) => "email" in candidate.fields);
-  if (!form) throw new Error("The registration page carries no form.");
+  const form = formsOn(page).find((candidate) => field in candidate.fields);
+  if (!form) throw new Error(`The ${what} page carries no form.`);
   return { browser, pkce, form };
 }
+
+/** The Broker's registration form. */
+const registrationForm = () =>
+  offeredOnSignIn(/register/i, "email", "registration");
 
 /**
  * Fills the registration form in and sends it, and says where that left the
@@ -139,10 +150,9 @@ const codeIn = (landing: Landing): string | null =>
  * registered, and returns the form that then asks for a password.
  */
 async function openConfirmation(
-  registering: Registering,
+  browser: Browser,
   address: string,
 ): Promise<HtmlForm> {
-  const { browser } = registering;
   const confirmed = await pageAfter(
     browser,
     await browser.get(await linkMailedTo(address)),
@@ -154,11 +164,10 @@ async function openConfirmation(
 
 /** Chooses a password on that form, and says where it left the Person. */
 async function choosePassword(
-  registering: Registering,
+  browser: Browser,
   form: HtmlForm,
   password: string,
 ): Promise<Landing> {
-  const { browser } = registering;
   return pastConsent(
     browser,
     await follow(
@@ -183,8 +192,9 @@ async function confirm(
   address: string,
   password = A_PASSWORD,
 ): Promise<Record<string, unknown>> {
-  const form = await openConfirmation(registering, address);
-  const code = codeIn(await choosePassword(registering, form, password));
+  const { browser } = registering;
+  const form = await openConfirmation(browser, address);
+  const code = codeIn(await choosePassword(browser, form, password));
   if (!code) {
     throw new Error("Confirming did not send the Person back signed in.");
   }
@@ -253,14 +263,10 @@ describe.each(CLIENT_TYPES)(
       await confirm(await register(address), address);
 
       const local = await everyPlace(client, signingIn(address));
-      const delegated = await everyPlace(client, {
-        as: {
-          through: AFFIRMING_SOURCE_A,
-          username: "merge-verified",
-          password: MOCK_IDENTITIES["merge-verified"].password,
-        },
-        pkce: createPkce("S256"),
-      });
+      const delegated = await everyPlace(
+        client,
+        arriving(AFFIRMING_SOURCE_A, "merge-verified"),
+      );
 
       expect(local.idToken.sub).toMatch(PERSON_IDENTIFIER);
       for (const [place, body] of local.places) {
@@ -277,10 +283,10 @@ describe.each(CLIENT_TYPES)(
 describe("the declared password policy", () => {
   it("refuses a password shorter than twelve characters", async () => {
     const address = freshAddress();
-    const registering = await register(address);
-    const form = await openConfirmation(registering, address);
+    const { browser } = await register(address);
+    const form = await openConfirmation(browser, address);
 
-    const landing = await choosePassword(registering, form, "elevenchars");
+    const landing = await choosePassword(browser, form, "elevenchars");
 
     expect(codeIn(landing)).toBeNull();
     // Still asked for one, rather than turned away.
@@ -317,21 +323,11 @@ async function personWithALocalCredential(password = A_PASSWORD) {
  * password where that link leads.
  */
 async function recover(address: string, password: string): Promise<void> {
-  const browser = new Browser();
-  const pkce = createPkce("S256");
-  const signIn = await pageAfter(
-    browser,
-    await requestAuthorization(browser, CONFIDENTIAL_CLIENT, {
-      nonce: randomUUID(),
-      code_challenge: pkce.challenge,
-      code_challenge_method: pkce.method,
-    }),
+  const { browser, form: ask } = await offeredOnSignIn(
+    /forgot/i,
+    "username",
+    "recovery",
   );
-  const offer = linksOn(signIn).find((link) => /forgot/i.test(link.text));
-  if (!offer) throw new Error("The sign-in page offers no recovery.");
-  const page = await pageAfter(browser, await browser.get(offer.href));
-  const ask = formsOn(page).find((form) => "username" in form.fields);
-  if (!ask) throw new Error("The recovery page carries no form.");
 
   const seen = await mailCountTo(address);
   await browser.postForm(ask.action, { ...ask.fields, username: address });
@@ -341,7 +337,7 @@ async function recover(address: string, password: string): Promise<void> {
   );
   const form = formsOn(chosen).find((each) => "password-new" in each.fields);
   if (!form) throw new Error("The recovery link asked for no password.");
-  await choosePassword({ browser, pkce, form }, form, password);
+  await choosePassword(browser, form, password);
 }
 
 describe("recovering a forgotten password", () => {
@@ -416,24 +412,40 @@ async function signedInToTheConsole(address: string): Promise<InTheConsole> {
 }
 
 /**
- * Asks for a new address the way the console's own button does: by sending
- * the Person to the Broker's page for one. The Broker takes the address and
- * mails it, which is not yet a change.
+ * Starts one of the console's actions the way its own buttons do: by sending
+ * the Person to the Broker's page for it, with `kc_action`. Fills in the form
+ * that page shows, found by the field it carries, and sends it. The console
+ * has no other way to change a password or an address: the account API takes
+ * neither (`docs/notes/2026-11-18-account-rest-api-credential-operations.md`).
  */
-async function askToChangeAddress(
+async function consoleAction(
   { browser }: InTheConsole,
-  newAddress: string,
+  action: string,
+  answer: Record<string, string>,
 ): Promise<void> {
   const asked = await toTheConsole(browser, createPkce("S256"), {
-    kc_action: "UPDATE_EMAIL",
+    kc_action: action,
   });
+  const field = Object.keys(answer)[0] ?? "";
   const form =
     asked.at === "a page"
-      ? formsOn(asked.page).find((each) => "email" in each.fields)
+      ? formsOn(asked.page).find((each) => field in each.fields)
       : undefined;
-  if (!form) throw new Error("The console's request asked for no address.");
-  await browser.postForm(form.action, { ...form.fields, email: newAddress });
+  if (!form) throw new Error(`The console's ${action} asked for no ${field}.`);
+  await browser.postForm(form.action, { ...form.fields, ...answer });
 }
+
+/** Asks for a new address. The Broker takes it and mails it, which is not yet
+ *  a change. */
+const askToChangeAddress = (console: InTheConsole, newAddress: string) =>
+  consoleAction(console, "UPDATE_EMAIL", { email: newAddress });
+
+/** Chooses a new password, which takes effect at once. */
+const changePassword = (console: InTheConsole, password: string) =>
+  consoleAction(console, "UPDATE_PASSWORD", {
+    "password-new": password,
+    "password-confirm": password,
+  });
 
 /**
  * Writes a new address straight into the Person's account, through the same
@@ -506,18 +518,80 @@ describe("changing the address in the Account Console", () => {
     expect(withNew.claims.sub).toBe(sub);
     expect(withOld.outcome).toBe("refused-in-the-browser");
   });
+
+  it("keeps every Identity joined to the Person once the new address is confirmed", async () => {
+    // One Person holding two Identities, joined by their verified address. On
+    // a Broker that has run this before, both come back by their link instead,
+    // to the same Person, whatever address they hold by now.
+    //
+    // Being the same Person every run has a cost. Keycloak mails one Person a
+    // confirmation at most every 30 seconds, and the suite runs in less, so a
+    // second run straight after the first fails here with "No mail reached".
+    // The merge is not what broke. Wait half a minute, or `pnpm broker:reset`.
+    // The limit is base configuration, so lowering it here would lower it in
+    // production too.
+    const first = await authenticate(
+      CONFIDENTIAL_CLIENT,
+      arriving(AFFIRMING_SOURCE_A, "renamed-verified"),
+    );
+    const second = await authenticate(
+      CONFIDENTIAL_CLIENT,
+      arriving(AFFIRMING_SOURCE_B, "renamed-verified"),
+    );
+    expect(second.claims.sub, "the two Identities were never joined").toBe(
+      first.claims.sub,
+    );
+
+    const browser = new Browser();
+    const { accessToken } = await authenticate(ACCOUNT_CONSOLE, {
+      ...arriving(AFFIRMING_SOURCE_A, "renamed-verified"),
+      browser,
+    });
+    const newAddress = freshAddress();
+    await askToChangeAddress({ browser, accessToken }, newAddress);
+    await new Browser().get(await linkMailedTo(newAddress));
+
+    const throughA = await authenticate(
+      CONFIDENTIAL_CLIENT,
+      arriving(AFFIRMING_SOURCE_A, "renamed-verified"),
+    );
+    const throughB = await authenticate(
+      CONFIDENTIAL_CLIENT,
+      arriving(AFFIRMING_SOURCE_B, "renamed-verified"),
+    );
+    expect(throughA.claims.sub).toBe(first.claims.sub);
+    expect(throughB.claims.sub).toBe(first.claims.sub);
+    // Both arrivals said renamed@mock.test. A source that writes its address
+    // back on every sign-in, `syncMode: FORCE`, would have undone the change.
+    expect(await addressShownInTheConsole(accessToken)).toBe(newAddress);
+  });
+});
+
+describe("changing the password in the Account Console", () => {
+  it("replaces the old password with the new one", async () => {
+    const { address, sub } = await personWithALocalCredential();
+
+    await changePassword(
+      await signedInToTheConsole(address),
+      "a new password, chosen in the console",
+    );
+
+    const withNew = await authenticate(
+      CONFIDENTIAL_CLIENT,
+      signingIn(address, "a new password, chosen in the console"),
+    );
+    const withOld = await attempt(CONFIDENTIAL_CLIENT, signingIn(address));
+    expect(withNew.claims.sub).toBe(sub);
+    expect(withOld.outcome).toBe("refused-in-the-browser");
+  });
 });
 
 describe("the Account Console", () => {
   it("shows the Person the Identities they arrived with", async () => {
-    const { accessToken } = await authenticate(ACCOUNT_CONSOLE, {
-      as: {
-        through: AFFIRMING_SOURCE_A,
-        username: "merge-verified",
-        password: MOCK_IDENTITIES["merge-verified"].password,
-      },
-      pkce: createPkce("S256"),
-    });
+    const { accessToken } = await authenticate(
+      ACCOUNT_CONSOLE,
+      arriving(AFFIRMING_SOURCE_A, "merge-verified"),
+    );
 
     const response = await fetch(`${ISSUER}/account/linked-accounts`, {
       headers: {

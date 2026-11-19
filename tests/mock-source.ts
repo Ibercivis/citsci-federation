@@ -78,6 +78,16 @@ export const MOCK_IDENTITIES = declaration.identities;
 
 export type MockIdentity = keyof typeof MOCK_IDENTITIES;
 
+/** An arrival: who signs in, and through which Identity Source. */
+export const arriving = (through: string, identity: MockIdentity) => ({
+  as: {
+    through,
+    username: identity,
+    password: MOCK_IDENTITIES[identity].password,
+  },
+  pkce: createPkce("S256"),
+});
+
 /**
  * The Broker as the source knows it: a client, registered with a callback.
  *

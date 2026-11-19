@@ -627,6 +627,9 @@ export interface AttemptOptions {
   /** Who signs in, and through which Identity Source; the realm's demo
    *  Identity, on the Broker's own form, when absent. */
   as?: Arrival;
+  /** The browser to run it in, for a case that goes on using the session the
+   *  sign-in leaves behind. A fresh one when absent. */
+  browser?: Browser;
 }
 
 /** Runs a flow and reports where it died, or that it did not. */
@@ -634,7 +637,7 @@ export async function attempt(
   client: Client,
   options: AttemptOptions = {},
 ): Promise<Attempt> {
-  const browser = new Browser();
+  const browser = options.browser ?? new Browser();
   const nonce =
     options.nonce === undefined ? base64url(randomBytes(16)) : options.nonce;
   const params: Record<string, string> = {

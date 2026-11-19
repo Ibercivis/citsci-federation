@@ -39,6 +39,11 @@
       "password": "mock",
       "idToken": { "email": "untrusted@mock.test", "email_verified": true },
       "userinfo": { "email": "untrusted@mock.test", "email_verified": true }
+    },
+    "renamed-verified": {
+      "password": "mock",
+      "idToken": { "email": "renamed@mock.test", "email_verified": true },
+      "userinfo": { "email": "renamed@mock.test", "email_verified": true }
     }
   }
 }
