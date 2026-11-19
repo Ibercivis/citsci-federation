@@ -51,8 +51,13 @@ name: citsci-apps
 # The name here is this file's, and it lasts only as long as nothing reads it.
 # An integration settles the name the application reads the value under, in
 # that application's words, on its `federation` branch — and then this file
-# hands it that name instead. LostAtNight is integrated and reads
-# `IBERCIVIS_ACCOUNT_*` (`issue #94`); Geonity and OpenRed have not chosen yet.
+# hands it that name instead.
+#
+# LostAtNight's integration settles it as `IBERCIVIS_ACCOUNT_*` (`issue #94`),
+# and is **open against** that repository's `federation` branch rather than in
+# it. Until it lands there, this composition hands LostAtNight three names its
+# code does not read: the site comes up with the sign-in it always had and no
+# way in through the Broker. Geonity and OpenRed have not chosen theirs.
 #
 # The address is the issuer, reachable from inside this network as well as
 # from a browser: the proxy answers to `broker.localhost` on both sides of
@@ -75,9 +80,10 @@ x-mail: &mail
 x-lostatnight: &lostatnight
   DJANGO_SETTINGS_MODULE: gdalface.settings_local
   DEBUG: "True"
-  # The Broker, under the name that application reads it by: an Ibercivis
-  # account is what it calls signing in through the Broker, and `Broker` is a
-  # word that names nothing in a Django site that already has a task queue.
+  # The Broker, under the name that application's integration gives it: an
+  # Ibercivis account is what it calls signing in through the Broker, and
+  # `Broker` is a word that names nothing in a Django site that already has a
+  # task queue.
   # Every process is told, so one declaration of the settings answers for all
   # of them; only the service that runs the sign-in gets the credentials.
   IBERCIVIS_ACCOUNT_ISSUER: ${BROKER_ISSUER:?declare it in .env}
