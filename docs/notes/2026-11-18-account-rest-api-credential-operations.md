@@ -31,5 +31,6 @@ address is the username and `editUsernameAllowed` is off. Turn either of those a
 may start writing an unconfirmed address. `tests/local-credential.test.ts` makes the call to catch
 that.
 
-A user declared in the realm file, like `demo`, gets 401 on every call. It holds none of the realm's
-default roles, where a registered Person holds `default-roles-citsci`. Probe as a registered Person.
+A Person declared in the realm file, like `demo`, gets 401 on every call. They hold none of the
+realm's default roles, where a registered Person holds `default-roles-citsci`. Probe as a
+registered Person.

@@ -245,8 +245,7 @@ of it is base: a deployment ships it.
 **Every required action the realm uses is named in it.** Importing a
 `requiredActions` list replaces Keycloak's defaults, so an action left out does
 not exist. Without `VERIFY_EMAIL`, an unconfirmed registration signed straight
-in — measured. The list carries `VERIFY_EMAIL`, `UPDATE_PASSWORD` and
-`UPDATE_EMAIL`, and `VERIFY_PROFILE` disabled.
+in — measured.
 
 **The password is chosen after the address is confirmed.** With `verifyEmail`
 on, this version's registration form asks for the address alone, and the link
@@ -261,8 +260,8 @@ expiry. The import validates the realm's own users against it, which is why
 `demo`'s password is long.
 
 **An address changes only once the new one is confirmed.** That is the
-`update-email` feature with its `UPDATE_EMAIL` action. It is on by default in
-this version and named in `Dockerfile` anyway. The console's button sends the
+`update-email` feature, which `Dockerfile` turns on and says why, with its
+`UPDATE_EMAIL` action. The console's button sends the
 Person to `kc_action=UPDATE_EMAIL`, and without the feature there is no such
 page. Writing `email` straight into the account API is refused for another
 reason: the address is the username, and `editUsernameAllowed` is off. Leave it
