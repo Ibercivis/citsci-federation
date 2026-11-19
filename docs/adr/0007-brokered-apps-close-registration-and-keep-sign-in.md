@@ -44,6 +44,17 @@ because the alternative is somebody discovering it afterwards.
 
 ## Amended on 2026-11-20
 
+**An application that holds one account per address refuses the arrival instead.** `django-allauth`
+does by default, and Geonity keeps that default. A Person arriving with an address an account already
+uses is refused, and nobody ends up with a second, empty account they take for their own. Only someone
+arriving with an address the application does not hold gets a separate account.
+
+Making the separate account anyway means storing it without its address or under a mangled one. Both
+break password reset and mail, and both are hand-written code in the application (ADR-0016).
+
+The cost: someone with an existing account cannot use the Broker at that application until migration
+links the two. The point of choice says so, in the order it happens.
+
 **The mobile shape is the split flow, not a public client.** Geonity's web app starts the code flow
 with PKCE and receives the code; its API redeems it with the secret, so the client is confidential. A
 Flutter client does the same with its own scheme, and the secret never reaches the phone. The Broker
