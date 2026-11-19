@@ -45,7 +45,7 @@ For a checkout from nothing as well, `rm -rf apps/` first: the four repositories
 | `geonity-admin.localhost:8080` | Geonity's admin panel |
 | `geonity-api.localhost:8080` | Geonity's API |
 | `openred-api.localhost:8080` | OpenRed's API |
-| `mail.localhost:8080` | every message any of them sends |
+| `mail.localhost:8080` | every message any of them sends, the Broker's included |
 
 Everything is reached **by hostname**. `.localhost` resolves to the loopback in every browser with
 nothing configured.
@@ -70,7 +70,8 @@ open "$(pnpm -s sign-in-url)"          # or `geonity`, or `openred`
 
 In order:
 
-1. **Sign in to Ibercivis Citizen Science** — the Broker's own page, nobody else's. `demo` / `demo`.
+1. **Sign in to Ibercivis Citizen Science** — the Broker's own page, nobody else's. `demo` /
+   `demo-password`.
 2. The **consent screen**, naming the application. That name comes from the client the realm
    registered for it.
 3. Back to `…/accounts/oidc/callback?code=…`, **which 404s**. No application serves that path yet.
@@ -78,6 +79,11 @@ In order:
 The `code=` in the address bar is the Broker having done all of its half. Redeeming it needs the
 client secret, which is not a thing to put in an address bar; `pnpm test` redeems codes, over the
 protocol, with no browser involved.
+
+That page also offers **Register**, which is the Local Credential the Broker holds itself (ADR-0005,
+`issue #26`): the form asks for an address alone, the confirmation lands in the same inbox as step 6,
+and the link in it is where the password is chosen. `demo` is one of those too, declared in the realm
+instead of registered.
 
 ### 3. A Person arriving from an Identity Source
 
@@ -141,11 +147,6 @@ http://broker.localhost:8080/admin/, `admin` / `admin`, realm `citsci` → Clien
   none has landed. So single sign-on *between* two applications is not clickable yet: step 2 is the
   Broker's half, step 5 is each application's own, and nothing joins them. Say this before anybody
   asks.
-- **And a button alone will not be enough.** The realm applies `secure-session` to every client, so
-  the Broker refuses an authorization request carrying no nonce — and no django-allauth release
-  sends one. Step 2 works because `pnpm sign-in-url` sends a nonce itself. Until `PR #105` narrows
-  that rule to public clients, the first application to ship its button is still refused, with
-  `Missing parameter: nonce`. The day an integration merges, this section wants both numbers.
 - **Maps are blank.** They need a Mapbox token nobody has locally, and that is settled:
   [`local-development.md`](local-development.md) says not to spend a minute on it.
 - **`openred.localhost:8080` is declared and not served.** It is where OpenRed's React front end
