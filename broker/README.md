@@ -193,6 +193,11 @@ integration narrows the URI to the one path it uses; until then this is a
 development guess like the stand-ins above, and the registration exists so
 that the composition can hand each application a client that answers.
 
+Geonity's is narrowed (`issue #31`), and to its **web app's** address rather
+than its API's: `<GEONITY_WEB_BASE_URL>/auth/ibercivis/callback`. The web app
+starts the code flow and receives the code, and the API redeems it with the
+secret. So the client is confidential, and the browser carries PKCE.
+
 An unset name survives the import as the literal `${NAME}`, so a client whose
 secret is that string is the signature of a missing variable rather than of a
 mistake in this file. `compose.yaml` passes the three of each, and fails to

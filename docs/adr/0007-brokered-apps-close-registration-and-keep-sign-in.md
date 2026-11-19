@@ -41,3 +41,12 @@ it safe to defer the migration decision for as long as it takes.
 A person who already had an account and signs in through the Broker instead gets a **separate**
 Person, with none of their old contributions. The applications have to say so at the point of choice,
 because the alternative is somebody discovering it afterwards.
+
+## Amended on 2026-11-20
+
+**The mobile shape is the split flow, not a public client.** Geonity's web app starts the code flow
+with PKCE and receives the code; its API redeems it with the secret, so the client is confidential. A
+Flutter client does the same with its own scheme, and the secret never reaches the phone. The Broker
+still pays only a redirect URI, as the paragraph on public clients above promised. The application
+pays one more thing that paragraph missed: its API redeems with one redirect URI, and has to accept
+the mobile one as well.

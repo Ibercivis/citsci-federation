@@ -127,7 +127,7 @@ services:
       LOSTATNIGHT_BASE_URL: ${LOSTATNIGHT_BASE_URL:?declare it in .env}
       LOSTATNIGHT_CLIENT_ID: ${LOSTATNIGHT_CLIENT_ID:?declare it in .env}
       LOSTATNIGHT_CLIENT_SECRET: ${LOSTATNIGHT_CLIENT_SECRET:?declare it in .env}
-      GEONITY_API_BASE_URL: ${GEONITY_API_BASE_URL:?declare it in .env}
+      GEONITY_WEB_BASE_URL: ${GEONITY_WEB_BASE_URL:?declare it in .env}
       GEONITY_CLIENT_ID: ${GEONITY_CLIENT_ID:?declare it in .env}
       GEONITY_CLIENT_SECRET: ${GEONITY_CLIENT_SECRET:?declare it in .env}
       OPENRED_API_BASE_URL: ${OPENRED_API_BASE_URL:?declare it in .env}
