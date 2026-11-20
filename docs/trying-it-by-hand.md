@@ -71,9 +71,12 @@ In order:
    `demo-password`.
 2. The **consent screen**, naming the application. That name comes from the client the realm
    registered for it.
-3. Back to `…/accounts/oidc/callback?code=…`, **which 404s**. That address is this script's
-   own: LostAtNight serves its callback at `/accounts/oidc/ibercivis/login/callback/` and redeems
-   the code itself, which is the step below. Nothing serves the bare `/accounts/oidc/callback`.
+3. Back to the application's callback with `code=…` in the address bar. For `lostatnight` and
+   `openred` that is `…/accounts/oidc/callback`, **which 404s**. That address is this script's own:
+   LostAtNight serves its callback at `/accounts/oidc/ibercivis/login/callback/` and redeems the code
+   itself, which is step 5. Nothing serves the bare `/accounts/oidc/callback`. For `geonity` it is
+   the web app's `/auth/ibercivis/callback`, which says the sign-in did not work, because this URL
+   was not started by Geonity.
 
 The `code=` in the address bar is the Broker having done all of its half. Redeeming it needs the
 client secret, which is not a thing to put in an address bar; `pnpm test` redeems codes, over the
@@ -104,7 +107,7 @@ because `demo` signs in with a local credential.
 It is Keycloak's own screen, not ours. Nothing in the pilot links to it and nothing depends on it,
 but it is the shortest answer to "so what does the Broker actually know about me".
 
-### 5. Signing in to LostAtNight with an Ibercivis account
+### 5. Signing in to an application with an Ibercivis account
 
 http://lostatnight.localhost:8080/accounts/login/ → **Sign in with your Ibercivis account**.
 
@@ -120,6 +123,13 @@ composition is told (ADR-0002), and the only thing LostAtNight stores about that
 `/accounts/signup/` is closed there: it offers the same button and creates nothing. Registration on
 a Brokered App is the Broker's job now (ADR-0007), and LostAtNight is the first application where
 that has landed.
+
+Geonity does the same from http://geonity.localhost:8080/login (`issue #31`). There the web app
+sends you to the Broker and comes back to `/auth/ibercivis/callback`, and the API redeems the code.
+The profile page shows the identifier under **Ibercivis account**. `/register` leads to `/login`,
+and the paragraph beside the button says that an address already used by a Geonity account is
+refused. Its API's registration endpoint stays open, because the mobile app still creates accounts
+there.
 
 ### 6. An account that existed before the pilot
 
@@ -158,14 +168,14 @@ Nothing in the composition can deliver to a real address.
 ### 8. The three applications, as the Broker knows them
 
 http://broker.localhost:8080/admin/, `admin` / `admin`, realm `citsci` → Clients: **lostatnight**,
-**geonity** and **openred**, each with its redirect URI under `/accounts/oidc/*`.
+**geonity** and **openred**. LostAtNight's and OpenRed's redirect URIs are under `/accounts/oidc/*`.
+Geonity's is the one page of its web app, `/auth/ibercivis/callback`.
 
 ## What does not work yet, on purpose
 
-- **Single sign-on between two applications is not clickable yet.** LostAtNight signs in with an
-  Ibercivis account (step 5, `issue #94`); Geonity and OpenRed do not (`issue #31`, `issue #30`), so
-  there is no second application to arrive at already signed in. One application and the Broker is
-  what there is to show. Say this before anybody asks.
+- **OpenRed has no sign-in through the Broker yet** (`issue #30`). LostAtNight and Geonity both have
+  one (step 5), so single sign-on between those two can be tried by hand; the browser test that
+  asserts it is `issue #34`.
 - **Maps are blank.** They need a Mapbox token nobody has locally, and that is settled:
   [`local-development.md`](local-development.md) says not to spend a minute on it.
 - **`openred.localhost:8080` is declared and not served.** It is where OpenRed's React front end

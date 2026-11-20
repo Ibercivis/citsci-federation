@@ -94,7 +94,7 @@ discarded.
 
 29. As a person who already had an account in an application before the pilot, I want my existing sign-in to keep working exactly as before, so that the pilot does not lock me out.
 30. As an existing account holder, I want not to be forced into a migration I did not ask for, so that nothing I rely on breaks while the pilot is being evaluated.
-31. As an existing account holder who signs in through the Broker instead, I want to be told at the point of choice that this creates a separate account, so that I am not surprised to find my old contributions missing.
+31. As an existing account holder, I want to be told at the point of choice what signing in through the Broker does: I am turned away while my address is held here, and I get a separate account under any other. That way I am not surprised to find my old contributions missing.
 32. As a person new to an application, I want one place to get an account rather than two, so that I am not offered a choice whose consequences I cannot see.
 
 ### A Brokered App maintainer

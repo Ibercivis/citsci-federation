@@ -8,11 +8,11 @@
 #   scripts/sign-in-url.sh geonity      # or openred
 #   open "$(pnpm -s sign-in-url)"       # macOS, straight to the browser
 #
-# This exists because no application has a sign-in button yet (`issue #30`,
-# `issue #31`, `issue #94`), and the Broker's half is worth exercising before
-# they do. The redirect back lands on a path nothing serves yet, so the browser
-# ends on that application's 404 with `code=` in the address bar — which is the
-# Broker having done everything that is its to do. Delete this script once
+# This exists because not every application has a sign-in button yet
+# (`issue #30`), and the Broker's half is worth exercising before they do. The
+# redirect back lands on a page that cannot finish the sign-in, so the browser
+# ends there with `code=` in the address bar — which is the Broker having done
+# everything that is its to do. Delete this script once
 # every application has its own button.
 #
 # Nothing here redeems the code: that needs the client secret, and a URL in an
@@ -31,11 +31,15 @@ set +a
 
 app=${1:-lostatnight}
 case "$app" in
-  lostatnight) client=$LOSTATNIGHT_CLIENT_ID; base=$LOSTATNIGHT_BASE_URL ;;
-  # Geonity and OpenRed register their API as the client: the callback is a
-  # path on the Django side of each, not on the front end.
-  geonity)     client=$GEONITY_CLIENT_ID;     base=$GEONITY_API_BASE_URL ;;
-  openred)     client=$OPENRED_CLIENT_ID;     base=$OPENRED_API_BASE_URL ;;
+  lostatnight) client=$LOSTATNIGHT_CLIENT_ID; callback=$LOSTATNIGHT_BASE_URL/accounts/oidc/callback ;;
+  # Geonity's callback is a page of its web app, which hands the code to its
+  # API (`issue #31`). Reached from here, that page has no sign-in of its own
+  # to finish, so it says the sign-in did not work: the code in the address
+  # bar is still the Broker's half, done.
+  geonity)     client=$GEONITY_CLIENT_ID;     callback=$GEONITY_WEB_BASE_URL/auth/ibercivis/callback ;;
+  # OpenRed registers its API as the client: the callback is a path on the
+  # Django side, not on the front end.
+  openred)     client=$OPENRED_CLIENT_ID;     callback=$OPENRED_API_BASE_URL/accounts/oidc/callback ;;
   *)
     echo "No such application: $app" >&2
     echo "One of: lostatnight, geonity, openred" >&2
@@ -57,7 +61,7 @@ challenge=$(
 # `:` and `/` are legal in a query value, but an address bar is not the only
 # thing that reads this URL, and a redirect URI that survives a copy-paste
 # through a chat window is worth two sed expressions.
-redirect=$(printf %s "$base/accounts/oidc/callback" | sed 's|:|%3A|g; s|/|%2F|g')
+redirect=$(printf %s "$callback" | sed 's|:|%3A|g; s|/|%2F|g')
 
 printf '%s/protocol/openid-connect/auth?client_id=%s&response_type=code&scope=openid&nonce=%s&code_challenge=%s&code_challenge_method=S256&redirect_uri=%s\n' \
   "$BROKER_ISSUER" "$client" "$(openssl rand -hex 8)" "$challenge" "$redirect"
