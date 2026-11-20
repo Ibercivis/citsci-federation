@@ -59,7 +59,7 @@ RUN mvn --batch-mode --quiet package
 # without saying which Broker it is. The same Node as the Mock Identity
 # Source's, which runs TypeScript by stripping the types. MOCK_ISSUER is
 # written into the testing layer here, and a testing build without it fails.
-FROM node:24.22.3-alpine AS realm
+FROM node:26.13.1-alpine AS realm
 ARG BROKER_MODE
 ARG MOCK_ISSUER
 WORKDIR /realm
