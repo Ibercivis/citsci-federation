@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { CLIENT_TYPES, CONFIDENTIAL_CLIENT, PUBLIC_CLIENT } from "./clients.ts";
 import { authenticate, everyPlace, introspect } from "./brokered-app.ts";
 import { PERSON_IDENTIFIER } from "./broker.ts";
+import { AFFIRMING_SOURCE_A, arriving } from "./mock-source.ts";
 
 /*
  * The Person Identifier (ADR-0002) is all a Brokered App ever stores about
@@ -112,11 +113,25 @@ describe.each(CLIENT_TYPES)(
     });
 
     it("receives nothing about how the Person signed in, anywhere", async () => {
-      const { places } = await everyPlace(client);
+      // Through an Identity Source too: only then does Keycloak have an
+      // identity_provider it could hand over.
+      const arrivals = [
+        ["with a Local Credential", {}],
+        [
+          "through an Identity Source",
+          arriving(AFFIRMING_SOURCE_A, "merge-verified"),
+        ],
+      ] as const;
 
-      for (const [place, body] of places) {
-        for (const claim of SOURCE_CLAIMS) {
-          expect(body, `${claim} in ${place}`).not.toHaveProperty(claim);
+      for (const [how, options] of arrivals) {
+        const { places } = await everyPlace(client, options);
+        for (const [place, body] of places) {
+          for (const claim of SOURCE_CLAIMS) {
+            expect(
+              body,
+              `${claim} in ${place}, arriving ${how}`,
+            ).not.toHaveProperty(claim);
+          }
         }
       }
     });
