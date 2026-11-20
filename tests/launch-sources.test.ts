@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { ISSUER } from "./broker.ts";
-import { PUBLIC_CLIENT } from "./clients.ts";
+import { ACCOUNT_CONSOLE } from "./clients.ts";
 import {
   Browser,
   createPkce,
@@ -39,21 +39,24 @@ const LAUNCH_SOURCES = [
 ];
 
 /** Where the Broker sends a Person who pressed this source's button, read off
- *  the redirect and never followed. */
+ *  the redirect and never followed. From the Account Console, which every
+ *  realm has, so these hold on a `production` Broker too. */
 async function requestSentTo(name: string): Promise<URL> {
   const browser = new Browser();
   const { challenge } = createPkce("S256");
   const landing = await follow(
     browser,
-    await requestAuthorization(browser, PUBLIC_CLIENT, {
+    await requestAuthorization(browser, ACCOUNT_CONSOLE, {
       nonce: "launch-sources",
       code_challenge: challenge,
       code_challenge_method: "S256",
     }),
-    PUBLIC_CLIENT,
+    ACCOUNT_CONSOLE,
   );
   if (landing.at !== "a page") {
-    throw new Error("The public client was sent back without a sign-in page.");
+    throw new Error(
+      "The Account Console was sent back without a sign-in page.",
+    );
   }
   const button = linksOn(landing.page).find((link) => link.text.includes(name));
   if (!button) throw new Error(`The sign-in page offers no ${name}.`);
