@@ -457,4 +457,7 @@ second Identity arrives. One source cannot stage either half of it.
 Every credential here is a development constant on purpose. This stack is
 meant to be destroyed and recreated, and a secret worth protecting has no
 business being reproducible from a file in a public repository. Real secrets
-are referenced, never declared.
+are referenced, never declared: the realm names them, `.env.example` lists
+them with no values, and `.env.local`, which git ignores, values them.
+`tests/referenced-secrets.test.ts` fails when a referenced name is valued in
+any tracked file.
