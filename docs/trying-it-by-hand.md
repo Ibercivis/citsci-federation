@@ -7,7 +7,7 @@ the walkthrough to run in front of people. What the composition *is* and how it 
 ## Before you start
 
 Docker, `git`, `curl`. No token, no `/etc/hosts` line, no credential to obtain: everything the
-composition needs is declared in [`.env`](../.env). Node and pnpm are for the shortcuts below and
+composition needs is declared in [`.env`](../.env). Step 9 is the exception, and it is optional. Node and pnpm are for the shortcuts below and
 the test suite; both scripts are POSIX shell and run without them.
 
 Nineteen containers. Docker with less than 8 GB will thrash.
@@ -170,6 +170,22 @@ Nothing in the composition can deliver to a real address.
 http://broker.localhost:8080/admin/, `admin` / `admin`, realm `citsci` → Clients: **lostatnight**,
 **geonity** and **openred**. LostAtNight's and OpenRed's redirect URIs are under `/accounts/oidc/*`.
 Geonity's is the one page of its web app, `/auth/ibercivis/callback`.
+
+### 9. Google and GitHub, with real credentials
+
+The one step that needs something `.env` cannot hold. Copy [`.env.example`](../.env.example) to
+`.env.local`, fill in the client ids and secrets the two applications were registered with, and
+`pnpm broker:reset`. Without them, both buttons send you to Google or GitHub with
+`client_id=not-configured`, and the source refuses you there.
+
+- **Google**: choose **Google** on the Broker's sign-in page and sign in with a real account. You
+  come back with a Person Identifier, as in step 2, and step 4 shows the Person with a Google
+  Identity and a confirmed address.
+- **GitHub, at an address nobody holds**: choose **GitHub** with an account whose primary address
+  no Person has. The Broker holds you on "verify your email" and sends the link to the mail catcher
+  (step 7). You are signed in only after following it, whatever GitHub said about the address.
+- **GitHub, at the address Google used**: the Broker refuses you. It does not read whether GitHub
+  verified the address, so it joins nobody through GitHub (`issue #145`).
 
 ## What does not work yet, on purpose
 
