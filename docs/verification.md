@@ -14,12 +14,13 @@ with itself. `CODING_STANDARDS.md` holds the two rules no tool enforces.
 | Is it formatted? | oxfmt | `pnpm format:check` | `.oxfmtrc.json` |
 | Is it wrong? | oxlint, type-aware | `pnpm lint` | `.oxlintrc.json` |
 | Does it type-check? | `tsc --noEmit` | `pnpm typecheck` | `tsconfig.json` |
+| Does the `gh pr create` hook refuse what it is for, and nothing else? | its own cases | `pnpm require-issue-link:check` | `scripts/require-issue-link.sh` |
 | Is every file's licence declared? | `reuse lint`, from a container | `pnpm reuse:lint` | `REUSE.toml`, ADR-0013 |
 | Does a sign-in actually work? | Vitest against a real Broker | `pnpm broker:up && pnpm test` | `compose.yaml`, ADR-0010 |
 
-`pnpm check` is the first four, and is the only definition of "checked". The licence check is the
+`pnpm check` is the first five, and is the only definition of "checked". The licence check is the
 one that needs Docker running, which makes `pnpm check` need it too; ADR-0013 says why it is worth
-that. Every case in the suite reuses one running Broker instead of starting its own, which is why
+that. The hook's cases need `jq`, which the hook itself has always needed. Every case in the suite reuses one running Broker instead of starting its own, which is why
 they cannot run in parallel.
 
 Lint runs `correctness` and `suspicious` only; `.oxlintrc.json` carries the count that decided it.
