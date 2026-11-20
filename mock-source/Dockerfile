@@ -1,7 +1,7 @@
 # The Mock Identity Source. Built from the repository root, because its
 # one dependency is pinned in the root package.json and lockfile rather than
 # in a second pair of its own that could drift from the first.
-FROM node:24.22.3-alpine
+FROM node:26.13.1-alpine
 WORKDIR /mock-source
 RUN corepack enable
 COPY package.json pnpm-lock.yaml ./
