@@ -174,6 +174,10 @@ moves `HEAD` out from under anyone who is on `federation`.
 - `scripts/check-foreign-vocabulary.sh`, from this repository, run in the external clone, prints
   nothing — or every line it printed has been read and kept deliberately. Give it the pull request
   body as well, before `gh pr create` writes it.
+- `scripts/check-repeated-prose.sh`, the same way, for the **Vocabulary** rule above: our context
+  goes once, and this prints the paragraphs that went twice. Same contract — nothing, or every pair
+  read and kept. It reads the diff alone unless given more; `--help` says how.
+  `docs/notes/2026-11-20-repeated-prose.md` says what it can and cannot see.
 - `git log --oneline origin/main..<topic>` shows only pilot work, so the branch is still a
   descendant of `main` and nothing unrelated rode in. This now holds in every repository, OpenRed
   included: before 12 November 2026 the base of that range there was
