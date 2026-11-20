@@ -164,6 +164,11 @@ citation, not the authority.
   it and fails with `--offline`, so both Maven commands in `broker/Dockerfile` reach Central. Open
   it before deciding whether `mvn package` loses `--quiet` too, or before costing anything that
   assumes a Maven stage resolves once.
+- **Repeated prose** (`2026-11-20-repeated-prose.md`) — seven consecutive words in two places is
+  where prose written twice starts; shorter than that is the domain's own vocabulary.
+  `scripts/check-repeated-prose.sh` prints those pairs, and is a reminder rather than a gate. Open
+  it before moving the threshold, or before putting the check in CI, which the measurement argues
+  against.
 - **Conditional subflows and the brokered `email_verified`**
   (`conditional-subflow-and-brokered-email-verified.md`) — no condition Keycloak ships can see what
   an arriving Identity's source said about its address, which is why `broker/verified-email/` is our
