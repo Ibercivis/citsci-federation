@@ -70,7 +70,7 @@ if [[ $dependabot == false && ! ${title}${body} =~ (#[0-9]+|No\ ticket) ]]; then
 fi
 
 if ((${#failures[@]} > 0)); then
-  printf 'The title and body are what land in `main`, and they do not:\n\n' >&2
+  printf 'The title and body are what land in main, and they do not:\n\n' >&2
   printf '  - %s\n' "${failures[@]}" >&2
   printf '\nEdit the pull request; this check re-runs on an edit.\n' >&2
   exit 1

@@ -67,5 +67,7 @@ not being read beside its caller.
 
 Issue [#102](https://github.com/Ibercivis/citsci-federation/issues/102) holds
 why the directory is flat: the split by environment that was refused and why it
-discriminated nothing, the one grouping that would earn a directory of its own,
-and the non-recursive `shellcheck` glob that would have to move with it.
+discriminated nothing, and the one grouping that would earn a directory of its
+own. The third reason it gives is spent: the `shellcheck` glob a nested
+directory would have emptied is gone, because CI asks git for every tracked
+script instead of globbing one directory.
