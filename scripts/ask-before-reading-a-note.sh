@@ -54,7 +54,8 @@ jq -n '{
     permissionDecisionReason: (
       "This is a research note: dated evidence for one topic, long on purpose. "
       + "AGENTS.md carries its verdict in the Research notes index, which is the "
-      + "cheaper read. Approve this only if that note’s topic is the task at hand."
+      + "cheaper read. Approve this only if the topic of that note is the task "
+      + "at hand."
     )
   }
 }'

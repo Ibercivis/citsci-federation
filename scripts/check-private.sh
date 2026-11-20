@@ -22,7 +22,7 @@ cat >&2 <<EOF
 
   Refusing this commit: it stages internal notes.
 
-$(printf '    %s\n' $staged)
+$(printf '%s\n' "$staged" | sed 's/^/    /')
 
   docs/private/ is its own private repository and must never enter this one,
   which is public. Unstage it and commit there instead:

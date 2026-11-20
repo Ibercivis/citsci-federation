@@ -34,7 +34,7 @@ independently — which is why its own `7.0.x` is not a claim about ours.
 | the editor | oxlint as you type, if you took the extension `.vscode/extensions.json` recommends | not a gate, and not trying to be |
 | `pre-commit` | format + lint, staged files only, **checks and never fixes** | `--no-verify` |
 | `pre-push` | `pnpm check`; the suite too, when a Broker is up | `--no-verify` |
-| CI | `pnpm check`, then its own Broker and the suite | none for the developer |
+| CI | `pnpm check`, `actionlint` and `shellcheck`; then its own Broker and the suite | none for the developer |
 | the merge button | the ruleset on `main`: a pull request, one approving review, `check`, `tests`, `base` and `pr` green | three named people, on a pull request only |
 
 CI cannot be skipped the way a hook can, and since 13 November 2026 **a red CI stops the merge**: a
@@ -63,6 +63,13 @@ a defect: an `ignore` suppresses a *security* pull request as well as a schedule
 advisory arrives as an alert to read against ADR-0004, never as a pull request that moves the pin by
 itself.
 
+`actionlint` and `shellcheck` run in CI and nowhere else. That is not an exception to the rule in
+`CODING_STANDARDS.md`, which is about the code: what these two read is CI's own configuration —
+`.github/workflows/`, and the scripts the git hooks run. Neither tool publishes a GitHub Action, so
+each runs from its author's image pinned by digest, the way `pnpm reuse:lint` already runs `reuse`.
+They are steps of the `check` job rather than a job of their own, because the ruleset names the
+contexts it requires and only an administrator can add one. `ci.yaml` carries the rest.
+
 Which row a new check joins is not a free choice, and the rule is not here: `CODING_STANDARDS.md`
 holds it, along with the reason the suite and `pr` are the two that stay out of `pnpm check`.
 
@@ -75,7 +82,6 @@ A row marked *Fired* is decided and not yet built, and carries an issue.
 |---|---|---|---|
 | **Module boundaries** — features must not import each other ([#43](https://github.com/Ibercivis/citsci-federation/issues/43)) | dependency-cruiser 18.7.2, the only maintained ESLint-free option | A second, non-Rust pass. `pre-push` and CI only | A `src/` with more than one feature in it |
 | ↳ or, for free ([#45](https://github.com/Ibercivis/citsci-federation/issues/45) watches it) | oxlint `import/no-restricted-paths` | Five lines of `.oxlintrc.json` | [oxc#13789](https://github.com/oxc-project/oxc/issues/13789). Watch that one issue; it is the whole dependency |
-| **Our own CI and scripts** — nothing checks either ([#47](https://github.com/Ibercivis/citsci-federation/issues/47)) | `actionlint` for the workflow, `shellcheck` for `scripts/*.sh`, both in CI only | Two steps. Neither has a first-party npm build, which is why they stay out of `pnpm check` | Fired. The ticket carries the route and why the other two were refused |
 | **Dead code** — unused files and exports | knip 6.45 | A third pass, but it is the thing that actually rots in a feature-sliced tree | When nobody would notice an orphan |
 | **Mutation testing** | StrykerJS 10.1.1 + `@stryker-mutator/vitest-runner` | The runner forces `threads: true` and one worker, and ignores `coverageAnalysis`. Cost is controlled by `incremental: true`, **not** by `--since`, which does not exist in StrykerJS | One module of pure logic worth really trusting. Never on `pre-commit`, never on every PR |
 | **Faster hooks** | hk 2.12.0 — per-file read/write locks, so fixers can run concurrently; ships `ox-lint` and `oxfmt` builtins | Config is Pkl, and it is not on npm. Only published benchmark is the vendor's: ~1.2× ahead of lefthook on a small commit | When `pre-commit` stops feeling instant |
