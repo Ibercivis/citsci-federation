@@ -19,7 +19,7 @@
 # was whatever Central called latest that morning (`issue #114`).
 ARG DEPENDENCY_PLUGIN=org.apache.maven.plugins:maven-dependency-plugin:3.7.0
 
-FROM maven:3.9.16-eclipse-temurin-21 AS mapper
+FROM maven:3.9-eclipse-temurin-26 AS mapper
 ARG DEPENDENCY_PLUGIN
 WORKDIR /build
 # The pom first, so that `go-offline` resolves this module's dependencies
@@ -45,7 +45,7 @@ RUN mvn --batch-mode "${DEPENDENCY_PLUGIN}:go-offline"
 COPY person-identifier/src ./src
 RUN mvn --batch-mode --quiet package
 
-FROM maven:3.9.16-eclipse-temurin-21 AS condition
+FROM maven:3.9-eclipse-temurin-26 AS condition
 ARG DEPENDENCY_PLUGIN
 WORKDIR /build
 COPY verified-email/pom.xml .
