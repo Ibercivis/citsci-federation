@@ -28,16 +28,37 @@ registration *link* closes while the registration *endpoint* stays alive for as 
 depends on it. The honest consequence is that exposure falls on the web and not on mobile, and this ADR
 promises exactly that much and no more. Mobile closes when mobile enters scope.
 
-A public client with PKCE is already the shape a Flutter client needs, so **nothing in the Broker has to
-change** to serve one — only a redirect URI for the application's own scheme. That is why working the
-integration out once, in a single application, is worth doing even though mobile is out of scope: the
-cost is a redirect URI and an example, and the value is a reference for the teams who will not be in the
-room when they need it.
+**Which client shape a native app takes depends on its backend, not on being mobile.** An application
+whose API already authenticates its users, as Geonity's does, uses the split flow: the client starts the
+code flow with PKCE and receives the code, and the API redeems it with the secret, so the client is
+confidential and the secret never reaches the phone. An application with no such backend uses a public
+client with PKCE. The Broker serves both already, so **nothing in it has to change** for a Flutter
+client: only a redirect URI for the application's own scheme. With the split flow the application pays
+one more thing: its API redeems with one redirect URI, and has to accept the mobile one as well. That is
+why working the integration out once, in a single application, is worth doing even though mobile is out
+of scope: the cost is a redirect URI and an example, and the value is a reference for the teams who will
+not be in the room when they need it.
 
 Local sign-in with no sunset is an acceptable **end state**, not a temporary concession. If the
 migration never happens, two ways in coexist forever and nothing is broken — which is also what makes
 it safe to defer the migration decision for as long as it takes.
 
-A person who already had an account and signs in through the Broker instead gets a **separate**
-Person, with none of their old contributions. The applications have to say so at the point of choice,
-because the alternative is somebody discovering it afterwards.
+A person who already had an account and signs in through the Broker instead is **refused** wherever
+the application holds one account per address, as `django-allauth` does by default and Geonity keeps.
+Nobody ends up with a second, empty account they take for their own. Only someone arriving with an
+address the application does not hold gets a separate Person, with none of their old contributions. The
+applications have to say so at the point of choice, in the order it happens, because the alternative is
+somebody discovering it afterwards.
+
+Making the separate account anyway means storing it without its address or under a mangled one. Both
+break password reset and mail, and both are hand-written code in the application (ADR-0016).
+
+The cost: someone with an existing account cannot use the Broker at that application until migration
+links the two.
+
+## Amended on 2026-11-20
+
+Geonity's integration (issue #31) rewrote two paragraphs above. The mobile paragraph assumed a public
+client; which shape applies depends on whether the application's API redeems the code, and Geonity's
+does. An existing account holder signing in through the Broker got a separate Person; where the
+application holds one account per address, they are refused.

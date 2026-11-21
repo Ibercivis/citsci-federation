@@ -155,13 +155,19 @@ describe("the Broker takes a confidential Brokered App as the libraries write it
   // Without this case, tightening the realm would lock out every Django
   // Brokered App and nothing here would say so until somebody tried to
   // integrate one. That is how `issue #104` was found.
+  //
+  // Geonity (`issue #31`) sends this request too: its web app asks for the
+  // code and its API redeems it, but the Broker cannot tell the halves apart.
   it("authenticates a code flow that carries no nonce", async () => {
     const result = await attempt(CONFIDENTIAL_CLIENT, {
       pkce: createPkce("S256"),
       nonce: null,
+      params: { scope: "openid email" },
     });
 
     expect(result).toMatchObject({ outcome: "authenticated" });
+    if (result.outcome !== "authenticated") return;
+    expect(result.claims).toHaveProperty("email");
   });
 });
 
