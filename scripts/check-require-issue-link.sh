@@ -192,6 +192,26 @@ allowed "a head named by the short flag" "$(checkout_on issue-116)" \
 allowed "a head on a fork" "$(checkout_on issue-116)" \
   'gh pr create --head someone:issue-38 --title "[#38] A thing" --body "Part of #38"'
 
+# --- The cross-repository spelling of a reference ----------------------------
+#
+# A pull request in an application repository cannot say `Part of #52`: a bare
+# number there points at that repository's own issue #52. The hook read only
+# the bare form and refused the line `docs/agents/external-repos.md` requires
+# instead (issue #150). The spelling is valid for a pull request here too,
+# which is what these cases are.
+
+allowed "a closing keyword in the cross-repository spelling" "$(checkout_on issue-52)" \
+  'gh pr create --title "A thing" --body "It does a thing. Closes Ibercivis/citsci-federation#52"'
+
+allowed "part of, in the cross-repository spelling" "$(checkout_on issue-52)" \
+  'gh pr create --title "A thing" --body "It does a thing. Part of Ibercivis/citsci-federation#52"'
+
+# Another repository's issue #52 is not ours, and a body that advances it has
+# said nothing about what becomes of ours.
+refused "a cross-reference to another repository's issue" "$(checkout_on issue-52)" \
+  'gh pr create --title "A thing" --body "It does a thing. Part of other/repo#52"' \
+  "is on \`issue-52\`"
+
 # --- What it lets through ----------------------------------------------------
 
 allowed "a body that says what becomes of the issue" "$(checkout_on issue-52)" \
