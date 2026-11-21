@@ -10,7 +10,13 @@ Text addressed outside the project — a mail to a supplier, a message to a part
 the language that person reads. The repo keeps the English record, noting at the top when the
 original went out in another language.
 
-Translate any Spanish you find in a document you are already editing, as part of the change.
+**A GitHub comment's language is its author's** — an issue thread, a pull request thread, a review
+reply. This team talks in Spanish, so write one in the user's language and translate nothing. What
+the thread settles then goes into the body or the ADR that owns it, in English. A comment in a
+source file is no part of this: that file is English, identifiers and prose alike.
+
+Translate any Spanish you find in a document or a source file you are already editing, as part of
+the change. A GitHub comment is neither, and keeps the language it was written in.
 
 ## What goes in a document
 
