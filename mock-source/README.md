@@ -43,16 +43,33 @@ agree, because making them disagree is what this source is for.
 | `takeover-unverified` | `takeover@mock.test`, **unverified** | the same |
 | `merge-verified` | `merge@mock.test`, verified | the same |
 | `untrusted-verified` | `untrusted@mock.test`, verified | the same |
+| `lockout-untrusted` | `lockout@mock.test`, verified | the same |
+| `lockout-verified` | `lockout@mock.test`, verified | the same |
+| `squat-untrusted` | `squat@mock.test`, verified | the same |
+| `squat-verified` | `squat@mock.test`, verified | the same |
+
+The `-untrusted` half of each pair is the same claim read through `mock`, whose
+word on an address the Broker does not take, so it arrives affirmed by nobody.
+`untrusted-verified` is the same idea for the join; these two pairs are for
+arriving *first* (`issue #88`).
 | `renamed-verified` | `renamed@mock.test`, verified | the same |
 
 **An address per case.** The suite drives one Broker and a Person outlives the
 case that made them, so two cases at the same address decide each other's
-outcome — and no case can see which of them ran first. `takeover`, `merge` and
-`untrusted` belong to `tests/verified-email-join.test.ts`, and `renamed` to
+outcome — and no case can see which of them ran first. `takeover`, `merge`,
+`untrusted`, `lockout` and `squat` belong to
+`tests/verified-email-join.test.ts`, and `renamed` to
 `tests/local-credential.test.ts`.
 
 A case that needs another combination adds an Identity here. The source's
 answer cannot yet change between two sign-ins; #25 needs that, and adds it.
+
+**An Identity the Broker has never met** is the one thing this table cannot
+give: a case about a Person's first arrival runs once against a Broker, and the
+second run signs in as the Person the first one made. So `mock.json` also
+declares a `newcomer` — any username under its prefix, at an address of its own
+name that nobody affirmed, with `{username}` in the claims filled in by the
+server. `tests/mock-source.ts` mints one per run.
 
 ## Keep the ID tokens free of names
 

@@ -4,6 +4,12 @@
     "id": "citsci-broker",
     "secret": "mock-source-development-secret"
   },
+  "newcomer": {
+    "usernamePrefix": "newcomer-",
+    "password": "mock",
+    "idToken": { "email": "{username}@mock.test", "email_verified": false },
+    "userinfo": { "email": "{username}@mock.test", "email_verified": false }
+  },
   "identities": {
     "mock-verified": {
       "password": "mock",
@@ -39,6 +45,26 @@
       "password": "mock",
       "idToken": { "email": "untrusted@mock.test", "email_verified": true },
       "userinfo": { "email": "untrusted@mock.test", "email_verified": true }
+    },
+    "lockout-untrusted": {
+      "password": "mock",
+      "idToken": { "email": "lockout@mock.test", "email_verified": true },
+      "userinfo": { "email": "lockout@mock.test", "email_verified": true }
+    },
+    "lockout-verified": {
+      "password": "mock",
+      "idToken": { "email": "lockout@mock.test", "email_verified": true },
+      "userinfo": { "email": "lockout@mock.test", "email_verified": true }
+    },
+    "squat-untrusted": {
+      "password": "mock",
+      "idToken": { "email": "squat@mock.test", "email_verified": true },
+      "userinfo": { "email": "squat@mock.test", "email_verified": true }
+    },
+    "squat-verified": {
+      "password": "mock",
+      "idToken": { "email": "squat@mock.test", "email_verified": true },
+      "userinfo": { "email": "squat@mock.test", "email_verified": true }
     },
     "renamed-verified": {
       "password": "mock",

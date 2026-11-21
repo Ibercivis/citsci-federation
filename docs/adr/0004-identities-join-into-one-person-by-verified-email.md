@@ -70,13 +70,42 @@ Person — this source is trusted on addresses, and it said it verified this one
 cannot drift away from the create path. Whatever it cannot establish counts as unverified.
 
 An Identity it refuses is **turned away** today, told the service it came from did not confirm the
-address. They should instead be asked for an address and sent a confirmation link, which gets them a
-Person of their own rather than a closed door. That needs SMTP (#26); `idp-email-verification` then
-takes the refusal's place in the same subflow.
+address. That refusal fires only where a Person already holds the address, which is the one case the
+rule below does not cover, and it is still a closed door: `idp-email-verification` is what should
+take its place in that subflow, so that whoever reads the mailbox joins (`issue #149`).
 
-**The mirror of the rule is unenforced, so the accepted risk is larger than the one written above.**
-Nothing asks whether the Person being joined holds that address verified, so the takeover still works
-by arriving *first*: create a Person at somebody else's address through a source that affirms nothing
-— ORCID affirms none — and the Broker joins their genuine verified arrival to it. This ADR accepted
-"whoever controls a mailbox can become that Person". Today no mailbox is needed. `issue #88` owns it,
-blocked by #26.
+## An Identity does not bring an address its source did not affirm
+
+Refusing the join is not enough on its own, because the takeover works by arriving **first**: take an
+address at a source that affirms nothing — ORCID affirms none — and the Broker hands the genuine
+holder's verified arrival to the Person you made. Nothing asks whether the Person being joined holds
+that address affirmed, and no configuration can: `idp-create-user-if-unique` matches on the address
+alone, exactly as `idp-auto-link` does.
+
+Refusing the verified arrival instead was rejected. It trades a takeover for a lockout of the same
+victim, who could then never sign in at their own address. Giving that arrival a Person of its own
+needs two Persons at one address, which the realm forbids by signing in with email.
+
+So what is refused is the **address**, not the Person: an Identity whose source did not affirm its
+address does not keep it. The Person created for it holds none, and the Broker asks for one and
+confirms it by mail — the sentence at the top of this record, applied where a Person is made and not
+only where one is joined. Every Person's address is then affirmed by their Identity Source or by the
+Broker, which is what makes the address safe to join on at all.
+
+**The address is removed rather than never written, and that is the weaker form of the claim.** This
+realm signs in with the address as the username (ADR-0005), so Keycloak reads the username off the
+address and will not create a Person at all without one. So the Person is created holding the
+address and `broker/verified-email/` takes it off them in the same request, before anything is
+committed: no Person who *exists* holds an address nobody affirmed, which is what the join needs,
+rather than no Person ever being created at one.
+`docs/notes/2026-11-20-withholding-an-unaffirmed-address.md` has that measurement and the rest.
+
+**What the rule costs a Person**, which is a price rather than a defect: an Identity whose source
+affirms no address at all is asked for one twice in a single sign-in, once to give Keycloak a
+username and once to have it confirmed. ORCID is that shape (`issue #19`).
+
+**The Broker's own registration is the half still open.** It creates the Person at the typed address
+before the mail is answered, so a registration nobody confirmed still absorbs a later verified
+arrival at it. That is not a takeover — the Person it makes holds no credential and no way to set one
+without the mailbox — and `issue #148` owns it. Until it is closed, nothing may assume that the
+address a Person holds was affirmed by anybody.

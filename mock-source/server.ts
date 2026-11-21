@@ -23,6 +23,33 @@ type Identity =
 
 const IDENTITIES: Record<string, Identity> = declaration.identities;
 
+/**
+ * An Identity this source has never served before: any username under the
+ * declared prefix, at an address of its own name, affirmed by nobody.
+ *
+ * It exists because a case about what happens on a Person's **first** arrival
+ * can only run once against a Broker, and `mock.json` cannot declare a new
+ * username per run. The source is still only saying what it was told: the
+ * declaration names the prefix, the password and the claims, and `{username}`
+ * in them is filled in with the one that signed in.
+ */
+function identityNamed(username: string): Identity | undefined {
+  const declared = IDENTITIES[username];
+  if (declared) return declared;
+  if (!username.startsWith(declaration.newcomer.usernamePrefix)) {
+    return undefined;
+  }
+  const at = (claims: Identity["idToken"]): Identity["idToken"] => ({
+    ...claims,
+    email: claims.email.replaceAll("{username}", username),
+  });
+  return {
+    password: declaration.newcomer.password,
+    idToken: at(declaration.newcomer.idToken),
+    userinfo: at(declaration.newcomer.userinfo),
+  };
+}
+
 /** What each scope releases. The grant below gives every one of them, so the
  *  scopes are spelled here once. */
 const CLAIMS = { openid: ["sub"], email: ["email", "email_verified"] };
@@ -93,7 +120,7 @@ const provider = new Provider(ISSUER, {
   // token carries what is declared for it and the two can be compared.
   conformIdTokenClaims: false,
   findAccount: (_ctx, sub) => {
-    const identity = IDENTITIES[sub];
+    const identity = identityNamed(sub);
     if (!identity) return undefined;
     return {
       accountId: sub,
@@ -168,7 +195,7 @@ const server = createServer((req, res) => {
     }
     const form = await formBody(req);
     const username = form.get("username") ?? "";
-    if (IDENTITIES[username]?.password !== form.get("password")) {
+    if (identityNamed(username)?.password !== form.get("password")) {
       res.writeHead(401, { "content-type": "text/html; charset=utf-8" });
       res.end(
         signInPage(uid, "No mock Identity with that username and password."),

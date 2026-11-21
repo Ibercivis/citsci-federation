@@ -106,9 +106,11 @@ The Keycloak version is **pinned** and does not move on its own. A security
 property of the design rests on how this version treats a verified email
 address (ADR-0004), and the extension that enforces it —
 [`broker/verified-email/`](broker/verified-email/), which refuses to join an
-address nobody verified — reads that flag out of an undocumented field. An
-upgrade that moved the field would break the refusal silently, so an upgrade
-is something `pnpm test` has to clear first.
+address nobody verified and takes one off a Person whose source did not affirm
+it — reads that flag out of an undocumented field. An upgrade that moved the
+field would break both silently, and break them towards keeping an address
+rather than refusing one, so an upgrade is something `pnpm test` has to clear
+first.
 
 ## How this is tested
 

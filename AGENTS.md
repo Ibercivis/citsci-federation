@@ -174,6 +174,12 @@ citation, not the authority.
   an arriving Identity's source said about its address, which is why `broker/verified-email/` is our
   code. Open it before reaching for `conditional-user-attribute`, or to cost anything else that
   needs the brokered context inside a first broker login flow.
+- **Withholding an address nobody affirmed**
+  (`2026-11-20-withholding-an-unaffirmed-address.md`) — Keycloak will not create a Person without an
+  address, because the realm reads the username off it, so the address is taken off the Person in the
+  request that created them and removed from the brokered context as well. Open it before touching
+  the create path of the first broker login flow, or before assuming a Person's address was affirmed
+  by somebody — `issue #148` is why that assumption is not available yet.
 
 ### Internal notes
 

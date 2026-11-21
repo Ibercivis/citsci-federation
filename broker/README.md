@@ -1,7 +1,7 @@
 # The Broker's OpenID provider
 
 Keycloak at a pinned version with two extensions of ours — the Person
-Identifier mapper and the Verified Email condition — behind the reverse proxy
+Identifier mapper and the Verified Email rules — behind the reverse proxy
 `compose.yaml` puts in front of it, and configured entirely by the declaration
 in `realm/`. `Dockerfile` builds all three into one image.
 
@@ -319,13 +319,18 @@ The base names its mail server as `${SMTP_HOST}` and `${SMTP_PORT}`. In
 `testing` they point at the mail catcher `compose.yaml` runs, whose inbox is
 <http://localhost:8026/>.
 
-### The first broker login flow, and the one rule in it
+### The first broker login flow, and the two rules in it
 
 The first time somebody arrives from an Identity Source, the Broker either
 creates a Person for them or decides they are a Person it already knows. It
 decides that by email address, and it asks them nothing (ADR-0004). The
 built-in flow asks them to confirm the link instead, which is why this realm
 declares a flow of its own.
+
+Both rules in it answer one question — did the source this Identity came from
+affirm the address it arrived with? — and both read the answer from the same
+condition in `verified-email/`. The first refuses the join. The second refuses
+the **address**, on the path where there is nobody to join.
 
 **The risk this flow exists to handle.** `idp-auto-link`, the authenticator
 that performs the join, compares the address and nothing else. It never checks
@@ -356,12 +361,42 @@ the only step that decides differently is the join. Declaring these flows does
 not cost the realm its built-in ones — the note says what that was measured
 against.
 
-**`deny-access-authenticator` is temporary.** Turning somebody away keeps the
-address from being taken over, but it also leaves them with no way in. They
-should be asked for an address and sent a confirmation link, which gets them an
-account of their own. The Broker can send mail now; putting
-`idp-email-verification` in that slot is issue #88, and the condition stays as
-it is.
+**`deny-access-authenticator` is still temporary**, and now serves one case
+rather than all of them: an unverified arrival at an address a Person already
+holds. Everything arriving at an address nobody holds is covered by the rule
+below instead. `idp-email-verification` should take this slot, so that whoever
+reads the mailbox joins and nobody meets a closed door — `issue #149`.
+
+### The rule on the create path: no Person keeps an address nobody affirmed
+
+The refusal above guards the join. The takeover it refuses also works by
+arriving **first** — take an address at a source that affirms nothing, and the
+Broker hands the genuine holder's verified arrival to the Person you made
+(issue #88) — and that path never reaches `idp-auto-link`, so the subflow above
+never sees it.
+
+So a second conditional subflow sits at the **end** of the flow, with the same
+condition and `citsci-withhold-unverified-email` from `verified-email/` behind
+it: the address comes off the Person who was just created, and Keycloak's
+`UPDATE_EMAIL` asks them for one it confirms by mail itself.
+
+Three things about that shape are decisions rather than taste:
+
+- **`UPDATE_EMAIL` is what the Person is asked for.** It asks for an address
+  and writes nothing until the link is followed, which `VERIFY_EMAIL` cannot
+  do: that one confirms an address the Person is already holding, and holding
+  it is the thing to prevent.
+- **At the end of the flow, not inside the create path.**
+  `idp-create-user-if-unique` has to stay `ALTERNATIVE` beside the join
+  subflow, so there is nowhere inside the create path to put this. The rule
+  runs after the decision instead, and reads which way it went.
+- **It reaches only a Person the flow has just made.** An address belonging to
+  a Person who was already there is not an arrival's to take away.
+
+Why the address is taken off rather than never written, what the removal costs,
+and the half still open — the Broker's own registration, `issue #148` — are in
+ADR-0004 and in
+`docs/notes/2026-11-20-withholding-an-unaffirmed-address.md`.
 
 ### The Mock Identity Source
 
