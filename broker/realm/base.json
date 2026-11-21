@@ -274,6 +274,13 @@
           "priority": 20,
           "authenticatorFlow": true,
           "userSetupAllowed": false
+        },
+        {
+          "flowAlias": "citsci withhold an unverified address",
+          "requirement": "CONDITIONAL",
+          "priority": 30,
+          "authenticatorFlow": true,
+          "userSetupAllowed": false
         }
       ]
     },
@@ -296,6 +303,29 @@
           "requirement": "ALTERNATIVE",
           "priority": 20,
           "authenticatorFlow": true,
+          "userSetupAllowed": false
+        }
+      ]
+    },
+    {
+      "alias": "citsci withhold an unverified address",
+      "description": "The Person just created holds an address their source did not affirm. It is taken off them and the Broker asks for one it confirms itself.",
+      "providerId": "basic-flow",
+      "topLevel": false,
+      "builtIn": false,
+      "authenticationExecutions": [
+        {
+          "authenticator": "citsci-condition-unverified-email",
+          "requirement": "REQUIRED",
+          "priority": 10,
+          "authenticatorFlow": false,
+          "userSetupAllowed": false
+        },
+        {
+          "authenticator": "citsci-withhold-unverified-email",
+          "requirement": "REQUIRED",
+          "priority": 20,
+          "authenticatorFlow": false,
           "userSetupAllowed": false
         }
       ]

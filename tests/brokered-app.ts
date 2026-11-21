@@ -228,10 +228,14 @@ export interface Arrival {
   through?: string;
   username: string;
   password: string;
+  /** The address this Person gives the Broker when it asks them for one,
+   *  which it then confirms by mail (ADR-0004). A Person who brought none
+   *  cannot answer that question, and the dialogue stops on it. */
+  address?: string;
 }
 
 type Question =
-  | { asks: "sign-in" | "consent"; form: HtmlForm }
+  | { asks: "sign-in" | "consent" | "give-an-address"; form: HtmlForm }
   | { asks: "choose-source"; href: string };
 
 /**
@@ -265,6 +269,20 @@ function question(page: Page, arrival: Arrival): Question | null {
   // A form offering to accept is the Broker asking a Person to consent.
   const consent = forms.find((form) => "accept" in form.controls);
   if (consent) return { asks: "consent", form: consent };
+  // A form asking for an address and for nothing else about the Person is the
+  // Broker asking for one of its own, which it then confirms by mail: it holds
+  // none for this Person, because the source they arrived from affirmed none.
+  // A form that asks for a name as well is the Broker showing them what their
+  // source sent, which is a different question and not this one's answer.
+  //
+  // Only a Person who brought an address to give can answer, so a case that
+  // offered none stops here.
+  const address = forms.find(
+    (form) => "email" in form.fields && !("firstName" in form.fields),
+  );
+  if (address && arrival.address) {
+    return { asks: "give-an-address", form: address };
+  }
   return null;
 }
 
@@ -396,9 +414,10 @@ type Dialogue =
   | { outcome: "stuck"; complaint: string; asked: Asked[] };
 
 /** The most questions a dialogue asks here: choosing an Identity Source,
- *  signing in at it, and consenting. A dialogue that asks one more is one this
- *  stand-in app cannot drive, and it says so rather than looping. */
-const MOST_QUESTIONS_ASKED = 3;
+ *  signing in at it, giving the Broker an address when it holds none, and
+ *  consenting. A dialogue that asks one more is one this stand-in app cannot
+ *  drive, and it says so rather than looping. */
+const MOST_QUESTIONS_ASKED = 4;
 
 /** Who signs in when a case does not say: the realm's one Local Credential. */
 const DEMO_ARRIVAL: Arrival = {
@@ -420,6 +439,11 @@ function answer(
       { username: arrival.username, password: arrival.password },
       "login",
     );
+  }
+  if (asking.asks === "give-an-address") {
+    // Typed in, with nothing pressed: the form's one button carries no name,
+    // so a browser sends the fields alone.
+    return submit(browser, asking.form, { email: arrival.address ?? "" });
   }
   // Pressing Yes, and only Yes. The same form offers No, and a Person who
   // pressed both granted nothing.

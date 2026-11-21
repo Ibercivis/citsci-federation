@@ -1,7 +1,7 @@
 # The Broker's OpenID provider: Keycloak at a pinned version, plus the two
 # extensions this repository adds to it — the Person Identifier mapper, and the
-# condition that refuses to join an address nobody verified — and the realm it
-# imports.
+# rules that keep an address nobody verified from reaching a Person — and the
+# realm it imports.
 #
 # Both are compiled here rather than committed: the repository carries no
 # binaries, and building inside a Maven container means nobody needs Java on
@@ -68,11 +68,13 @@ RUN node derive.ts "$BROKER_MODE" "$MOCK_ISSUER" > realm-citsci.json
 
 # The version is pinned and does not move on its own. Two reasons:
 #
-# 1. `verified-email/` reads the `email_verified` the identity provider sent
-#    out of a Keycloak field that no public API promises. A version that
-#    renames or moves it leaves our condition finding nothing — and finding
-#    nothing means "nobody verified this address", so the Broker would start
-#    refusing sign-ins it ought to allow. It breaks safe, and quietly.
+# 1. `verified-email/` reads the `email_verified` the identity provider sent,
+#    and the note saying a Person was just registered, out of Keycloak fields
+#    that no public API promises. A version that renamed or moved the first
+#    leaves our rules finding nothing — "nobody verified this address", so the
+#    Broker refuses sign-ins it ought to allow, which breaks safe and quietly.
+#    The second breaks the other way: finding nothing there means no address is
+#    taken off anybody.
 # 2. Whether an address counts as verified is decided by this version, and a
 #    security property of the design rests on that answer (ADR-0004).
 #

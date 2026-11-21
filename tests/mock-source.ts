@@ -9,6 +9,7 @@
  * (`./realm.ts`). Neither fact is written twice, so neither can drift.
  */
 
+import { randomUUID } from "node:crypto";
 import { createRemoteJWKSet, jwtVerify } from "jose";
 import {
   type Discovery,
@@ -84,6 +85,26 @@ export const arriving = (through: string, identity: MockIdentity) => ({
     through,
     username: identity,
     password: MOCK_IDENTITIES[identity].password,
+  },
+  pkce: createPkce("S256"),
+});
+
+/**
+ * An arrival from an Identity the Broker has never met, at an address of its
+ * own that nobody affirmed, giving `address` when the Broker asks for one.
+ *
+ * A case about what the Broker does on a Person's **first** arrival can run
+ * only once against the same Broker, so it cannot use a declared Identity: the
+ * second run signs in as the Person the first one made. `mock.json` declares
+ * what this source says about a newcomer, and `mock-source/server.ts` fills in
+ * the username.
+ */
+export const aNewcomerArriving = (through: string, address: string) => ({
+  as: {
+    through,
+    username: `${declaration.newcomer.usernamePrefix}${randomUUID()}`,
+    password: declaration.newcomer.password,
+    address,
   },
   pkce: createPkce("S256"),
 });

@@ -1,12 +1,21 @@
+import { randomUUID } from "node:crypto";
 import { describe, expect, it } from "vitest";
 import { CONFIDENTIAL_CLIENT } from "./clients.ts";
-import { type Attempt, attempt, authenticate } from "./brokered-app.ts";
+import {
+  type Attempt,
+  Browser,
+  attempt,
+  authenticate,
+  follow,
+} from "./brokered-app.ts";
 import { PERSON_IDENTIFIER } from "./broker.ts";
+import { linkMailedTo, mailCountTo } from "./mailbox.ts";
 import {
   AFFIRMING_SOURCE_A,
   AFFIRMING_SOURCE_B,
   SOURCE_AFFIRMING_NOTHING,
   type MockIdentity,
+  aNewcomerArriving,
   arriving,
 } from "./mock-source.ts";
 import { declaredRefusal } from "./realm.ts";
@@ -35,6 +44,11 @@ const whatThePersonWasTold = (result: Attempt): string =>
   result.outcome === "refused-in-the-browser"
     ? result.complaint
     : `no page: the flow ended as ${result.outcome}`;
+
+/** Somebody taking an address at a source whose word on one the Broker does not
+ *  take. Whatever the Broker gives them, it must not be the address. */
+const takeTheAddressFirst = (identity: MockIdentity) =>
+  attempt(CONFIDENTIAL_CLIENT, arriving(SOURCE_AFFIRMING_NOTHING, identity));
 
 /** A Person whose address was verified — the only kind the Broker will join an
  *  Identity to. */
@@ -132,5 +146,82 @@ describe("a Verified Email joins the Person that holds it", () => {
       "choose-source",
       "sign-in",
     ]);
+  });
+});
+
+/**
+ * The mirror of the rule above, and why the rule is applied before the Broker
+ * decides whether to create a Person or join one.
+ *
+ * Guarding the join alone leaves the same takeover working by arriving
+ * *first*: take an address at a source that affirms nothing, and the genuine
+ * holder's verified arrival lands on the Person you made (issue #88). Nothing in
+ * Keycloak asks whether the Person being joined holds that address affirmed —
+ * `idp-create-user-if-unique` matches on the address alone, exactly as
+ * `idp-auto-link` does.
+ */
+describe("a Person is never created at an address nobody affirmed", () => {
+  it("lets the holder of an address in, whoever arrived at it first", async () => {
+    // Refusing the verified arrival instead would trade a takeover for a
+    // lockout of the same victim: seed the Person, and the real holder of the
+    // address can never sign in. That is not a fix, so this case is what any
+    // enforcement has to survive.
+    await takeTheAddressFirst("lockout-untrusted");
+
+    const genuine = await personArrivingWithAVerifiedEmail("lockout-verified");
+
+    expect(genuine).toMatch(PERSON_IDENTIFIER);
+  });
+
+  it("does not hand the holder of an address to whoever arrived at it first", async () => {
+    await takeTheAddressFirst("squat-untrusted");
+
+    const genuine = await personArrivingWithAVerifiedEmail("squat-verified");
+
+    // Back through the source that affirmed nothing. Whatever the Broker gave
+    // that arrival, it is not the Person who holds the address.
+    const squatter = await takeTheAddressFirst("squat-untrusted");
+
+    expect(JSON.stringify(squatter)).not.toContain(genuine);
+    // And left where the rule leaves them: on a Person of their own, with the
+    // Broker asking for an address it will confirm itself. Without this, a
+    // retry that broke for any other reason would satisfy the line above.
+    expect(whatThePersonWasTold(squatter)).toContain("Asks for field: email");
+  });
+
+  it("gives a Person of their own to an arrival its source affirmed nothing about, once the Broker's mail is answered", async () => {
+    // The other half of the rule, and what makes it something other than a
+    // closed door: the Broker asks for an address and confirms it itself
+    // (ADR-0004). Without this case the rule above would be satisfied by
+    // turning every such Person away, which is what it used to do.
+    const address = `${randomUUID()}@newcomer.test`;
+    const browser = new Browser();
+    const newcomer = aNewcomerArriving(SOURCE_AFFIRMING_NOTHING, address);
+
+    const waiting = await attempt(CONFIDENTIAL_CLIENT, {
+      browser,
+      ...newcomer,
+    });
+
+    // Asked, not taken. The dialogue stops on a page of the Broker's, so no
+    // Brokered App has heard of this Person, and the address is nobody's
+    // until the mailbox answers.
+    expect(waiting.outcome).toBe("refused-in-the-browser");
+    expect(await mailCountTo(address)).toBe(1);
+
+    // Answered, in the browser the Broker asked from.
+    await follow(
+      browser,
+      await browser.get(await linkMailedTo(address)),
+      CONFIDENTIAL_CLIENT,
+    );
+
+    // And now they are a Person like any other: the sign-in that could not
+    // finish a moment ago reaches a Brokered App.
+    const { claims } = await authenticate(CONFIDENTIAL_CLIENT, {
+      as: newcomer.as,
+    });
+
+    expect(claims.sub).toMatch(PERSON_IDENTIFIER);
   });
 });
