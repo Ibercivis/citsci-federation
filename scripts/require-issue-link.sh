@@ -141,14 +141,25 @@ $(cat "$body_file")"
   fi
 fi
 
+# How the issue may be spelled after the keyword. The bare `#52` is this
+# repository's own. `Ibercivis/citsci-federation#52` is GitHub's
+# cross-repository form, and it is the only spelling available in an
+# application repository, where a bare `#52` points at that repository's own
+# issue #52 — which is why `docs/agents/external-repos.md` requires it there.
+#
+# The prefix is optional rather than alternative, and it is ours alone:
+# `other/repo#52` has said nothing about our issue #52 and goes on being
+# refused.
+reference="(Ibercivis/citsci-federation)?#$issue([^0-9]|$)"
+
 # GitHub's own keywords, and then ours for the deliberate opt-out.
 if printf '%s' "$text" |
-  grep -Eqi "(clos(e|es|ed)|fix(es|ed)?|resolv(e|es|ed))[[:space:]]+#$issue([^0-9]|$)"; then
+  grep -Eqi "(clos(e|es|ed)|fix(es|ed)?|resolv(e|es|ed))[[:space:]]+$reference"; then
   exit 0
 fi
 
 if printf '%s' "$text" |
-  grep -Eqi "(part of|refs|references)[[:space:]]+#$issue([^0-9]|$)"; then
+  grep -Eqi "(part of|refs|references)[[:space:]]+$reference"; then
   exit 0
 fi
 
