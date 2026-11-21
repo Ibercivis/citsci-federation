@@ -1,9 +1,9 @@
 # The documentation is written in English
 
 Everything this repository keeps as a record is written in **English**: ADRs, the glossary, specs,
-the agent docs, learning artifacts, issues, pull requests and commit messages. The gitignored
-operational notes under `docs/private/` are held to the same rule, so that a conclusion can move
-from them into a public document without being rewritten first.
+the agent docs, learning artifacts, issue and pull request bodies, and commit messages. The
+gitignored operational notes under `docs/private/` are held to the same rule, so that a conclusion
+can move from them into a public document without being rewritten first.
 
 The reason is accountability. The record has to be readable by everyone who may be asked to answer
 for it — project partners, reviewers of the European-funded work, auditors, a developer who joins
@@ -17,6 +17,19 @@ This governs **documents, not conversations**. Meetings, calls and correspondenc
 language the people in them share — a mail to a Spanish supplier is written in Spanish. What the
 repository keeps is the English record of them, and where a document records something that was sent
 in another language, it says so at the top.
+
+A **comment on GitHub** is a conversation: on an issue, on a pull request, a reply to a review. Its
+language is its author's, and this team talks in Spanish. Nothing there is translated into English,
+by a person or by an agent.
+
+A **comment in the code** is not one of those, and stays English. It is read with the code it sits
+in, by the same people, and a Spanish line in the middle of a file whose identifiers and prose are
+English is the translation seam this decision exists to avoid.
+
+The record is what holds. When a comment settles something, the conclusion moves into the body, the
+ADR or the spec that owns it, **in English**. That is where the accountability above is owed, and
+the only place it was ever owed: nobody is asked to answer for a thread, so a thread only has to be
+readable by the people in it.
 
 ## Considered Options
 
@@ -34,6 +47,9 @@ in another language, it says so at the top.
   mistranslations would do real damage.
 
 ## Consequences
+
+The comment threads written before this are not wrong in retrospect, and nobody goes back over
+them. What was wrong was the wording, which never distinguished a body from the thread on it.
 
 The Veridas consultation (`docs/notes/veridas-technical-questions.md`) was sent in Spanish before
 this decision. It is kept as the English translation of what was sent, with a note saying so: the
