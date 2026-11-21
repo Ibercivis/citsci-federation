@@ -174,6 +174,10 @@ citation, not the authority.
   an arriving Identity's source said about its address, which is why `broker/verified-email/` is our
   code. Open it before reaching for `conditional-user-attribute`, or to cost anything else that
   needs the brokered context inside a first broker login flow.
+- **PostGIS 18 over an older cluster** (`2026-11-21-postgis-18-needs-a-wiped-volume.md`) — an 18
+  image adopts nothing a 16 left behind, whichever way the volume is mounted, so promoting a major
+  is paid for in the data. Open it before `issue #39` settles Geonity's version, or before you mount
+  a database volume here.
 
 ### Internal notes
 
