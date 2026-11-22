@@ -48,7 +48,8 @@ touched, and the way those applications are deployed for real still does not cha
 declares is how an application runs **in the pilot**, which is not that application's infrastructure.
 The distinction is load-bearing: the day this composition becomes the way something is actually
 deployed, it has to meet standards it does not meet yet, and that is a decision to take knowingly
-rather than to drift into.
+rather than to drift into. Which versions the declared services run — the application's or ours —
+is ADR-0017, which qualifies this one where it does.
 
 **Every service is reached through the proxy by hostname, not by a port on localhost.** That is the
 same parity-of-form argument the spec already makes for the Broker, extended to the applications:
