@@ -42,36 +42,76 @@ updates:
         patterns:
           - "*"
 
-  # The images in `compose.yaml`: Caddy and PostgreSQL.
+  # The images in `compose.yaml`: Caddy, the Broker's PostgreSQL, the mail
+  # catcher. All three are ours under ADR-0017, so they are kept current.
   #
   # `docker-compose`, not `docker`: the `docker` ecosystem reads Dockerfiles
   # and Kubernetes manifests only, so pointed here it reads nothing in this
   # file.
   #
-  # Ungrouped, unlike the two above: a PostgreSQL major arrives with a data
-  # directory to migrate, and that is not read in a batch with Caddy.
+  # `compose.apps.yaml` is excluded, and this entry was the only thing reading
+  # it. Three of the four images it pins mirror an application's own compose
+  # file, and ADR-0017 says a mirrored pin moves when they move it. Dependabot
+  # cannot tell the two kinds apart, so it proposed raising them: PR #131 and
+  # PR #132 landed in `main` with every check green, and `issue #140` undid
+  # both — #132 after it stopped Geonity's database from starting on any clone
+  # that had run the composition before.
+  #
+  # Per-file, because `ignore` by `dependency-name` cannot reach this. One
+  # entry at `/` read both compose files, and `postgres` is pinned in each:
+  # LostAtNight's `:16` there, the Broker's `:18-alpine` here. One name would
+  # silence both. Excluding the file leaves this entry one file to read, which
+  # also retires the shadowing `issue #139` asked about.
+  #
+  # What it costs: the two `node:26-bookworm-slim` pins behind Geonity's Vite
+  # dev servers are ours, and nothing watches them now. A major still shows up
+  # through the entry below, on a different tag line, and these two are then
+  # changed by hand.
+  #
+  # The pattern is a bare filename, which the `*.lock` example in GitHub's
+  # options reference supports. `dependabot-core` carries a report of that
+  # matching nothing where a `**/` prefix worked, so Dependabot's own run log
+  # is what confirms this one bites.
   - package-ecosystem: docker-compose
     directory: "/"
     schedule:
       interval: weekly
+    exclude-paths:
+      - "compose.apps.yaml"
+    groups:
+      compose:
+        patterns:
+          - "*"
+        # Minor and patch only, so a major still arrives alone: a PostgreSQL
+        # major carries a data directory to migrate, and that is not read in a
+        # batch with Caddy. Leaving the entry ungrouped bought the same thing
+        # and charged one pull request per image for it.
+        update-types:
+          - minor
+          - patch
 
   # The base images in `broker/Dockerfile` and `mock-source/Dockerfile`.
   #
   # `directories`, because this ecosystem reads the folder it is pointed at and
   # not the tree beneath it: one entry at `/` would read neither file.
-  #
-  # Ungrouped, like the rule above: a base-image major is read on its own. That
-  # costs one duplicate, because both files pin the same `node` and a
-  # multi-directory entry bumps it once per directory. `group-by:
-  # dependency-name` would collapse the two, but GitHub documents it for npm
-  # and says nothing about this ecosystem, so it stays out until something
-  # confirms it reaches here.
   - package-ecosystem: docker
     directories:
       - "/broker"
       - "/mock-source"
     schedule:
       interval: weekly
+    groups:
+      base-images:
+        patterns:
+          - "*"
+        # Minor and patch only, for the reason the entry above gives: a
+        # base-image major is read on its own. One group spans both
+        # directories, so a minor or a patch of the `node` both files pin
+        # arrives once rather than once per directory. A major still arrives
+        # twice, which is what `group-by: dependency-name` would have been for.
+        update-types:
+          - minor
+          - patch
     # Keycloak does not move on its own, and this rule is what holds it. The
     # `FROM` line in `broker/Dockerfile` says why; the bump is read against
     # ADR-0004 and made by hand.
