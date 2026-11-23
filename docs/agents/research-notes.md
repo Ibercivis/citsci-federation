@@ -60,3 +60,11 @@ note only when one of its branches is yours.
   trusted source's userinfo omits `email_verified`, Keycloak would store the Person verified, and only
   our condition stops it. Open it before moving the Keycloak pin, or before reading a Person's
   `emailVerified` to decide anything.
+- **What agent-facing docs practice says**
+  (`2026-11-23-what-agent-facing-docs-practice-says.md`) — nine projects adopted a blocking prose
+  gate and dropped or disabled it, and none was found that kept one; the stated reasons are the
+  machinery, almost never the rules. A volume budget on a standing file is settled practice because a
+  loader truncates, and a budget per change exists nowhere. Nobody has written a Diátaxis for agents,
+  and no tool in common use finds a passage written twice across two files. Open it before making
+  `scripts/check-repeated-prose.sh` a gate, or when `issue #165` decides which surface owns *why* —
+  not to support a claim about length, which the one paper on it does not.
