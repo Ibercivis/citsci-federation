@@ -52,8 +52,8 @@ const whatThePersonWasTold = (result: Attempt): string =>
 const takeTheAddressFirst = (identity: MockIdentity) =>
   attempt(CONFIDENTIAL_CLIENT, arriving(SOURCE_AFFIRMING_NOTHING, identity));
 
-/** The same, but through a source the Broker trusts. Its userinfo gives an
- *  address and says nothing about verifying it. */
+/** The same, but through a source the Broker trusts — one whose userinfo
+ *  hands over an address with no verdict attached. */
 const takeTheAddressSilently = (identity: MockIdentity) =>
   attempt(CONFIDENTIAL_CLIENT, arriving(AFFIRMING_SOURCE_B, identity));
 

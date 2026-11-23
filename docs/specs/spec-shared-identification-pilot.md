@@ -348,15 +348,14 @@ The only open question is therefore one for the directors, and it is a product q
 acceptable that a researcher arriving through ORCID has to type and confirm an email address, a step
 nobody arriving through Google has?** That can be answered without waiting for anything.
 
-**A reported security advisory, checked.** With `trustEmail` on and userinfo in use, Keycloak took
-the address from userinfo but `email_verified` from the ID token. Two different addresses, one
-verdict: a source could verify one address and hand over another. Real on earlier versions, gone on
-the one pinned here. So the pin has a floor, and `broker/Dockerfile` carries it beside the version
-it constrains. The seam 1 negative test holds the join against the advisory whether or not a later
-version reopens it. One rule follows, and holds whatever the version does: Keycloak's own record of
-whether an address was verified is not the authority here. Nothing may read it to decide anything.
-Our condition decides. `docs/notes/2026-11-23-trust-email-and-userinfo.md` has the shape that makes
-that record wrong.
+**A reported security advisory, checked.** The research reported a Keycloak advisory that would let
+an unverified arrival pass as a verified one. Real on earlier versions, gone on the one pinned here.
+So the pin has a floor, and `broker/Dockerfile` carries it beside the version it constrains. The
+seam 1 negative test holds the join against the advisory whether or not a later version reopens it.
+One rule follows, and holds whatever the version does: Keycloak's own record of whether an address
+was verified is not the authority here. Nothing may read it to decide anything. Our condition
+decides. `docs/notes/2026-11-23-trust-email-and-userinfo.md` has the shape that makes that record
+wrong.
 
 **A research item that must precede any federation work.** Before specs or tickets are written for the
 federation phase, understand the real options and their costs: carrying a Keycloak fork, writing a
