@@ -181,6 +181,9 @@ type SourceDiscovery = Pick<
  */
 export async function signInAtMock(
   identity: MockIdentity,
+  /** What the Broker asks the source for: what `mock` asks for, unless the
+   *  case is about a source that asks for more. */
+  scope = "openid email",
 ): Promise<MockAnswer> {
   const discovery = (await (
     await fetch(`${MOCK_SOURCE.issuer}/.well-known/openid-configuration`)
@@ -193,7 +196,7 @@ export async function signInAtMock(
     client_id: client.id,
     redirect_uri: client.redirectUri,
     response_type: "code",
-    scope: "openid email",
+    scope,
     state: "mock",
     nonce: "mock",
     code_challenge: pkce.challenge,
