@@ -236,6 +236,20 @@ describe("refusing a flow graph Keycloak would import anyway", () => {
     );
   });
 
+  it("refuses a description longer than the column that holds it", () => {
+    // What this one costs to find out the other way: Keycloak takes the realm
+    // whole or not at all, so a description one character too long is a server
+    // that exits with the column's type and no field name, and a suite where
+    // every case fails for the same unrelated reason.
+    const wordy = declaringFlows([
+      { ...TOP_LEVEL_FLOW, description: "a".repeat(256) },
+    ]);
+
+    expect(() => derive("production", wordy)).toThrow(
+      'Flow "citsci first broker login" has a description of 256 characters, and the column holds 255.',
+    );
+  });
+
   it("derives the declaration this repository holds", () => {
     expect(() => derive("production", readDeclaration())).not.toThrow();
   });

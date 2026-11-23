@@ -24,6 +24,7 @@ interface Execution {
 
 interface Flow {
   alias: string;
+  description?: string;
   topLevel?: boolean;
   authenticationExecutions?: Execution[];
 }
@@ -31,6 +32,14 @@ interface Flow {
 /** An execution that declares no `priority` is a 0 like any other 0, so a
  *  missing one ties rather than being excused. */
 const priorityOf = (execution: Execution) => execution.priority ?? 0;
+
+/**
+ * What `authentication_flow.description` holds. Keycloak's own schema, not a
+ * choice of ours, and nothing in the import says which field was too long:
+ * the server logs the column type and exits, so the realm is simply absent
+ * and every case fails at once.
+ */
+const LONGEST_DESCRIPTION = 255;
 
 /**
  * What every flow in the realm has to be true of, refused where the build can
@@ -41,12 +50,23 @@ const priorityOf = (execution: Execution) => execution.priority ?? 0;
  * - every declared flow is reached from exactly one execution, or is
  *   `topLevel`, because one nothing reaches is dead and reads as live;
  * - no two executions of one flow share a `priority`, because their order is
- *   then whatever Keycloak makes of a tie.
+ *   then whatever Keycloak makes of a tie;
+ * - no description is longer than the column it is stored in, because the
+ *   import takes the whole realm or none of it.
  */
 export function checkFlows(realm: Realm): void {
   const flows = declaredFlows(realm);
   const declared = new Set(flows.map((flow) => flow.alias));
   const reached = new Map<string, number>();
+
+  for (const flow of flows) {
+    const description = flow.description ?? "";
+    if (description.length > LONGEST_DESCRIPTION) {
+      throw new Error(
+        `Flow "${flow.alias}" has a description of ${description.length} characters, and the column holds ${LONGEST_DESCRIPTION}. Keycloak refuses the whole realm, saying only "value too long for type character varying(255)".`,
+      );
+    }
+  }
 
   for (const flow of flows) {
     const priorities = new Set<number>();
