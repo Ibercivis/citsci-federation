@@ -23,6 +23,12 @@
 # is the composition: which applications are in it, what each one is told, and
 # the datastores each one needs.
 #
+# **Most of the pins below are not ours to move** (ADR-0017). A datastore that
+# stands in for one the application runs carries that application's own tag,
+# and the comment on it names the file it mirrors: it moves when they move it,
+# never ahead. Every pin here with no such comment was chosen in this
+# repository, and ADR-0017 says which of those are free to raise.
+#
 # **Nothing here publishes a port.** Every service is reached through the proxy
 # by the hostname `.env` declares for it, so cookies, redirect URIs and CORS
 # take the shape they will have in production. The databases are not published
@@ -168,6 +174,7 @@ services:
   # server-rendered site, so LOSTATNIGHT_BASE_URL is the whole application.
 
   lostatnight-db:
+    # Mirrors apps/gdalface/docker-compose.local.yml.
     image: postgres:16
     environment:
       POSTGRES_DB: gdalface
@@ -182,6 +189,7 @@ services:
       retries: 20
 
   lostatnight-redis:
+    # Mirrors apps/gdalface/docker-compose.local.yml.
     image: redis:7-alpine
     healthcheck: *redis-check
 
@@ -246,7 +254,8 @@ services:
   geonity-db:
     # PostGIS, from the same maintainer's multi-arch build rather than
     # postgis/postgis, which is amd64 only — the application's own compose file
-    # says so and this follows it.
+    # says so and this follows it. Mirrors apps/citsci-api/compose.yaml, tag
+    # included.
     image: imresamu/postgis:16-3.5
     environment:
       POSTGRES_DB: citsci
@@ -261,6 +270,7 @@ services:
       retries: 20
 
   geonity-redis:
+    # Mirrors apps/citsci-api/compose.yaml.
     image: redis:7-alpine
     healthcheck: *redis-check
 
@@ -400,6 +410,10 @@ services:
     # PostgreSQL with PostGIS *and* h3, built by the application: its raw SQL
     # calls a server-side h3 function, and no postgis/postgis tag can have
     # h3-pg added to it. Its LOCAL-DEV.md carries the measurement.
+    #
+    # Built rather than pinned, and the recipe is ours: the base it builds on is
+    # pinned on OpenRed's `federation` branch, with nothing upstream to mirror
+    # (ADR-0017).
     build: ./apps/openred/local_dev/postgis-h3
     environment:
       POSTGRES_DB: openred_db
@@ -414,6 +428,7 @@ services:
       retries: 20
 
   openred-redis:
+    # Mirrors apps/openred/compose.yaml.
     image: redis:7-alpine
     healthcheck: *redis-check
 

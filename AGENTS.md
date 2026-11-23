@@ -137,6 +137,11 @@ locally. Record what is blank and move on.
 `docs/local-development.md` is the index, and the order that worked for the ones already built.
 Read it before building the next one; an application missing from it has no local environment.
 
+### Dependency pins
+
+**A version an application pins is not ours to raise** — not in the Composition, not on a
+`federation` branch. ADR-0017 has the three kinds of pin and who may move each.
+
 ### Research notes
 
 `docs/notes/` holds dated evidence, never decisions. Each note opens with its verdict and a "read on
@@ -182,8 +187,8 @@ citation, not the authority.
   needs the brokered context inside a first broker login flow.
 - **PostGIS 18 over an older cluster** (`2026-11-21-postgis-18-needs-a-wiped-volume.md`) — an 18
   image adopts nothing a 16 left behind, whichever way the volume is mounted, so promoting a major
-  is paid for in the data. Open it before `issue #39` settles Geonity's version, or before you mount
-  a database volume here.
+  is paid for in the data. ADR-0017 settled Geonity's version by leaving it to Geonity. Open the
+  note before mounting a database volume here, or to cost a major that application does ask for.
 
 ### Internal notes
 
