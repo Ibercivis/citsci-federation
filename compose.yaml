@@ -227,7 +227,7 @@ services:
   # swallow every confirmation.
   mailpit:
     profiles: [testing]
-    image: axllent/mailpit:v1.33.1
+    image: axllent/mailpit:v1.34.0
     environment:
       MP_SMTP_AUTH_ACCEPT_ANY: "1"
       MP_SMTP_AUTH_ALLOW_INSECURE: "1"
