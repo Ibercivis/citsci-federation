@@ -13,10 +13,15 @@
  * with nothing in front of them. What comes out is never written into this
  * repository, so there is nothing to edit by hand. `broker/README.md` says
  * which layer an addition belongs in.
+ *
+ * It is also the last place a broken realm can be stopped cheaply, which is
+ * what the refusals here and in `flows.ts` are for: afterwards the only reader
+ * is Keycloak's import, which says nothing about most of them.
  */
 
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { checkFlows } from "./flows.ts";
 
 export type Realm = Record<string, unknown>;
 
@@ -57,6 +62,7 @@ export function derive(
       realm[field] = appendLayer(field, realm[field] ?? [], entries);
     }
   }
+  checkFlows(realm);
   realm["components"] = userProfileComponent(declaration.userProfile);
   return realm;
 }

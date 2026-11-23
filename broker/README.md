@@ -337,6 +337,27 @@ affirm the address it arrived with? — and both read the answer from the same
 condition in `verified-email/`. The first refuses the join. The second refuses
 the **address**, on the path where there is nobody to join.
 
+```text
+citsci first broker login
+  idp-review-profile                             REQUIRED
+  citsci create a Person, or join one            REQUIRED
+    idp-create-user-if-unique                    ALTERNATIVE
+    citsci join the Person holding this address  ALTERNATIVE
+      citsci refuse an unverified address        CONDITIONAL
+        citsci-condition-unverified-email        REQUIRED
+        deny-access-authenticator                REQUIRED
+      idp-auto-link                              REQUIRED
+  citsci withhold an unverified address          CONDITIONAL
+    citsci-condition-unverified-email            REQUIRED
+    citsci-withhold-unverified-email             REQUIRED
+```
+
+`realm/base.json` declares that as a flat list of flows joined by `flowAlias`
+and ordered by `priority`, so the block above is a reconstruction. It is not a
+hand-drawn one: `renderFlowTree` in `realm/flows.ts` makes it, and a case in
+`tests/realm-derivation.test.ts` fails when the two disagree, with the render
+on one side of the diff.
+
 **The risk this flow exists to handle.** `idp-auto-link`, the authenticator
 that performs the join, compares the address and nothing else. It never checks
 whether the arriving source said it had verified that address. On its own it
