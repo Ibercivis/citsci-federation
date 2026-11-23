@@ -431,8 +431,9 @@ later decides its own `trustEmail` (ADR-0004).
   ignores the `verified` flag in GitHub's `/user/emails` list. With
   `trustEmail` on, an address the GitHub account never confirmed would be
   marked confirmed, and its real owner would later arrive into that Person.
-  Off, a new GitHub Person confirms the address by mail first, and a GitHub
-  arrival at an address somebody holds is refused like any unverified one.
+  Off, nothing through GitHub joins silently: a new GitHub Person confirms the
+  address by mail first, and a GitHub arrival at an address somebody holds is
+  mailed at that address and joins them once the link is followed.
   Reading GitHub's flag ourselves is issue #145.
 - **Their credentials are `${NAME:not-configured}`.** The value comes from
   outside the repository (`.env.example` names them). A name nobody valued
