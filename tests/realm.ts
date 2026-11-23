@@ -41,6 +41,9 @@ export interface DeclaredSource {
   /** Whether the Broker takes this source's word on an address. One decision
    *  about one operator, so the realm sets it per source and never globally. */
   affirmsAddresses: boolean;
+  /** The scope the Broker asks this source for. What a source puts in its ID
+   *  token depends on it, so a case about that reads it from here. */
+  asksFor: string;
 }
 
 /**
@@ -59,9 +62,18 @@ export function declaredSource(alias: string): DeclaredSource {
         "alias moved, or the source was never added to the realm.",
     );
   }
+  const asksFor = provider.config?.defaultScope;
+  if (!asksFor) {
+    throw new Error(
+      `The realm has the Broker ask ${alias} for no particular scope, so ` +
+        "what that source sends is Keycloak's default rather than this " +
+        "stack's decision.",
+    );
+  }
   return {
     name: provider.displayName,
     affirmsAddresses: provider.trustEmail,
+    asksFor,
   };
 }
 

@@ -13,6 +13,7 @@ import {
   AFFIRMING_SOURCE_A,
   AFFIRMING_SOURCE_B,
   MOCK_SOURCES,
+  SCOPE_ASKING_FOR_NAMES,
   type MockIdentity,
   arriving,
   signInAtMock,
@@ -200,7 +201,7 @@ describe("the Mock Identity Source says what it is told to", () => {
     // names would let every case pass as the named one.
     const named = await signInAtMock(
       "advisory-split-named",
-      "openid email profile",
+      SCOPE_ASKING_FOR_NAMES,
     );
     const unnamed = await signInAtMock("advisory-split-named");
 
