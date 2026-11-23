@@ -66,6 +66,13 @@ function sourceNamed(alias: string, affirming: boolean): string {
 export const AFFIRMING_SOURCE_A = sourceNamed("mock-affirming-a", true);
 export const AFFIRMING_SOURCE_B = sourceNamed("mock-affirming-b", true);
 
+/** The one source that also asks for `profile`: `broker/README.md` says
+ *  why. */
+export const AFFIRMING_SOURCE_ASKING_FOR_NAMES = sourceNamed(
+  "mock-affirming-named",
+  true,
+);
+
 /** The source that affirms nothing: every address arriving through it is
  *  unverified, whatever its claims say. */
 export const SOURCE_AFFIRMING_NOTHING = sourceNamed("mock", false);
