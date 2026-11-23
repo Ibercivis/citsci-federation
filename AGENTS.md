@@ -195,6 +195,12 @@ citation, not the authority.
   image adopts nothing a 16 left behind, whichever way the volume is mounted, so promoting a major
   is paid for in the data. ADR-0017 settled Geonity's version by leaving it to Geonity. Open the
   note before mounting a database volume here, or to cost a major that application does ask for.
+- **Adding a Local Credential to a brokered Person**
+  (`2026-11-23-adding-a-local-credential-to-a-brokered-person.md`) — recovery mints one: "Forgot
+  password?" sets a password where the Person held none, and the Identity link and the Person
+  Identifier both survive. The Account Console offers the same from the Person's own session. A
+  Person holding no address is reachable by neither. Open it before ADR-0005 says what a Person's
+  second Identity is, or to cost closing either path — `issue #124` holds the decision.
 
 ### Internal notes
 
