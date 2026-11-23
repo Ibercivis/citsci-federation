@@ -63,22 +63,22 @@ export const AFFIRMING_SOURCE_A = sourceNamed("mock-affirming-a", true);
 export const AFFIRMING_SOURCE_B = sourceNamed("mock-affirming-b", true);
 
 /**
- * The one source the Broker asks for `profile` as well: `broker/README.md`
- * says why.
+ * The one source the Broker also asks for `profile`. `broker/README.md` says
+ * why.
  *
- * Guarded like `sourceNamed`, and for the same reason. An arrival with names
- * in its ID token is only a different case from one without while the realm
- * asks this source for `profile`. Take that scope out and the pair would both
- * still pass, asserting the same thing twice, so the realm is held to it here
- * rather than in a comment.
+ * Guarded, like `sourceNamed`. The guard matters: names in the ID token are
+ * the only thing that makes `advisory-split-named` a different case from
+ * `advisory-split`, and names arrive only if the realm asks for `profile`.
+ * Take the scope out and both cases still pass, asserting the same thing
+ * twice. So the realm is held to it here, not in a comment.
  */
 function sourceAskingForNames(alias: string): string {
   const name = sourceNamed(alias, true);
   const { asksFor } = declaredSource(alias);
   if (!asksFor.includes("profile")) {
     throw new Error(
-      `The realm has the Broker ask ${alias} for ${asksFor}, and this case ` +
-        "asked for the source that is also asked for names.",
+      `This case wants the source the Broker asks for names. The realm ` +
+        `asks ${alias} for ${asksFor}, which brings no names.`,
     );
   }
   return name;
@@ -89,8 +89,7 @@ export const AFFIRMING_SOURCE_ASKING_FOR_NAMES = sourceAskingForNames(
 );
 
 /** What the Broker asks that source for. A case at the source's own seam
- *  sends this rather than spelling a scope, so what it asks for cannot drift
- *  from what the Broker asks for. */
+ *  sends this instead of spelling a scope, so the two cannot drift apart. */
 export const SCOPE_ASKING_FOR_NAMES = declaredSource(
   "mock-affirming-named",
 ).asksFor;
@@ -178,9 +177,8 @@ type SourceDiscovery = Pick<
  */
 export async function signInAtMock(
   identity: MockIdentity,
-  /** What the Broker asks the source for, read from the realm: what most
-   *  sources are asked for, unless the case is about the one asked for
-   *  more. */
+  /** What the Broker asks the source for, read from the realm. Defaults to
+   *  what most sources get; pass `SCOPE_ASKING_FOR_NAMES` for the other. */
   scope = declaredSource("mock").asksFor,
 ): Promise<MockAnswer> {
   const discovery = (await (
