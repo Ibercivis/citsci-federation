@@ -58,6 +58,24 @@ email … already exists. Please login to account management to link the account
 `attempted()`. It has to stay `ALTERNATIVE`, beside the join subflow, which is why the rule sits at
 the end of the top-level flow and reads `BROKER_REGISTERED_NEW_USER` to know which path it is on.
 
+## What is left behind by an arrival that never answers the mail
+
+Measured 23 November 2026, same Broker: two arrivals of one Identity through the source that affirms
+nothing, the mail left unanswered between them.
+
+After the first, one Person — username set to their own id, no address, `email_verified` false,
+`UPDATE_EMAIL` pending — and `federated_identity` **written**, pointing at the source's username.
+`IdentityBrokerService.afterFirstBrokerLogin` writes that link in the request after the flow whether
+or not the flow finished, which is the fact the whole question turns on.
+
+The second arrival therefore reaches that same Person: same id, same `created_timestamp`, no second
+row, and Keycloak puts them back on the `UPDATE_EMAIL` page. So an abandoned arrival accumulates
+nothing, and the Person is reachable by the only thing that identifies them — their Identity Source.
+No token either way.
+
+Keycloak also rate-limits its own resend — "You must wait 29 seconds before resending" — so the
+second arrival mailed nothing. Worth knowing before costing anything that counts the Broker's mails.
+
 ## The half this does not close: the Broker's own registration
 
 A Local Credential registration creates the Person at the typed address before the mail is answered,
