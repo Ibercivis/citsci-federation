@@ -42,8 +42,7 @@
 #
 # What is NOT here yet, and the ticket that brings it:
 #
-#   * Geonity's Flutter client and OpenRed's React front end and Flutter client.
-#     `openred.localhost` is reserved for the React one.
+#   * Geonity's Flutter client and OpenRed's Flutter client.
 #   * The schedulers and the queues that carry no mail. The composition exists
 #     to try signing in; a recurring weather job is scenery.
 
@@ -314,12 +313,13 @@ services:
   # The web app: a Vite dev server, so the application is the checkout and the
   # image is a plain Node.
   #
-  # So this is the one place in the composition where a service's recipe is
-  # here rather than on the application's `federation` branch, which is what
-  # ADR-0009 asks for. It is not an omission to correct: these two front ends
-  # need no recipe — a stock Node, the checkout and `--host` is all either one
-  # is, and Vite answers to a `.localhost` hostname without being configured
-  # to. `docs/local-development.md` records that, from `issue #93`.
+  # So the three front ends in this composition — this one, the admin panel
+  # below and OpenRed's React app — are where a service's recipe is here rather
+  # than on the application's `federation` branch, which is what ADR-0009 asks
+  # for. It is not an omission to correct: none of them needs a recipe, because
+  # a stock Node image and the checkout is all any of them is, and no dev
+  # server among them has to be configured to answer to a `.localhost`
+  # hostname. `docs/local-development.md` records why, per application.
   #
   # `npm install` rather than `npm ci` — this
   # repository's lock file is out of step with its package.json, which its
@@ -402,9 +402,9 @@ services:
 
   # ----------------------------------------------------------- OpenRed
   #
-  # Ibercivis/OpenRed: the API. Its React front end is not in the composition
-  # yet — its `federation` branch carries no local environment — and
-  # `openred.localhost` is held for it.
+  # Ibercivis/OpenRed is the API; Ibercivis/openred-react is the React front
+  # end in front of it, at `openred.localhost`. Two addresses, one client: the
+  # API is the part that holds the secret.
 
   openred-db:
     # PostgreSQL with PostGIS *and* h3, built by the application: its raw SQL
@@ -445,8 +445,7 @@ services:
       DEBUG: "True"
       ALLOWED_HOSTS: "*"
       CSRF_TRUSTED_ORIGINS_EXTRA: ${OPENRED_API_BASE_URL:?declare it in .env}
-      # Where its mail links send a Person: the address `.env` reserves for the
-      # front end that is not in the composition yet (`issue #96`).
+      # Where its mail links send a Person: the front end's own address.
       FRONTEND_URL: ${OPENRED_WEB_BASE_URL:?declare it in .env}
       BROKER_CLIENT_ID: ${OPENRED_CLIENT_ID:?declare it in .env}
       BROKER_CLIENT_SECRET: ${OPENRED_CLIENT_SECRET:?declare it in .env}
@@ -502,6 +501,77 @@ services:
       openred-redis:
         condition: service_healthy
 
+  # The React front end: a `react-scripts` dev server, the third of the three
+  # above. webpack's host check never comes into it, for a reason that is this
+  # application's rather than ours — `docs/local-development.md` carries it,
+  # and `tests/openred-web.test.ts` is what notices if it stops holding.
+  #
+  # `npm ci` rather than Geonity's `npm install --no-package-lock`: this
+  # repository's lock file *is* in step with its package.json, and `npm ci`
+  # writes to neither — so the install is reproducible and the checkout stays
+  # clean, which scripts/checkout-apps.sh needs in order to keep updating it.
+  # It runs only when the volume is empty, because `npm ci` deletes
+  # node_modules before it installs and would otherwise do that on every
+  # start.
+  openred-web:
+    image: node:24-bookworm-slim
+    working_dir: /app
+    volumes:
+      - ./apps/openred-react:/app
+      - openred-web-node-modules:/app/node_modules
+    command: sh -c "([ -x node_modules/.bin/react-scripts ] || npm ci --no-audit --no-fund) && exec npm start"
+    environment:
+      # The API through this dev server's own proxy (`src/setupProxy.js`), not
+      # from the browser, as in production behind nginx — and what the front
+      # end's own relative baseURL expects in development.
+      #
+      # This value trips that file's own guard on every start: it warns, in
+      # four lines, that the target "is not a local address" and that writes go
+      # there. The guard tests for `localhost`, and the composition reaches the
+      # API by its service name. The address it names is this composition's,
+      # and the warning in `pnpm apps:logs openred-web` means nothing else.
+      OPENRED_API_PROXY: http://openred-api:8000
+      # The port this application's own .env.example chooses, kept so that the
+      # composition and its LOCAL-DEV.md say the same number.
+      PORT: "3010"
+      # Every interface, not the loopback: the container's loopback is reachable
+      # from nothing, the proxy included.
+      HOST: 0.0.0.0
+      # `react-scripts start` opens a browser on the machine it runs on, which
+      # in a container is a dependency that is not installed.
+      BROWSER: none
+      # Mapbox needs an access token nobody has locally. The map area stays
+      # blank and every other screen works, which is deliberate
+      # (`docs/local-development.md`).
+      REACT_APP_MAPBOX_TOKEN: ""
+      # Correctly shaped and not a real client id. `GoogleOAuthProvider` is
+      # mounted unconditionally and `LoginPage` calls `useGoogleLogin` as a
+      # top-level hook, so an empty value throws from Google's own script
+      # before /login renders — taking email-and-password sign-in down with it,
+      # which is the one way in this application has until its integration
+      # (`issue #30`). The value is the placeholder that application's
+      # .env.example ships, for the same reason. Pressing the Google button
+      # fails, and locally it could not work anyway.
+      REACT_APP_GOOGLE_CLIENT_ID: 000000000000-localdevplaceholder.apps.googleusercontent.com
+      # REACT_APP_API_URL is deliberately absent. It is read at build time
+      # only: `npm start` serves a relative baseURL and the proxy above decides
+      # the target. Setting it here would name an address the running
+      # composition never calls.
+    depends_on:
+      openred-api:
+        condition: service_healthy
+    healthcheck:
+      # The Vite front ends' check, on the port this one serves.
+      test:
+        [
+          "CMD-SHELL",
+          'node -e "require(''net'').connect(3010, ''127.0.0.1'').on(''connect'', () => process.exit(0)).on(''error'', () => process.exit(1))"',
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 90
+      start_period: 60s
+
 volumes:
   lostatnight-pgdata:
   geonity-pgdata:
@@ -509,3 +579,4 @@ volumes:
   geonity-admin-node-modules:
   openred-pgdata:
   openred-media:
+  openred-web-node-modules:

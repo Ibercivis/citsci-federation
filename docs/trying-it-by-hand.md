@@ -24,13 +24,13 @@ pnpm apps:up         # checkout → build → wait → migrate → seed → read
 for the composition: they publish ports on `localhost`, the composition publishes none, and
 `localhost:8000` answering while `lostatnight.localhost:8080` does not is a confusing half-hour.
 
-The first `apps:up` on a cold machine is slow — OpenRed's database compiles an extension, Geonity's
-two front ends install their dependencies. Every `apps:up` after a `clean-slate` pays the second of
+The first `apps:up` on a cold machine is slow — OpenRed's database compiles an extension, and the
+three front ends install their dependencies. Every `apps:up` after a `clean-slate` pays the second of
 those again: those `node_modules` live in volumes. It ends by reading every address back through the proxy
 and exits non-zero if any answered 000, 400, 502 or 503, so "it came up" is not something to read
 by eye.
 
-For a checkout from nothing as well, `rm -rf apps/` first: the four repositories are cloned again.
+For a checkout from nothing as well, `rm -rf apps/` first: the five repositories are cloned again.
 
 ## The addresses
 
@@ -41,6 +41,7 @@ For a checkout from nothing as well, `rm -rf apps/` first: the four repositories
 | `geonity.localhost:8080` | Geonity's web app |
 | `geonity-admin.localhost:8080` | Geonity's admin panel |
 | `geonity-api.localhost:8080` | Geonity's API |
+| `openred.localhost:8080` | OpenRed's React front end |
 | `openred-api.localhost:8080` | OpenRed's API |
 | `mail.localhost:8080` | every message any of them sends, the Broker's included |
 
@@ -142,6 +143,7 @@ password is whatever the seed command printed — `devpass12345` unless somebody
 | http://geonity.localhost:8080/login | `ada@geonity.invalid`, or `rosa@`, or `admin@` |
 | http://geonity-admin.localhost:8080/ | `admin@geonity.invalid` |
 | http://geonity-api.localhost:8080/admin/login/ | `admin` — Django's admin takes the **username** |
+| http://openred.localhost:8080/login | `rosa@openred.invalid`, or `admin@`, or a volunteer |
 | http://openred-api.localhost:8080/admin/login/ | `admin` |
 
 Everything but Django's own admin signs in by **email address**: all three applications set
@@ -203,8 +205,11 @@ one-line fix. `PR #164` weighed the three.
   asserts it is `issue #34`.
 - **Maps are blank.** They need a Mapbox token nobody has locally, and that is settled:
   [`local-development.md`](local-development.md) says not to spend a minute on it.
-- **`openred.localhost:8080` is declared and not served.** It is where OpenRed's React front end
-  will answer (`issue #96`); until then the proxy says it serves no such name.
+- **"Sign in with Google" fails on OpenRed's front end**, and could not do otherwise: it would
+  need an OAuth client with this composition's address registered as an authorised origin, which
+  nobody has. The composition hands it a correctly shaped placeholder instead, because an empty one
+  throws from Google's own script as `/login` mounts and takes email sign-in down with it. Sign in
+  with an address and a password.
 - **`pnpm test` wants the Broker alone**, not the composition — one port 8080 between them:
   `pnpm apps:down && pnpm broker:up && pnpm test`.
 

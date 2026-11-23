@@ -30,6 +30,7 @@ gdalface|https://github.com/Ibercivis/gdalface.git
 citsci-api|https://github.com/Ibercivis/citsci-api.git
 geonity|https://github.com/Ibercivis/Geonity.git
 openred|https://github.com/Ibercivis/OpenRed.git
+openred-react|https://github.com/Ibercivis/openred-react.git
 "
 
 BRANCH=federation
