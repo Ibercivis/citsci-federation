@@ -232,10 +232,18 @@ export interface Arrival {
    *  which it then confirms by mail (ADR-0004). A Person who brought none
    *  cannot answer that question, and the dialogue stops on it. */
   address?: string;
+  /** The address this Person types over what their source sent, on the page
+   *  the Broker shows when something their profile needs is missing. A
+   *  different question from the one above, and the one issue #182 is about:
+   *  nobody affirmed what is typed there. */
+  typesOnReview?: string;
 }
 
 type Question =
-  | { asks: "sign-in" | "consent" | "give-an-address"; form: HtmlForm }
+  | {
+      asks: "sign-in" | "consent" | "give-an-address" | "review-the-profile";
+      form: HtmlForm;
+    }
   | { asks: "choose-source"; href: string };
 
 /**
@@ -282,6 +290,17 @@ function question(page: Page, arrival: Arrival): Question | null {
   );
   if (address && arrival.address) {
     return { asks: "give-an-address", form: address };
+  }
+  // The other form with an address on it: the Broker showing a Person what
+  // their source sent, because something the profile requires is missing or
+  // will not validate. What is typed here was affirmed by nobody, which is
+  // the whole of issue #182, so only a case that says what it types reaches
+  // it.
+  const review = forms.find(
+    (form) => "email" in form.fields && "firstName" in form.fields,
+  );
+  if (review && arrival.typesOnReview) {
+    return { asks: "review-the-profile", form: review };
   }
   return null;
 }
@@ -414,10 +433,11 @@ type Dialogue =
   | { outcome: "stuck"; complaint: string; asked: Asked[] };
 
 /** The most questions a dialogue asks here: choosing an Identity Source,
- *  signing in at it, giving the Broker an address when it holds none, and
- *  consenting. A dialogue that asks one more is one this stand-in app cannot
- *  drive, and it says so rather than looping. */
-const MOST_QUESTIONS_ASKED = 4;
+ *  signing in at it, reviewing the profile the source sent, giving the Broker
+ *  an address when it holds none, and consenting. A dialogue that asks one
+ *  more is one this stand-in app cannot drive, and it says so rather than
+ *  looping. */
+const MOST_QUESTIONS_ASKED = 5;
 
 /** Who signs in when a case does not say: the realm's one Local Credential. */
 const DEMO_ARRIVAL: Arrival = {
@@ -444,6 +464,14 @@ function answer(
     // Typed in, with nothing pressed: the form's one button carries no name,
     // so a browser sends the fields alone.
     return submit(browser, asking.form, { email: arrival.address ?? "" });
+  }
+  if (asking.asks === "review-the-profile") {
+    // The address replaced and everything else left as the source sent it,
+    // which is what a Person correcting one field does. The names come back
+    // empty when the source sent none, and the profile asks for neither.
+    return submit(browser, asking.form, {
+      email: arrival.typesOnReview ?? "",
+    });
   }
   // Pressing Yes, and only Yes. The same form offers No, and a Person who
   // pressed both granted nothing.

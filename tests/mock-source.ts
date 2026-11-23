@@ -167,6 +167,34 @@ export function aNewcomerWhoseAddressIsAffirmed() {
 }
 
 /**
+ * An Identity the Broker has never met whose source affirms an address that is
+ * no address at all, returned as a function of how it arrives.
+ *
+ * The one way to reach `idp-review-profile` from the declaration alone: the
+ * page shows when a required field will not validate, and the realm requires
+ * `email` and nothing else. So this is the Identity a case uses to type an
+ * address the source never sent — with `email_verified` still saying `true`
+ * about the one it did (`issue #182`).
+ *
+ * A function because such a case arrives twice as the same Identity: once
+ * typing an address, and once afterwards to see which Person it reaches.
+ */
+export function aNewcomerWhoseAffirmedAddressIsUnusable() {
+  const { username, password } = aNewcomerUnder(NEWCOMERS.affirmedButNoAddress);
+  return (arrival: {
+    through: string;
+    /** What it types over the unusable address, on the review page. */
+    typesOnReview?: string;
+    /** What it gives the Broker if the Broker asks for an address of its
+     *  own, which is a different page and a different question. */
+    address?: string;
+  }) => ({
+    as: { username, password, ...arrival },
+    pkce: createPkce("S256"),
+  });
+}
+
+/**
  * The Broker as the source knows it: a client, registered with a callback.
  *
  * The callback is Keycloak's path for an Identity Source with the alias

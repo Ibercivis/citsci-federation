@@ -337,8 +337,10 @@ built-in flow asks them to confirm the link instead, which is why this realm
 declares a flow of its own.
 
 Both rules in it answer one question — did the source this Identity came from
-affirm the address it arrived with? — and both read the answer from the same
-condition in `verified-email/`. The first holds the join back until the address
+affirm the address now in the flow? — and both read the answer from the same
+condition in `verified-email/`. **Now in** carries the review page: an address
+typed there was affirmed by nobody, whatever the source said about the one it
+sent (issue #182). The first holds the join back until the address
 itself answers. The second withholds the **address**, on the path where there
 is nobody to join.
 
@@ -350,7 +352,7 @@ citsci first broker login
     citsci join the Person holding this address     ALTERNATIVE
       citsci confirm an unverified address by mail  CONDITIONAL
         citsci-condition-unverified-email           REQUIRED
-        idp-email-verification                      REQUIRED
+        citsci-confirm-address-by-mail              REQUIRED
       idp-auto-link                                 REQUIRED
   citsci withhold an unverified address             CONDITIONAL
     citsci-condition-unverified-email               REQUIRED
@@ -370,10 +372,9 @@ therefore gives away an account: register somewhere that never checks
 addresses, using somebody else's, and wait for its owner to arrive (issue #75).
 
 So a conditional subflow sits **ahead** of `idp-auto-link`: a condition of ours
-from `verified-email/`, and `idp-email-verification` behind it. Unverified
-address, no join until the mail the Broker sends to the address that Person
-holds is answered — and whoever answers it holds the address, which is all
-ADR-0004 asks of a join.
+from `verified-email/`, and the mail behind it. Unverified address, no join
+until the mail the Broker sends to the address that Person holds is answered —
+and whoever answers it holds the address, which is all ADR-0004 asks of a join.
 
 Four things about that shape are decisions rather than taste:
 
@@ -386,11 +387,18 @@ Four things about that shape are decisions rather than taste:
   `federated_identity` until the flow finishes, so an arrival that never
   answers the mail leaves no trace at all. Holding it back afterwards would
   mean undoing a decision already taken.
-- **`idp-email-verification` behind the condition rather than in the built-in
-  flow's own slot.** There it is reached by every duplicate address, verified
-  or not, so it would put a mail in front of the silent join ADR-0004 is
-  about. Behind the condition it is reached only by the arrivals that would
-  otherwise be given away.
+- **The mail behind the condition rather than in the built-in flow's own
+  slot.** There it is reached by every duplicate address, verified or not, so
+  it would put a mail in front of the silent join ADR-0004 is about. Behind the
+  condition it is reached only by the arrivals that would otherwise be given
+  away.
+- **The mail is `citsci-confirm-address-by-mail`, ours, and it is
+  Keycloak's `idp-email-verification` with one branch taken out.** That one
+  declines to mail an address typed on the review page and reports
+  `attempted()`; the built-in flow has a re-authentication alternative to
+  absorb that, and a subflow holding a condition and one authenticator has
+  nothing. The sign-in died on "Invalid username or password" instead
+  (issue #182).
 - **Bound on the realm, not on each source.** `firstBrokerLoginFlow` is what
   every Identity Source uses, and no source names a flow of its own, so one
   added later cannot miss this rule by nobody remembering to attach it.

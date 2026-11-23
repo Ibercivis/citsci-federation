@@ -389,7 +389,7 @@
     },
     {
       "alias": "citsci confirm an unverified address by mail",
-      "description": "The arriving source did not verify the address, so the Broker mails it and joins on the click. Nothing else checks it: idp-auto-link reads the address alone (issue #75).",
+      "description": "Nobody affirmed the address, so the Broker mails it and joins on the click. Nothing else checks it: idp-auto-link reads the address alone (issue #75). The mail is ours rather than idp-email-verification because that one declines to mail an address typed on the review page, and this subflow has no sibling to absorb that (issue #182).",
       "providerId": "basic-flow",
       "topLevel": false,
       "builtIn": false,
@@ -402,7 +402,7 @@
           "userSetupAllowed": false
         },
         {
-          "authenticator": "idp-email-verification",
+          "authenticator": "citsci-confirm-address-by-mail",
           "requirement": "REQUIRED",
           "priority": 20,
           "authenticatorFlow": false,

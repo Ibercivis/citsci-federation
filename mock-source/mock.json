@@ -21,6 +21,12 @@
       "password": "mock",
       "idToken": { "email": "{username}@mock.test", "email_verified": true },
       "userinfo": { "email": "{username}@mock.test", "email_verified": true }
+    },
+    "affirmedButNoAddress": {
+      "usernamePrefix": "unusable-newcomer-",
+      "password": "mock",
+      "idToken": { "email": "not an address", "email_verified": true },
+      "userinfo": { "email": "not an address", "email_verified": true }
     }
   },
   "identities": {

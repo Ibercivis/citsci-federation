@@ -75,12 +75,20 @@ declares `newcomers` — any username under one of their prefixes, with
 refuses a declaration whose prefixes overlap, and is where the tests read the
 address a newcomer will arrive at rather than deriving it a second way.
 
-Two shapes, because what the claims say about that address is the question such
-a case usually turns on: `unverified` for an address nobody affirmed, and
+Three shapes, because what the claims say about that address is the question
+such a case usually turns on: `unverified` for an address nobody affirmed, and
 `verified` for one its source did. The second is how a case stages a Person
 **and** a later arrival at their address in one run — the same username through
 an affirming source and then through `mock`, which is `untrusted-verified`
 above with nothing left over from the last run.
+
+`affirmedButNoAddress` is the third, and its claims carry no `{username}`
+because its address is not an address: the source affirms the string `not an
+address`. It is the only way to reach `idp-review-profile` from the declaration
+alone — the page shows when a required field will not validate, and `email` is
+the one required field (`broker/realm/user-profile.json`). What such an arrival
+types there was affirmed by nobody while its source's `email_verified` still
+says `true`, which is the shape `issue #182` is about.
 
 ## The advisory's Identities
 

@@ -7,6 +7,7 @@ import org.keycloak.authentication.authenticators.broker.AbstractIdpAuthenticato
 import org.keycloak.authentication.authenticators.broker.util.SerializedBrokeredIdentityContext;
 import org.keycloak.authentication.authenticators.conditional.ConditionalAuthenticator;
 import org.keycloak.authentication.authenticators.conditional.ConditionalAuthenticatorFactory;
+import org.keycloak.broker.provider.AbstractIdentityProvider;
 import org.keycloak.broker.provider.BrokeredIdentityContext;
 import org.keycloak.models.AuthenticationExecutionModel.Requirement;
 import org.keycloak.models.KeycloakSession;
@@ -40,9 +41,9 @@ import org.keycloak.provider.ProviderConfigProperty;
  * away from the one Keycloak applies on the create path.
  *
  * <p>Whatever it cannot establish counts as unverified: no brokered context,
- * no claim, an unparseable claim, a source whose word is not trusted. Asking
- * the address itself is the safe answer, so uncertainty falls on that side
- * (ADR-0004).
+ * no claim, an unparseable claim, a source whose word is not trusted, an
+ * address the arrival typed on the review page. Asking the address itself is
+ * the safe answer, so uncertainty falls on that side (ADR-0004).
  */
 public class UnverifiedEmailCondition
     implements ConditionalAuthenticator, ConditionalAuthenticatorFactory {
@@ -63,6 +64,29 @@ public class UnverifiedEmailCondition
    */
   private static final String EMAIL_VERIFIED = "email_verified";
 
+  /**
+   * The note {@code idp-review-profile} leaves behind when the address in this
+   * flow is one the arrival typed rather than the one its source sent.
+   *
+   * <p>A source's verdict is about the address that source sent, and nothing
+   * on the review page edits the verdict. So an arrival that types another
+   * address carries a {@code true} about an address that is no longer in the
+   * flow, and reading it would affirm whatever was typed — somebody else's
+   * address, if they typed somebody else's (issue #182).
+   *
+   * <p>Only the address. Keycloak sets a second note for a username changed
+   * there, which this realm never shows: it signs in with the address, so the
+   * username is derived from it (ADR-0005).
+   *
+   * <p>No public API promises the note, which is why the image is pinned
+   * (broker/Dockerfile) and why the cases in
+   * {@code tests/verified-email-join.test.ts} drive the review page itself: a
+   * version that renamed it would leave this finding nothing, and finding
+   * nothing here means a typed address counts as affirmed.
+   */
+  private static final String ADDRESS_TYPED_ON_THE_REVIEW_PAGE =
+      AbstractIdentityProvider.UPDATE_PROFILE_EMAIL_CHANGED;
+
   @Override
   public boolean matchCondition(AuthenticationFlowContext context) {
     SerializedBrokeredIdentityContext serialized =
@@ -72,6 +96,12 @@ public class UnverifiedEmailCondition
     if (serialized == null) {
       // No Identity Source in this flow at all. Nothing affirmed the address,
       // so the guarded subflow runs.
+      return true;
+    }
+    if (Boolean.parseBoolean(
+        context.getAuthenticationSession().getAuthNote(ADDRESS_TYPED_ON_THE_REVIEW_PAGE))) {
+      // The arrival typed this address itself. Its source affirmed the one it
+      // sent, which is not this one, and nobody affirmed this one.
       return true;
     }
     BrokeredIdentityContext arrival =
@@ -137,9 +167,10 @@ public class UnverifiedEmailCondition
   @Override
   public String getHelpText() {
     return "True when the email address this Identity arrives with was not"
-        + " verified by the Identity Source it came from, or when that source"
-        + " is not trusted to verify addresses. Such an address must not reach"
-        + " a Person who already holds it.";
+        + " verified by the Identity Source it came from, when that source is"
+        + " not trusted to verify addresses, or when the address was typed on"
+        + " the review page rather than sent by the source. Such an address"
+        + " must not reach a Person who already holds it.";
   }
 
   /** Nothing to configure. A setting here would be a way to switch the rule

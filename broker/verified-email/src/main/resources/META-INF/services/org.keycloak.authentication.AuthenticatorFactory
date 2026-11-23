@@ -1,2 +1,3 @@
 es.ibercivis.broker.UnverifiedEmailCondition
 es.ibercivis.broker.WithholdUnverifiedEmail
+es.ibercivis.broker.ConfirmAddressByMail

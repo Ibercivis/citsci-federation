@@ -71,11 +71,32 @@ conditional subflow ahead of the join. It reads the two facts Keycloak itself re
 Person — this source is trusted on addresses, and it said it verified this one — so the join path
 cannot drift away from the create path. Whatever it cannot establish counts as unverified.
 
+**A verdict is about the address its source sent, and about no other.** Keycloak shows an arrival
+the profile its source sent whenever a required field will not validate, and the address can be
+edited on that page. Nothing there edits `email_verified`. So an arrival that types a different
+address carries a trusted source's `true` about an address that has left the flow, and reading that
+`true` on its own affirms whatever was typed: somebody else's address, if somebody else's was typed.
+That was a join with nothing asked, and on the create path a Person made at an address nobody
+affirmed — both of them reachable without a claim being false anywhere (`issue #182`). So the
+condition reads a third fact, the note Keycloak leaves when the address in the flow is not the one
+it received, and an address typed there is affirmed by nobody.
+
 An Identity it holds back is **mailed at the address it is arriving at**, the one that Person already
 holds, and joins them when the link is followed (`issue #149`). That is the top of this record
 applied to the join: the Broker asks for nothing the arrival could simply claim, and takes the
 mailbox's word instead. It adds no risk this decision has not already taken — whoever controls a
-mailbox can become that Person — and it is why nothing in the flow is now a closed door.
+mailbox can become that Person.
+
+**Nothing in the flow is a closed door, and that rests on the mail being ours.** Keycloak's own
+`idp-email-verification` declines to send for exactly the case above — the address was typed on the
+review page — and reports ATTEMPTED. The built-in flow has a re-authentication alternative beside it
+to absorb that; a subflow holding a condition and one authenticator has nothing, so the subflow
+failed and the sign-in died. This record claimed the door was open while that page still read
+"Invalid username or password" — an arrival blamed for its credentials over an address that was
+somebody else's. What stands there now is `citsci-confirm-address-by-mail`, that authenticator with
+the one branch taken out. **The claim is only as good as the case that holds it**: it is an arrival
+driven through the review page, in `tests/verified-email-join.test.ts`, and nothing read off the
+realm can take its place — the shape that failed was a declaration everything static agreed with.
 
 **It is paid for by the Person who holds the address.** They get a mail nobody asked them for
 whenever somebody arrives badly at it, one per attempt: Keycloak's guard against resending covers a
