@@ -212,8 +212,9 @@ describe("an unverified address joins no existing Person until its mail is answe
    *     userinfo   advisory@mock.test         unverified
    *     joined     the Person at advisory@    <- the takeover
    *
-   * Every arrival below is that shape. The note says which versions do this;
-   * `broker/Dockerfile` carries the floor that keeps us above them.
+   * Every arrival below is that shape, and each is mailed rather than joined.
+   * The note says which versions do this; `broker/Dockerfile` carries the
+   * floor that keeps us above them.
    */
   it.each([
     {
@@ -231,8 +232,12 @@ describe("an unverified address joins no existing Person until its mail is answe
       through: AFFIRMING_SOURCE_B,
       identity: "advisory-silent",
     },
-  ] as const)("refuses $what", async ({ through, identity }) => {
+  ] as const)("mails $what", async ({ through, identity }) => {
     const person = await personArrivingWithAVerifiedEmail("advisory-verified");
+    const address = addressOf("advisory-verified");
+    // Baseline rather than zero: all three cases arrive at this one address,
+    // so each adds a mail to the ones before it.
+    const sent = await mailCountTo(address);
 
     const split = await attempt(
       CONFIDENTIAL_CLIENT,
@@ -241,7 +246,8 @@ describe("an unverified address joins no existing Person until its mail is answe
 
     expect(split.outcome).toBe("refused-in-the-browser");
     expect(JSON.stringify(split)).not.toContain(person);
-    expect(whatThePersonWasTold(split)).toContain(REFUSAL);
+    await linkMailedTo(address, sent);
+    expect(await mailCountTo(address)).toBe(sent + 1);
   });
 });
 

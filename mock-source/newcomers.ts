@@ -14,12 +14,19 @@
 import { randomUUID } from "node:crypto";
 import declaration from "./mock.json" with { type: "json" };
 
-/** What this source says about one Identity, per destination: the ID token
- *  gets one set of claims and the userinfo response another. */
+/**
+ * What this source says about one Identity, per destination: the ID token gets
+ * one set of claims and the userinfo response another.
+ *
+ * `email_verified` is optional on userinfo because a source may hand over an
+ * address with no verdict attached, which is the shape `advisory-silent`
+ * stages. The ID token always carries one: that is what the Broker reads to
+ * create a Person.
+ */
 export interface DeclaredIdentity {
   password: string;
   idToken: { email: string; email_verified: boolean };
-  userinfo: { email: string; email_verified: boolean };
+  userinfo: { email: string; email_verified?: boolean };
 }
 
 /**
