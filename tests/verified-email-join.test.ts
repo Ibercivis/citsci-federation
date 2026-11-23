@@ -51,10 +51,10 @@ const whatThePersonWasTold = (result: Attempt): string =>
 const takeTheAddressFirst = (identity: MockIdentity) =>
   attempt(CONFIDENTIAL_CLIENT, arriving(SOURCE_AFFIRMING_NOTHING, identity));
 
-/** Somebody taking an address through a source the Broker trusts, whose
- *  userinfo says nothing about verifying it. */
-const arriveSilentlyFirst = () =>
-  attempt(CONFIDENTIAL_CLIENT, arriving(AFFIRMING_SOURCE_B, "silent-squat"));
+/** The same, through a source the Broker does trust, whose userinfo says
+ *  nothing about verifying the address it gives. */
+const takeTheAddressSilently = (identity: MockIdentity) =>
+  attempt(CONFIDENTIAL_CLIENT, arriving(AFFIRMING_SOURCE_B, identity));
 
 /** A Person whose address was verified — the only kind the Broker will join an
  *  Identity to. */
@@ -240,13 +240,13 @@ describe("a Person is never created at an address nobody affirmed", () => {
     // verdict and would store the Person verified; only our condition, reading
     // the lost verdict as unaffirmed, keeps the address off them.
     // `docs/notes/2026-11-23-trust-email-and-userinfo.md` has the measurement.
-    await arriveSilentlyFirst();
+    await takeTheAddressSilently("silent-squat");
 
     const genuine = await personArrivingWithAVerifiedEmail(
       "silent-squat-verified",
     );
 
-    const squatter = await arriveSilentlyFirst();
+    const squatter = await takeTheAddressSilently("silent-squat");
 
     expect(JSON.stringify(squatter)).not.toContain(genuine);
     expect(whatThePersonWasTold(squatter)).toContain("Asks for field: email");
