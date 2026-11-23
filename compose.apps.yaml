@@ -190,7 +190,7 @@ services:
 
   lostatnight-redis:
     # Mirrors apps/gdalface/docker-compose.local.yml.
-    image: redis:7-alpine
+    image: redis:8-alpine
     healthcheck: *redis-check
 
   lostatnight:
@@ -271,7 +271,7 @@ services:
 
   geonity-redis:
     # Mirrors apps/citsci-api/compose.yaml.
-    image: redis:7-alpine
+    image: redis:8-alpine
     healthcheck: *redis-check
 
   geonity-api:
@@ -429,7 +429,7 @@ services:
 
   openred-redis:
     # Mirrors apps/openred/compose.yaml.
-    image: redis:7-alpine
+    image: redis:8-alpine
     healthcheck: *redis-check
 
   openred-api:
