@@ -41,8 +41,8 @@ export interface DeclaredSource {
   /** Whether the Broker takes this source's word on an address. One decision
    *  about one operator, so the realm sets it per source and never globally. */
   affirmsAddresses: boolean;
-  /** The scope the Broker asks this source for. What a source puts in its ID
-   *  token depends on it, so a case about that reads it from here. */
+  /** The scope the Broker asks this source for. It decides which claims the
+   *  source puts in its ID token, so a case about those reads it here. */
   asksFor: string;
 }
 
@@ -65,9 +65,8 @@ export function declaredSource(alias: string): DeclaredSource {
   const asksFor = provider.config?.defaultScope;
   if (!asksFor) {
     throw new Error(
-      `The realm has the Broker ask ${alias} for no particular scope, so ` +
-        "what that source sends is Keycloak's default rather than this " +
-        "stack's decision.",
+      `The realm asks ${alias} for no scope at all. What that source then ` +
+        "sends is Keycloak's default, not a decision anybody here made.",
     );
   }
   return {

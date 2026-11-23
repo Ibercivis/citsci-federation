@@ -52,8 +52,8 @@ const whatThePersonWasTold = (result: Attempt): string =>
 const takeTheAddressFirst = (identity: MockIdentity) =>
   attempt(CONFIDENTIAL_CLIENT, arriving(SOURCE_AFFIRMING_NOTHING, identity));
 
-/** The same, through a source the Broker does trust, whose userinfo says
- *  nothing about verifying the address it gives. */
+/** The same, but through a source the Broker trusts. Its userinfo gives an
+ *  address and says nothing about verifying it. */
 const takeTheAddressSilently = (identity: MockIdentity) =>
   attempt(CONFIDENTIAL_CLIENT, arriving(AFFIRMING_SOURCE_B, identity));
 
@@ -204,14 +204,16 @@ describe("an unverified address joins no existing Person until its mail is answe
   });
 
   /**
-   * The reported advisory: with `trustEmail` on, the address is read from
-   * userinfo while `email_verified` is read from the ID token. A source can
-   * then verify one address in its ID token and hand over another in
-   * userinfo, and the Broker joins the Person holding the second. Each
-   * arrival below is that shape, and reaches the Person at
-   * `advisory@mock.test` if the pinned version still reads the two apart.
-   * `docs/notes/2026-11-23-trust-email-and-userinfo.md` has which versions
-   * do, and `broker/Dockerfile` carries the floor that follows from it.
+   * The reported advisory. Address from userinfo, `email_verified` from the ID
+   * token — two different addresses, one verdict. So a source can verify one
+   * address and hand over another:
+   *
+   *     ID token   advisory-decoy@mock.test   verified
+   *     userinfo   advisory@mock.test         unverified
+   *     joined     the Person at advisory@    <- the takeover
+   *
+   * Every arrival below is that shape. The note says which versions do this;
+   * `broker/Dockerfile` carries the floor that keeps us above them.
    */
   it.each([
     {

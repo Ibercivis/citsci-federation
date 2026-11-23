@@ -82,12 +82,12 @@ RUN node derive.ts "$BROKER_MODE" "$MOCK_ISSUER" > realm-citsci.json
 # what it says before trusting it. Both poms compile against the same version,
 # so they move with it or not at all.
 #
-# Downwards there is a floor, and it is 26.8.0. Earlier versions take a
-# brokered address from userinfo while reading its `email_verified` out of the
-# ID token, so `verified-email/` finds no verdict for the address that actually
-# arrived and treats every arrival as unaffirmed: a Person whose source did
-# verify them is withheld their address and asked for another. Measured on
-# 26.7.1 in `docs/notes/2026-11-23-trust-email-and-userinfo.md`.
+# Downwards there is a floor: 26.8.0. Below it, Keycloak takes a brokered
+# address from userinfo but reads `email_verified` from the ID token — two
+# different addresses. `verified-email/` then finds no verdict for the address
+# that arrived, so it treats everyone as unaffirmed, and a Person their own
+# source verified is asked for another address. Measured on 26.7.1 in
+# `docs/notes/2026-11-23-trust-email-and-userinfo.md`.
 FROM quay.io/keycloak/keycloak:26.8.1
 COPY --from=mapper /build/target/person-identifier.jar /opt/keycloak/providers/
 COPY --from=condition /build/target/verified-email.jar /opt/keycloak/providers/
