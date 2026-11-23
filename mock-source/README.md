@@ -74,9 +74,9 @@ server. `tests/mock-source.ts` mints one per run.
 
 ## The advisory's Identities
 
-The reported advisory says that with `trustEmail` on, the address is read from
-userinfo while `email_verified` is read from the ID token. These Identities
-stage it, and `tests/verified-email-join.test.ts` holds them against a Person
+These Identities stage the `trustEmail` advisory the spec names, which was real
+up to Keycloak 26.7.1 (`docs/notes/2026-11-23-trust-email-and-userinfo.md`). They
+stage it and `tests/verified-email-join.test.ts` holds them against a Person
 already at `advisory@mock.test`:
 
 | Identity | ID token | userinfo |

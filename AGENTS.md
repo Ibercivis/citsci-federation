@@ -195,6 +195,11 @@ citation, not the authority.
   image adopts nothing a 16 left behind, whichever way the volume is mounted, so promoting a major
   is paid for in the data. ADR-0017 settled Geonity's version by leaving it to Geonity. Open the
   note before mounting a database volume here, or to cost a major that application does ask for.
+- **`trustEmail` and userinfo** (`2026-11-23-trust-email-and-userinfo.md`) — the reported advisory
+  was real up to Keycloak 26.7.1 and is fixed from 26.8.0; our condition needs 26.8.0 too. When a
+  trusted source's userinfo omits `email_verified`, Keycloak would store the Person verified, and only
+  our condition stops it. Open it before moving the Keycloak pin, or before reading a Person's
+  `emailVerified` to decide anything.
 
 ### Internal notes
 

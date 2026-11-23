@@ -118,9 +118,10 @@ describe("an unverified address joins no existing Person", () => {
 
   /**
    * The reported advisory: with `trustEmail` on, the address is read from
-   * userinfo while `email_verified` is read from the ID token. Were it real,
-   * a source could verify one address in its ID token and hand over another in
-   * userinfo, and the Broker would join the Person holding the second. Each
+   * userinfo while `email_verified` is read from the ID token. Real up to
+   * Keycloak 26.7.1: a source could verify one address in its ID token and hand
+   * over another in userinfo, and the Broker would join the Person holding the
+   * second. Each
    * arrival below goes to the Person at `advisory@mock.test` if it is.
    * `docs/notes/2026-11-23-trust-email-and-userinfo.md` has what 26.8.1 does.
    */
