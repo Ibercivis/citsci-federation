@@ -95,6 +95,11 @@ already at `advisory@mock.test`:
 | `advisory-split` | `advisory-decoy@mock.test`, verified | `advisory@mock.test`, **unverified** |
 | `advisory-split-named` | as `advisory-split`, with `name` and `preferred_username` | as `advisory-split` |
 | `advisory-silent` | `advisory@mock.test`, **unverified** | `advisory@mock.test`, nothing said |
+| `silent-squat` | `silent-squat@mock.test`, **unverified** | `silent-squat@mock.test`, nothing said |
+| `silent-squat-verified` | `silent-squat@mock.test`, verified | the same |
+
+The `silent-squat` pair is the silent shape arriving *first*, at an address
+nobody holds yet.
 
 A name reaches the ID token only through `mock-affirming-named`, the one
 source that asks for `profile`. Through any other, `advisory-split-named` is
