@@ -23,7 +23,7 @@ interface ImportedRealm {
     alias: string;
     displayName: string;
     trustEmail: boolean;
-    config?: { defaultScope?: string };
+    config?: Record<string, string>;
   }>;
   authenticatorConfig?: ReadonlyArray<{
     alias: string;
