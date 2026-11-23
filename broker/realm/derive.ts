@@ -4,10 +4,11 @@
  * Keycloak imports one complete realm per file and cannot layer two, so the
  * layering happens here, inside the image build (`broker/Dockerfile`):
  *
- *   node derive.ts <testing|production> <MOCK_ISSUER> > realm-citsci.json
+ *   node derive.ts <testing|production|demo> <MOCK_ISSUER> > realm-citsci.json
  *
  * `base.json` is the whole Broker anywhere it runs. `testing.json` only adds
- * to it, and only in `testing`. `user-profile.json` becomes the realm's user
+ * to it, and only in `testing`: `production` and `demo` import the base alone,
+ * and differ only in the services compose.yaml starts beside it. `user-profile.json` becomes the realm's user
  * profile. In `testing`, the Mock Identity Source's issuer is written into the
  * layer here, so the build fails without it rather than importing endpoints
  * with nothing in front of them. What comes out is never written into this
@@ -31,9 +32,9 @@ export interface Declaration {
   userProfile: object;
 }
 
-/** The two ways the Broker runs. Anything else is refused, so a typo cannot
+/** The three ways the Broker runs. Anything else is refused, so a typo cannot
  *  quietly build the base alone. */
-const MODES = ["testing", "production"];
+const MODES = ["testing", "production", "demo"];
 
 export function derive(
   mode: string,
@@ -42,7 +43,7 @@ export function derive(
 ): Realm {
   if (!MODES.includes(mode)) {
     throw new Error(
-      `Unknown BROKER_MODE "${mode}": it is "testing" or "production".`,
+      `Unknown BROKER_MODE "${mode}": it is "testing", "production" or "demo".`,
     );
   }
   if ("components" in declaration.base) {

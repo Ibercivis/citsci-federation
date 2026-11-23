@@ -54,7 +54,7 @@ COPY verified-email/src ./src
 RUN mvn --batch-mode --quiet package
 
 # The realm Keycloak imports, derived from the declaration in `realm/` for one
-# mode: `testing` or `production`, from BROKER_MODE in `.env`. There is no
+# mode: `testing`, `production` or `demo`, from BROKER_MODE in `.env`. There is no
 # default, and `derive.ts` refuses anything else, so an image cannot be built
 # without saying which Broker it is. The same Node as the Mock Identity
 # Source's, which runs TypeScript by stripping the types. MOCK_ISSUER is
