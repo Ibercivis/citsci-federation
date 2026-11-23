@@ -1,5 +1,8 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { type Realm, derive } from "../broker/realm/derive.ts";
+import { type Realm, derive, readDeclaration } from "../broker/realm/derive.ts";
+import { renderFlowTree } from "../broker/realm/flows.ts";
 
 /**
  * The step that turns the Broker's declaration into the one realm Keycloak
@@ -148,3 +151,116 @@ describe("deriving the realm Keycloak imports", () => {
     );
   });
 });
+
+/** A declaration whose base declares flows, which only these cases and the
+ *  real one do. */
+const declaringFlows = (authenticationFlows: unknown[]) => ({
+  base: { ...BASE, authenticationFlows },
+  testing: TESTING,
+  userProfile: PROFILE,
+});
+
+/** The flow every case below hangs its graph from, since only a top-level one
+ *  is reached from nothing. */
+const TOP_LEVEL_FLOW = {
+  alias: "citsci first broker login",
+  topLevel: true,
+};
+
+describe("refusing a flow graph Keycloak would import anyway", () => {
+  it("refuses a flow holding a subflow no flow declares", () => {
+    const typo = declaringFlows([
+      {
+        ...TOP_LEVEL_FLOW,
+        authenticationExecutions: [
+          {
+            flowAlias: "citsci join the Person holding this adress",
+            priority: 10,
+          },
+        ],
+      },
+    ]);
+
+    expect(() => derive("production", typo)).toThrow(
+      'Flow "citsci first broker login" holds a subflow "citsci join the Person holding this adress", which no flow declares.',
+    );
+  });
+
+  it("refuses two executions of one flow sharing a priority", () => {
+    const tied = declaringFlows([
+      {
+        ...TOP_LEVEL_FLOW,
+        authenticationExecutions: [
+          { authenticator: "idp-review-profile", priority: 10 },
+          { authenticator: "idp-auto-link", priority: 10 },
+        ],
+      },
+    ]);
+
+    expect(() => derive("production", tied)).toThrow(
+      'Flow "citsci first broker login" gives two executions the priority 10, which leaves their order to Keycloak.',
+    );
+  });
+
+  it("refuses a declared subflow nothing holds, which reads as live", () => {
+    const dead = declaringFlows([
+      { ...TOP_LEVEL_FLOW, authenticationExecutions: [] },
+      { alias: "citsci refuse an unverified address", topLevel: false },
+    ]);
+
+    expect(() => derive("production", dead)).toThrow(
+      'Flow "citsci refuse an unverified address" is declared and nothing holds it, so it is dead. A subflow is reached from one execution; a flow reached from none is topLevel.',
+    );
+  });
+
+  it("refuses a subflow two executions hold, whose order is then two orders", () => {
+    const twice = declaringFlows([
+      {
+        ...TOP_LEVEL_FLOW,
+        authenticationExecutions: [
+          { flowAlias: "citsci refuse an unverified address", priority: 10 },
+          { flowAlias: "citsci refuse an unverified address", priority: 20 },
+        ],
+      },
+      { alias: "citsci refuse an unverified address", topLevel: false },
+    ]);
+
+    expect(() => derive("production", twice)).toThrow(
+      'Flow "citsci refuse an unverified address" is held by 2 executions, and a subflow is reached from one.',
+    );
+  });
+
+  it("derives the declaration this repository holds", () => {
+    expect(() => derive("production", readDeclaration())).not.toThrow();
+  });
+});
+
+describe("the first broker login flow, drawn", () => {
+  it("draws the tree broker/README.md carries", () => {
+    const { base } = readDeclaration();
+    const root = base["firstBrokerLoginFlow"] as string;
+
+    expect(fencedTree(root)).toBe(renderFlowTree(base, root));
+  });
+});
+
+/**
+ * The fenced block in `broker/README.md` whose first line names the flow. That
+ * first line is how the block is found, so the drawing identifies itself and
+ * nothing in the prose has to mark it.
+ */
+function fencedTree(rootAlias: string): string {
+  const readme = readFileSync(
+    join(import.meta.dirname, "../broker/README.md"),
+    "utf8",
+  );
+  const [drawn, ...also] = [...readme.matchAll(/```text\n([\s\S]*?)```/g)]
+    .map((block) => (block[1] ?? "").trimEnd())
+    .filter((block) => block.startsWith(`${rootAlias}\n`));
+  if (drawn === undefined || also.length > 0) {
+    throw new Error(
+      `broker/README.md holds ${also.length + (drawn === undefined ? 0 : 1)} fenced blocks beginning "${rootAlias}", and the case below compares one.`,
+    );
+  }
+  return drawn;
+}
