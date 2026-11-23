@@ -23,6 +23,7 @@ interface ImportedRealm {
     alias: string;
     displayName: string;
     trustEmail: boolean;
+    config?: Record<string, string>;
   }>;
   authenticatorConfig?: ReadonlyArray<{
     alias: string;
@@ -66,6 +67,30 @@ export function declaredSource(alias: string): DeclaredSource {
     name: provider.displayName,
     affirmsAddresses: provider.trustEmail,
   };
+}
+
+/**
+ * What the realm says a source's credentials are, by its alias, word for word
+ * and before Keycloak substitutes anything.
+ *
+ * Unsubstituted on purpose: a case about a real secret is asking what the
+ * tracked file says, not what this machine happens to hold.
+ */
+export function declaredCredentials(alias: string): {
+  clientId: string;
+  clientSecret: string;
+} {
+  const config = realm.identityProviders?.find(
+    (candidate) => candidate.alias === alias,
+  )?.config;
+  const { clientId, clientSecret } = config ?? {};
+  if (!clientId || !clientSecret) {
+    throw new Error(
+      `The realm gives ${alias} no clientId and clientSecret: either the ` +
+        "source lost its credentials, or Keycloak moved where they live.",
+    );
+  }
+  return { clientId, clientSecret };
 }
 
 /**
