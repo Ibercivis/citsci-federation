@@ -9,6 +9,7 @@
  * (`./realm.ts`). Neither fact is written twice, so neither can drift.
  */
 
+import { randomUUID } from "node:crypto";
 import { createRemoteJWKSet, jwtVerify } from "jose";
 import {
   type Discovery,
@@ -84,6 +85,22 @@ export const arriving = (through: string, identity: MockIdentity) => ({
     through,
     username: identity,
     password: MOCK_IDENTITIES[identity].password,
+  },
+  pkce: createPkce("S256"),
+});
+
+/**
+ * An arrival from an Identity the Broker has never met, at an address of its
+ * own that nobody affirmed, giving `address` when the Broker asks for one. A
+ * fresh one per run, which is what a case about a **first** arrival needs:
+ * `mock-source/README.md` says why.
+ */
+export const aNewcomerArriving = (through: string, address: string) => ({
+  as: {
+    through,
+    username: `${declaration.newcomer.usernamePrefix}${randomUUID()}`,
+    password: declaration.newcomer.password,
+    address,
   },
   pkce: createPkce("S256"),
 });

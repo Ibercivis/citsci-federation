@@ -1,7 +1,7 @@
 # The Broker's OpenID provider
 
 Keycloak at a pinned version with two extensions of ours — the Person
-Identifier mapper and the Verified Email condition — behind the reverse proxy
+Identifier mapper and the Verified Email rules — behind the reverse proxy
 `compose.yaml` puts in front of it, and configured entirely by the declaration
 in `realm/`. `Dockerfile` builds all three into one image.
 
@@ -324,13 +324,18 @@ The base names its mail server as `${SMTP_HOST}` and `${SMTP_PORT}`. In
 `testing` they point at the mail catcher `compose.yaml` runs, whose inbox is
 <http://localhost:8026/>.
 
-### The first broker login flow, and the one rule in it
+### The first broker login flow, and the two rules in it
 
 The first time somebody arrives from an Identity Source, the Broker either
 creates a Person for them or decides they are a Person it already knows. It
 decides that by email address, and it asks them nothing (ADR-0004). The
 built-in flow asks them to confirm the link instead, which is why this realm
 declares a flow of its own.
+
+Both rules in it answer one question — did the source this Identity came from
+affirm the address it arrived with? — and both read the answer from the same
+condition in `verified-email/`. The first refuses the join. The second refuses
+the **address**, on the path where there is nobody to join.
 
 **The risk this flow exists to handle.** `idp-auto-link`, the authenticator
 that performs the join, compares the address and nothing else. It never checks
@@ -361,12 +366,35 @@ the only step that decides differently is the join. Declaring these flows does
 not cost the realm its built-in ones — the note says what that was measured
 against.
 
-**`deny-access-authenticator` is temporary.** Turning somebody away keeps the
-address from being taken over, but it also leaves them with no way in. They
-should be asked for an address and sent a confirmation link, which gets them an
-account of their own. The Broker can send mail now; putting
-`idp-email-verification` in that slot is issue #88, and the condition stays as
-it is.
+**`deny-access-authenticator` is still temporary**, and now serves one case
+rather than all of them: an unverified arrival at an address a Person already
+holds. Everything arriving at an address nobody holds meets the rule below
+instead. `idp-email-verification` is what should take this slot — `issue #149`.
+
+### The rule on the create path: no Person keeps an address nobody affirmed
+
+The refusal above guards the join, and the same takeover works by arriving
+**first**, on a path that never reaches `idp-auto-link`. ADR-0004 has that
+argument.
+
+What the realm does about it: a second conditional subflow at the **end** of
+the flow, the same condition, and `citsci-withhold-unverified-email` from
+`verified-email/` behind it. The address comes off the Person who was just
+created, and Keycloak's `UPDATE_EMAIL` asks them for one it confirms by mail
+itself.
+
+**At the end of the flow rather than inside the create path**, because
+`idp-create-user-if-unique` has to stay `ALTERNATIVE` beside the join subflow:
+there is nowhere inside the create path to put it. So the rule runs after the
+decision and reads which way it went — which is also why it only ever reaches
+a Person this flow has just made.
+
+Everything else about the shape is decided elsewhere: ADR-0004 for why the
+address is taken off rather than never written, what that costs a Person, and
+the half still open (`issue #148`); the authenticator for why `UPDATE_EMAIL`
+and not `VERIFY_EMAIL`; and
+`docs/notes/2026-11-20-withholding-an-unaffirmed-address.md` for the
+measurements.
 
 ### The Mock Identity Source
 
