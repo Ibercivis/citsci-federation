@@ -187,6 +187,15 @@ registered with, and `pnpm broker:reset`. A line left empty breaks that button; 
 - **GitHub, at the address Google used**: the Broker refuses you. It does not read whether GitHub
   verified the address, so it joins nobody through GitHub (`issue #145`).
 
+**TODO — where this step goes is not settled.** `pnpm broker:reset` takes the Broker's database and
+the mail catcher with it, so the step throws away the Persons, the Identities and the mail that
+steps 2 to 7 just built, and then refers back to all three. The applications stay up from
+`compose.apps.yaml`, holding accounts that name Person Identifiers nobody has any more. A demo
+environment that runs the real sources with the mail catcher and no Mock Identity Source is being
+prepared, and it rewrites this walkthrough rather than this step; revisit then. If it does not
+arrive, `pnpm apps:reset` leaves the whole composition coherent with the new Broker, and is the
+one-line fix. `PR #164` weighed the three.
+
 ## What does not work yet, on purpose
 
 - **OpenRed has no sign-in through the Broker yet** (`issue #30`). LostAtNight and Geonity both have
