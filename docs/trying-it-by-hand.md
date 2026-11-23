@@ -174,8 +174,8 @@ Geonity's is the one page of its web app, `/auth/ibercivis/callback`.
 ### 9. Google and GitHub, with real credentials
 
 The one step that needs something `.env` cannot hold. Copy [`.env.example`](../.env.example) to
-`.env.local`, fill in the client ids and secrets the two applications were registered with, and
-`pnpm broker:reset`. Without them, both buttons send you to Google or GitHub with
+`.env.local`, uncomment and fill in the client ids and secrets the two applications were
+registered with, and `pnpm broker:reset`. A line left empty breaks that button; leave it commented. Without them, both buttons send you to Google or GitHub with
 `client_id=not-configured`, and the source refuses you there.
 
 - **Google**: choose **Google** on the Broker's sign-in page and sign in with a real account. You

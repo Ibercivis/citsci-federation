@@ -30,8 +30,15 @@ const referenced = new Set(
 /** Valued in the tracked `.env`: the development constants. */
 const constants = new Set(Object.keys(parseEnv(read(".env"))));
 
-/** Named in `.env.example`, each with what it carries there. */
-const example = parseEnv(read(".env.example"));
+/** Named in `.env.example`, commented out, each with what it carries there.
+ *  Commented because an empty `NAME=` is set, and the realm's default applies
+ *  only to a name that is not. */
+const exampleText = read(".env.example");
+const example = Object.fromEntries(
+  [...exampleText.matchAll(/^#[ \t]*([A-Z_][A-Z0-9_]*)=(.*)$/gm)].map(
+    ([, name = "", value = ""]) => [name, value.trim()],
+  ),
+);
 
 /** The names the realm references and the tracked `.env` does not value. The
  *  testing layer's `${MOCK_ISSUER}` is written in by `derive.ts`, from `.env`. */
@@ -46,6 +53,12 @@ describe("the secrets the realm references", () => {
     const valued = Object.entries(example).filter(([, value]) => value !== "");
 
     expect(valued).toEqual([]);
+  });
+
+  it("are set by nothing in .env.example that a copy would keep", () => {
+    // Uncommented, even empty, a name copied into `.env.local` is set, and
+    // the source's button fails at the Broker instead of at the source.
+    expect(Object.keys(parseEnv(exampleText))).toEqual([]);
   });
 
   it("are valued in a file git ignores", () => {

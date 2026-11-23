@@ -414,7 +414,10 @@ later decides its own `trustEmail` (ADR-0004).
   would otherwise be imported as the literal `${NAME}`. The default makes the
   request a Person is sent with say `client_id=not-configured`, and Google or
   GitHub refuses it on their own page. The buttons stay, so a stack without
-  credentials is still the declared one.
+  credentials is still the declared one. The default applies only to a name
+  that is unset: `NAME=` with nothing after it is set to the empty string,
+  and that source's button fails at the Broker. So `.env.example` names
+  them commented out.
 - **Each source's callback is `${BROKER_ISSUER}/broker/<alias>/endpoint`.** That
   is the redirect URI registered with Google and GitHub, so renaming an alias
   breaks every sign-in through it until the registration follows.
