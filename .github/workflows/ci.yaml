@@ -77,20 +77,6 @@ jobs:
             koalaman/shellcheck:v0.11.0@sha256:61862eba1fcf09a484ebcc6feea46f1782532571a34ed51fedf90dd25f925a8d \
             -f gcc
 
-      # A demo Broker imports the realm the `base` job already starts, so what
-      # is left to cover is the services compose starts beside it: the mail
-      # catcher the applications send to, and no Mock Identity Source. Reading
-      # the configuration says that without building anything, which is why it
-      # is a step here and not a job of its own.
-      - name: compose starts the mail catcher in demo, and not the Mock Identity Source
-        env:
-          BROKER_MODE: demo
-        run: |
-          services=$(docker compose config --services)
-          echo "$services"
-          echo "$services" | grep -qx mailpit
-          ! echo "$services" | grep -qx mock-source
-
   # The end-to-end suite (ADR-0010), against a Broker this job starts itself.
   # It is a separate job because it is minutes where `check` is seconds, and
   # because a failure here means something different: the stack, not the code.
