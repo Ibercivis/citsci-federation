@@ -350,11 +350,13 @@ nobody arriving through Google has?** That can be answered without waiting for a
 
 **A reported security advisory, checked.** The research reported a Keycloak advisory in which, with
 `trustEmail` enabled and the userinfo endpoint in use, the email address is taken from the userinfo
-response while `email_verified` is taken only from the ID token. It was real up to 26.7.1 and is fixed
-from 26.8.0, so it does not reproduce on the pinned 26.8.1; the pin may not move below 26.8.0. The
-seam 1 negative test holds the join against it. When a trusted source's userinfo omits the claim,
-Keycloak's own verdict is wrong and only our condition stops it:
-`docs/notes/2026-11-23-trust-email-and-userinfo.md`.
+response while `email_verified` is taken only from the ID token. It was real on earlier Keycloak
+versions and does not reproduce on the one pinned here, which is why that pin now has a floor:
+`broker/Dockerfile` carries it, beside the version it constrains. The seam 1 negative test holds the
+join against the advisory whether or not a future version reopens it. One rule follows from the fix
+and holds whatever the version does: Keycloak's own record of whether an address was verified is not
+the authority here, and nothing may read it to decide anything. Our condition is what decides.
+`docs/notes/2026-11-23-trust-email-and-userinfo.md` has the shape that makes that record wrong.
 
 **A research item that must precede any federation work.** Before specs or tickets are written for the
 federation phase, understand the real options and their costs: carrying a Keycloak fork, writing a
