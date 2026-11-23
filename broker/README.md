@@ -334,8 +334,9 @@ declares a flow of its own.
 
 Both rules in it answer one question — did the source this Identity came from
 affirm the address it arrived with? — and both read the answer from the same
-condition in `verified-email/`. The first refuses the join. The second refuses
-the **address**, on the path where there is nobody to join.
+condition in `verified-email/`. The first holds the join back until the address
+itself answers. The second withholds the **address**, on the path where there
+is nobody to join.
 
 ```text
 citsci first broker login
@@ -365,10 +366,12 @@ therefore gives away an account: register somewhere that never checks
 addresses, using somebody else's, and wait for its owner to arrive (issue #75).
 
 So a conditional subflow sits **ahead** of `idp-auto-link`: a condition of ours
-from `verified-email/`, and `deny-access-authenticator` behind it. Unverified
-address, no join.
+from `verified-email/`, and `idp-email-verification` behind it. Unverified
+address, no join until the mail the Broker sends to the address that Person
+holds is answered — and whoever answers it holds the address, which is all
+ADR-0004 asks of a join.
 
-Three things about that shape are decisions rather than taste:
+Four things about that shape are decisions rather than taste:
 
 - **The condition is ours because none of Keycloak's can do it.** The only one
   that could name such a flag reads a user's attributes, and at this point in
@@ -376,8 +379,14 @@ Three things about that shape are decisions rather than taste:
   refused, are in
   `docs/notes/conditional-subflow-and-brokered-email-verified.md`.
 - **Ahead of the join, not after it.** Nothing is written to
-  `federated_identity` until the flow finishes, so denying here leaves no trace
-  at all. Denying afterwards would mean undoing a decision already taken.
+  `federated_identity` until the flow finishes, so an arrival that never
+  answers the mail leaves no trace at all. Holding it back afterwards would
+  mean undoing a decision already taken.
+- **`idp-email-verification` behind the condition rather than in the built-in
+  flow's own slot.** There it is reached by every duplicate address, verified
+  or not, so it would put a mail in front of the silent join ADR-0004 is
+  about. Behind the condition it is reached only by the arrivals that would
+  otherwise be given away.
 - **Bound on the realm, not on each source.** `firstBrokerLoginFlow` is what
   every Identity Source uses, and no source names a flow of its own, so one
   added later cannot miss this rule by nobody remembering to attach it.
@@ -387,14 +396,9 @@ the only step that decides differently is the join. Declaring these flows does
 not cost the realm its built-in ones — the note says what that was measured
 against.
 
-**`deny-access-authenticator` is still temporary**, and now serves one case
-rather than all of them: an unverified arrival at an address a Person already
-holds. Everything arriving at an address nobody holds meets the rule below
-instead. `idp-email-verification` is what should take this slot — `issue #149`.
-
 ### The rule on the create path: no Person keeps an address nobody affirmed
 
-The refusal above guards the join, and the same takeover works by arriving
+The rule above guards the join, and the same takeover works by arriving
 **first**, on a path that never reaches `idp-auto-link`. ADR-0004 has that
 argument.
 
@@ -466,8 +470,9 @@ second Identity arrives. One source cannot stage either half of it.
   through it is unverified, whatever its claims say.
 - **`mock-affirming-a` and `mock-affirming-b` affirm addresses**:
   `trustEmail` on. Two, so that one Person can hold an Identity from each —
-  which is what the merge and the refusal both need. `trustEmail` is set per
-  source and never on the realm (ADR-0004).
+  which is what both halves of the join need, the silent one and the one that
+  waits for the mail. `trustEmail` is set per source and never on the realm
+  (ADR-0004).
 - **Userinfo is on**, because the reported advisory this source exists to
   stage is about the address being read from userinfo. Being on is not the
   same as being called: `mock-source/README.md` says what else that

@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { CONFIDENTIAL_CLIENT } from "./clients.ts";
 import {
   type Attempt,
+  type AttemptOptions,
   Browser,
   attempt,
   authenticate,
@@ -16,27 +17,27 @@ import {
   SOURCE_AFFIRMING_NOTHING,
   type MockIdentity,
   aNewcomerArriving,
+  aNewcomerWhoseAddressIsAffirmed,
+  addressOf,
   arriving,
 } from "./mock-source.ts";
-import { declaredRefusal } from "./realm.ts";
 
 /**
- * Arrive at an address a Person already holds and you become that Person — but
- * only if the source you came from verified the address (ADR-0004).
+ * Arrive at an address a Person already holds and you become that Person: with
+ * nothing asked, if the source you came from verified the address, and once
+ * you have answered the Broker's mail if it did not (ADR-0004).
  *
- * **The refusals below are the point.** Without them the Broker gives an
- * account away: register with somebody else's address somewhere that checks
- * nothing, wait for its owner to arrive. Nothing refuses it for free — the
- * authenticator that performs the join never reads `email_verified` — so what
- * these cases are really holding up is `broker/verified-email/` and the realm's
- * `citsci first broker login` flow. Take away either and they go red.
+ * **What stands between those two is the point.** Nothing in Keycloak asks the
+ * question for free: the authenticator that performs the join reads the
+ * address and never `email_verified`, so an Identity arriving with somebody
+ * else's unverified address would simply become them — register somewhere that
+ * checks nothing, wait for its owner to arrive. So what these cases are really
+ * holding up is `broker/verified-email/` and the realm's `citsci first broker
+ * login` flow. Take away either and they go red.
  *
  * Each case makes its own Person at an address of its own: the suite shares one
  * Broker, and a Person outlives the case that created them.
  */
-
-/** The refusal as the realm words it. */
-const REFUSAL = declaredRefusal("citsci-refuse-an-unverified-join");
 
 /** What the Broker showed the Person. A flow that ended anywhere else says so,
  *  so a case asserting on the wording fails by naming what happened instead. */
@@ -50,22 +51,36 @@ const whatThePersonWasTold = (result: Attempt): string =>
 const takeTheAddressFirst = (identity: MockIdentity) =>
   attempt(CONFIDENTIAL_CLIENT, arriving(SOURCE_AFFIRMING_NOTHING, identity));
 
-/** A Person whose address was verified — the only kind the Broker will join an
- *  Identity to. */
-async function personArrivingWithAVerifiedEmail(
-  identity: MockIdentity,
-): Promise<string> {
-  const { claims } = await authenticate(
-    CONFIDENTIAL_CLIENT,
-    arriving(AFFIRMING_SOURCE_A, identity),
-  );
+/** The Person an arrival that should work comes back as. */
+async function personFrom(arrival: AttemptOptions): Promise<string> {
+  const { claims } = await authenticate(CONFIDENTIAL_CLIENT, arrival);
   expect(claims.sub).toMatch(PERSON_IDENTIFIER);
   return claims.sub as string;
 }
 
-describe("an unverified address joins no existing Person", () => {
-  it("refuses an Identity whose own source does not affirm its address", async () => {
+/** A Person whose address was verified by their own Identity Source — the only
+ *  kind the Broker joins an Identity to with nothing asked. */
+const personArrivingWithAVerifiedEmail = (
+  identity: MockIdentity,
+): Promise<string> => personFrom(arriving(AFFIRMING_SOURCE_A, identity));
+
+/**
+ * The arrival this subflow holds back used to be turned away, told the service
+ * it came from had not confirmed the address (`issue #149`). The mail is what
+ * replaces that: ADR-0004 has already accepted that whoever reads a mailbox
+ * can become its Person, so asking the mailbox adds no risk the decision has
+ * not taken, and it turns the last closed door into the Person's own account.
+ *
+ * **A mail arriving is how these cases know the Broker stopped the join.** The
+ * page saying so is Keycloak's own wording, and the flow could stop on a page
+ * for reasons that have nothing to do with this rule — a missing `nonce`, for
+ * instance. Nothing but this rule mails the address.
+ */
+describe("an unverified address joins no existing Person until its mail is answered", () => {
+  it("mails an Identity whose own source does not affirm its address", async () => {
     const person = await personArrivingWithAVerifiedEmail("takeover-verified");
+    const address = addressOf("takeover-unverified");
+    const sent = await mailCountTo(address);
 
     // The same address, from a source that verifies addresses in general and
     // did not verify this one.
@@ -74,19 +89,23 @@ describe("an unverified address joins no existing Person", () => {
       arriving(AFFIRMING_SOURCE_B, "takeover-unverified"),
     );
 
+    // The dialogue stops on a page of the Broker's, and a mail is on its way
+    // to the address itself. Waited for: the Broker sends it inside the
+    // request that ended there, so counting straight away races the catcher.
     expect(takeover.outcome).toBe("refused-in-the-browser");
-    // Nothing of that Person came back: no identifier, no token, no data.
+    await linkMailedTo(address, sent);
+    expect(await mailCountTo(address)).toBe(sent + 1);
+    // And nothing of that Person came back: no identifier, no token, no data.
     expect(JSON.stringify(takeover)).not.toContain(person);
-    // Refused for the declared reason. Without this, any page the stand-in app
-    // could not answer would pass the case — a missing `nonce`, for instance.
-    expect(whatThePersonWasTold(takeover)).toContain(REFUSAL);
   });
 
-  it("refuses an affirmed address when the Broker does not trust that source", async () => {
+  it("mails an affirmed address when the Broker does not trust that source", async () => {
     // Trusting a source's word on addresses is one decision about one operator,
     // so it is set per source and never on the realm. A source nobody decided
     // to trust verifies nothing, whatever its claims say.
     const person = await personArrivingWithAVerifiedEmail("untrusted-verified");
+    const address = addressOf("untrusted-verified");
+    const sent = await mailCountTo(address);
 
     const throughUntrusted = await attempt(
       CONFIDENTIAL_CLIENT,
@@ -94,13 +113,57 @@ describe("an unverified address joins no existing Person", () => {
     );
 
     expect(throughUntrusted.outcome).toBe("refused-in-the-browser");
+    await linkMailedTo(address, sent);
+    expect(await mailCountTo(address)).toBe(sent + 1);
     expect(JSON.stringify(throughUntrusted)).not.toContain(person);
-    expect(whatThePersonWasTold(throughUntrusted)).toContain(REFUSAL);
   });
 
-  it("leaves the Person it refused to join exactly as they were", async () => {
-    // Otherwise the refusal is a way to break somebody else's account: arrive
-    // badly at their address often enough and they can no longer get in.
+  it("joins whoever answers that mail to the Person holding the address", async () => {
+    // What the mail is for, and the only case here that finishes the join. A
+    // fresh Identity per run, because an Identity that joined a Person once
+    // never meets this flow again: `mock-source/README.md` says why that is
+    // the one thing the fixed Identities above cannot stage.
+    //
+    // Unaffirmed here by the source not being trusted rather than by the
+    // claim, because one username cannot carry both: the Person has to be made
+    // at this address first, and that takes an arrival the Broker does affirm.
+    // The condition reads the two facts as one, and the cases above cover the
+    // claim.
+    const newcomer = aNewcomerWhoseAddressIsAffirmed();
+    const person = await personFrom(newcomer.through(AFFIRMING_SOURCE_A));
+    const sent = await mailCountTo(newcomer.address);
+
+    const browser = new Browser();
+    const waiting = await attempt(CONFIDENTIAL_CLIENT, {
+      browser,
+      ...newcomer.through(SOURCE_AFFIRMING_NOTHING),
+    });
+
+    expect(waiting.outcome).toBe("refused-in-the-browser");
+
+    // Answered, in the browser the Broker asked from.
+    await follow(
+      browser,
+      await browser.get(await linkMailedTo(newcomer.address, sent)),
+      CONFIDENTIAL_CLIENT,
+    );
+
+    // And now that Identity is one of this Person's: arriving through the
+    // source that affirmed nothing reaches the Person who holds the address,
+    // which is what the whole pilot is for.
+    const joined = await authenticate(
+      CONFIDENTIAL_CLIENT,
+      newcomer.through(SOURCE_AFFIRMING_NOTHING),
+    );
+
+    expect(joined.claims.sub).toBe(person);
+  });
+
+  it("leaves both of them where they were when the mail goes unanswered", async () => {
+    // Two ways this could go wrong at once. A join that did not wait for the
+    // click would hand the account over; and a Person whose address somebody
+    // arrived badly at must still be able to sign in, or arriving badly often
+    // enough is a way to lock them out.
     const person = await personArrivingWithAVerifiedEmail("takeover-verified");
 
     await attempt(
@@ -111,16 +174,24 @@ describe("an unverified address joins no existing Person", () => {
       CONFIDENTIAL_CLIENT,
       arriving(AFFIRMING_SOURCE_A, "takeover-verified"),
     );
+    // The arrival that was mailed, coming back without having clicked: asked
+    // again rather than let in, because it is still nobody.
+    const unanswered = await attempt(
+      CONFIDENTIAL_CLIENT,
+      arriving(AFFIRMING_SOURCE_B, "takeover-unverified"),
+    );
 
     expect(afterwards.claims.sub).toBe(person);
+    expect(unanswered.outcome).toBe("refused-in-the-browser");
+    expect(JSON.stringify(unanswered)).not.toContain(person);
   });
 });
 
 describe("a Verified Email joins the Person that holds it", () => {
   it("gives one Person Identifier to the same address through two sources", async () => {
-    // What the pilot exists to demonstrate, and what the refusals above must
-    // not have cost. An enforcement that turned everyone away would pass them
-    // all (#25).
+    // What the pilot exists to demonstrate, and what the rule above must not
+    // have cost. An enforcement that asked everyone for a mail, or turned them
+    // away, would pass every case above (#25).
     const person = await personArrivingWithAVerifiedEmail("merge-verified");
 
     const second = await authenticate(

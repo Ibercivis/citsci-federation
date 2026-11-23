@@ -38,10 +38,10 @@ public class WithholdUnverifiedEmail
 
   /**
    * The note {@code idp-create-user-if-unique} leaves behind when the Person
-   * in this flow is one it has just made. Only the create path reaches here
-   * with an unaffirmed address today, but the join path's refusal is meant to
-   * become a confirmation (issue #149), so the guard is read rather than
-   * assumed.
+   * in this flow is one it has just made. The join path reaches here too, with
+   * an unaffirmed address and a Person who was already there: it mails that
+   * address and joins on the click (issue #149), and the Person it joins must
+   * keep the address they hold.
    *
    * <p>No public API promises the note, which is why the image is pinned
    * (broker/Dockerfile) and why the cases in

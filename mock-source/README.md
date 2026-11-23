@@ -16,7 +16,8 @@ client it serves — the Broker — and its Identities.
 
 Three, because a Person holds **one Identity per source** — `federated_identity`
 says so with a primary key — and the join is about their *second* Identity. Two
-affirming sources to stage it, one affirming nothing to stage its refusal.
+affirming sources to stage the silent join, one affirming nothing to stage the
+arrival that has to answer the Broker's mail first.
 
 `sources` is the list of aliases and nothing more: `server.ts` registers one
 Broker callback per alias, and the realm repeats them because JSON imports
@@ -68,9 +69,17 @@ answer cannot yet change between two sign-ins; #25 needs that, and adds it.
 **An Identity the Broker has never met** is the one thing this table cannot
 give: a case about a Person's first arrival runs once against a Broker, and the
 second run signs in as the Person the first one made. So `mock.json` also
-declares a `newcomer` — any username under its prefix, at an address of its own
-name that nobody affirmed, with `{username}` in the claims filled in by the
-server. `tests/mock-source.ts` mints one per run.
+declares `newcomers` — any username under one of their prefixes, with
+`{username}` in the claims filled in. `newcomers.ts` mints one per run,
+refuses a declaration whose prefixes overlap, and is where the tests read the
+address a newcomer will arrive at rather than deriving it a second way.
+
+Two shapes, because what the claims say about that address is the question such
+a case usually turns on: `unverified` for an address nobody affirmed, and
+`verified` for one its source did. The second is how a case stages a Person
+**and** a later arrival at their address in one run — the same username through
+an affirming source and then through `mock`, which is `untrusted-verified`
+above with nothing left over from the last run.
 
 ## Keep the ID tokens free of names
 

@@ -17,37 +17,14 @@ import { type webcrypto, createECDH, createHash } from "node:crypto";
 import { type IncomingMessage, createServer } from "node:http";
 import { type KoaContextWithOIDC, Provider } from "oidc-provider";
 import declaration from "./mock.json" with { type: "json" };
+import { type DeclaredIdentity, newcomerNamed } from "./newcomers.ts";
 
-type Identity =
-  (typeof declaration.identities)[keyof typeof declaration.identities];
+const IDENTITIES: Record<string, DeclaredIdentity> = declaration.identities;
 
-const IDENTITIES: Record<string, Identity> = declaration.identities;
-
-/**
- * An Identity this source has never served before: any username under the
- * prefix `mock.json` declares, at an address of its own name, affirmed by
- * nobody. Still only what it was told — the declaration names the prefix, the
- * password and the claims, and `{username}` in them is filled in with whoever
- * signed in.
- *
- * Why a case needs one: `mock-source/README.md`.
- */
-function identityNamed(username: string): Identity | undefined {
-  const declared = IDENTITIES[username];
-  if (declared) return declared;
-  if (!username.startsWith(declaration.newcomer.usernamePrefix)) {
-    return undefined;
-  }
-  const at = (claims: Identity["idToken"]): Identity["idToken"] => ({
-    ...claims,
-    email: claims.email.replaceAll("{username}", username),
-  });
-  return {
-    password: declaration.newcomer.password,
-    idToken: at(declaration.newcomer.idToken),
-    userinfo: at(declaration.newcomer.userinfo),
-  };
-}
+/** The Identity behind a username: one the declaration names, or one this
+ *  source has never served before (`newcomers.ts`). */
+const identityNamed = (username: string): DeclaredIdentity | undefined =>
+  IDENTITIES[username] ?? newcomerNamed(username);
 
 /** What each scope releases. The grant below gives every one of them, so the
  *  scopes are spelled here once. */

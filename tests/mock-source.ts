@@ -7,9 +7,12 @@
  * that exist. What each source is *called* and whether its word on an address
  * is trusted are the Broker's configuration, so those are read from the realm
  * (`./realm.ts`). Neither fact is written twice, so neither can drift.
+ *
+ * An Identity the source has never served is minted by the source's own
+ * module for the same reason: the address such a username will arrive at is
+ * that module's to derive (`mock-source/newcomers.ts`), never this one's.
  */
 
-import { randomUUID } from "node:crypto";
 import { createRemoteJWKSet, jwtVerify } from "jose";
 import {
   type Discovery,
@@ -19,6 +22,7 @@ import {
 import type { Client } from "./clients.ts";
 import { Browser, createPkce, follow, formsOn } from "./brokered-app.ts";
 import declaration from "../mock-source/mock.json" with { type: "json" };
+import { NEWCOMERS, aNewcomerUnder } from "../mock-source/newcomers.ts";
 import { declaredSource } from "./realm.ts";
 
 /**
@@ -90,20 +94,45 @@ export const arriving = (through: string, identity: MockIdentity) => ({
 });
 
 /**
+ * The address an Identity arrives with, read from what the declaration puts in
+ * its ID token. A case that waits for the Broker's mail has to know where the
+ * Broker will send it, and reading it here keeps the address out of the case.
+ *
+ * `mock-split` is the one Identity whose two destinations disagree on purpose,
+ * so a case about that one says which of them it means rather than asking
+ * here.
+ */
+export const addressOf = (identity: MockIdentity): string =>
+  MOCK_IDENTITIES[identity].idToken.email;
+
+/**
  * An arrival from an Identity the Broker has never met, at an address of its
- * own that nobody affirmed, giving `address` when the Broker asks for one. A
- * fresh one per run, which is what a case about a **first** arrival needs:
- * `mock-source/README.md` says why.
+ * own that nobody affirmed, giving `address` when the Broker asks for one.
  */
 export const aNewcomerArriving = (through: string, address: string) => ({
-  as: {
-    through,
-    username: `${declaration.newcomer.usernamePrefix}${randomUUID()}`,
-    password: declaration.newcomer.password,
-    address,
-  },
+  as: { through, ...aNewcomerUnder(NEWCOMERS.unverified), address },
   pkce: createPkce("S256"),
 });
+
+/**
+ * An Identity the Broker has never met whose source says it verified the
+ * address it carries, and that address.
+ *
+ * Which source it arrives through is the caller's, because this is what one
+ * address arriving twice needs: affirmed, through a source the Broker takes
+ * the word of on addresses, and then unaffirmed through one it does not — the
+ * same claim, read through `trustEmail` instead of a second Identity.
+ */
+export function aNewcomerWhoseAddressIsAffirmed() {
+  const { address, ...credentials } = aNewcomerUnder(NEWCOMERS.verified);
+  return {
+    address,
+    through: (source: string) => ({
+      as: { through: source, ...credentials },
+      pkce: createPkce("S256"),
+    }),
+  };
+}
 
 /**
  * The Broker as the source knows it: a client, registered with a callback.

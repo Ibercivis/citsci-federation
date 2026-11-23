@@ -28,7 +28,7 @@ import org.keycloak.provider.ProviderConfigProperty;
  *
  * <p>This condition is what stands in front of it. The realm puts it in a
  * conditional subflow ahead of the join; what that subflow then does with the
- * refused arrival is the realm's decision, not this class's. No condition
+ * arrival it holds back is the realm's decision, not this class's. No condition
  * Keycloak ships can take its place: none of them can see what the arriving
  * source said about the address (measured in issue #75, recorded in
  * {@code docs/notes/conditional-subflow-and-brokered-email-verified.md}).
@@ -40,8 +40,9 @@ import org.keycloak.provider.ProviderConfigProperty;
  * away from the one Keycloak applies on the create path.
  *
  * <p>Whatever it cannot establish counts as unverified: no brokered context,
- * no claim, an unparseable claim, a source whose word is not trusted. Refusing
- * is the safe answer, so uncertainty falls on that side (ADR-0004).
+ * no claim, an unparseable claim, a source whose word is not trusted. Asking
+ * the address itself is the safe answer, so uncertainty falls on that side
+ * (ADR-0004).
  */
 public class UnverifiedEmailCondition
     implements ConditionalAuthenticator, ConditionalAuthenticatorFactory {

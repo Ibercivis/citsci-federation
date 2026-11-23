@@ -4,11 +4,19 @@
     "id": "citsci-broker",
     "secret": "mock-source-development-secret"
   },
-  "newcomer": {
-    "usernamePrefix": "newcomer-",
-    "password": "mock",
-    "idToken": { "email": "{username}@mock.test", "email_verified": false },
-    "userinfo": { "email": "{username}@mock.test", "email_verified": false }
+  "newcomers": {
+    "unverified": {
+      "usernamePrefix": "newcomer-",
+      "password": "mock",
+      "idToken": { "email": "{username}@mock.test", "email_verified": false },
+      "userinfo": { "email": "{username}@mock.test", "email_verified": false }
+    },
+    "verified": {
+      "usernamePrefix": "verified-newcomer-",
+      "password": "mock",
+      "idToken": { "email": "{username}@mock.test", "email_verified": true },
+      "userinfo": { "email": "{username}@mock.test", "email_verified": true }
+    }
   },
   "identities": {
     "mock-verified": {
