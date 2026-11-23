@@ -51,11 +51,19 @@ for (const shape of Object.values(NEWCOMERS)) {
   }
 }
 
-/** The declared claims with this username written into them. */
-const filledIn = (
-  claims: DeclaredIdentity["idToken"],
+/**
+ * The declared claims with this username written into them, whichever
+ * destination they are for.
+ *
+ * Generic rather than typed as the ID token's claims, which it is also called
+ * with userinfo's. The two carry the same claims today and the lie costs
+ * nothing; it costs something the moment a source declares a userinfo that
+ * says less, because the error lands here rather than where that source is.
+ */
+const filledIn = <Claims extends { email: string }>(
+  claims: Claims,
   username: string,
-): DeclaredIdentity["idToken"] => ({
+): Claims => ({
   ...claims,
   email: claims.email.replaceAll("{username}", username),
 });
