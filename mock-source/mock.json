@@ -1,5 +1,10 @@
 {
-  "sources": ["mock", "mock-affirming-a", "mock-affirming-b"],
+  "sources": [
+    "mock",
+    "mock-affirming-a",
+    "mock-affirming-b",
+    "mock-affirming-named"
+  ],
   "client": {
     "id": "citsci-broker",
     "secret": "mock-source-development-secret"

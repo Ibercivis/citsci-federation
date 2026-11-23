@@ -416,6 +416,10 @@ second Identity arrives. One source cannot stage either half of it.
   `trustEmail` on. Two, so that one Person can hold an Identity from each —
   which is what the merge and the refusal both need. `trustEmail` is set per
   source and never on the realm (ADR-0004).
+- **`mock-affirming-named` affirms addresses and asks for `profile`**: the
+  only one that does, so an Identity can carry a name in its ID token. A and B
+  ask for `openid email`, which is all issue #28 asks Google for, so the
+  cases built on them see what a launch source sends.
 - **Userinfo is on**, because the reported advisory this source exists to
   stage is about the address being read from userinfo. Being on is not the
   same as being called: `mock-source/README.md` says what else that

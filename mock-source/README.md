@@ -12,11 +12,12 @@ layer (`broker/realm/testing.json`).
 `mock.json` holds the Identity Sources this one server stands behind, the
 client it serves — the Broker — and its Identities.
 
-### Three sources, one server
+### Four sources, one server
 
-Three, because a Person holds **one Identity per source** — `federated_identity`
-says so with a primary key — and the join is about their *second* Identity. Two
-affirming sources to stage it, one affirming nothing to stage its refusal.
+A Person holds **one Identity per source** — `federated_identity` says so with
+a primary key — and the join is about their *second* Identity. Two affirming
+sources to stage it, one affirming nothing to stage its refusal, and one that
+affirms and asks for `profile` as well (`broker/README.md` says why).
 
 `sources` is the list of aliases and nothing more: `server.ts` registers one
 Broker callback per alias, and the realm repeats them because JSON imports

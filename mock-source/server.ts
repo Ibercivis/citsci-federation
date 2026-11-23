@@ -50,8 +50,14 @@ function identityNamed(username: string): Identity | undefined {
 }
 
 /** What each scope releases. The grant below gives every one of them, so the
- *  scopes are spelled here once. */
-const CLAIMS = { openid: ["sub"], email: ["email", "email_verified"] };
+ *  scopes are spelled here once. `profile` is what `mock-affirming-named`
+ *  asks for, the way a launch source would the day the Broker wants names;
+ *  it releases only what an Identity declares. */
+const CLAIMS = {
+  openid: ["sub"],
+  email: ["email", "email_verified"],
+  profile: ["name", "preferred_username"],
+};
 
 function required(name: string): string {
   const value = process.env[name];
