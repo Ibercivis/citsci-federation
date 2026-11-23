@@ -14,6 +14,22 @@ When a skill mentions a role (e.g. "apply the AFK-ready triage label"), use the 
 
 Edit the "Label in our tracker" column to match whatever vocabulary you actually use.
 
+## A closed issue carries no triage label
+
+Closing an issue takes its triage label off. The first four in the table say what an issue needs
+next — evaluating, information, an agent, a human. A closed issue needs none of them.
+
+That is what the labels are filtered on. `--label ready-for-agent` is worth listing only while it
+answers with work somebody can pick up; left on after the close, the labels pile up until it answers
+with finished work instead. Drop this rule if a triage label is ever wanted as a record of how an
+issue was handled, and accept that nothing then selects live work.
+
+`wontfix` is the exception. It is a reason for closing rather than something the issue needs, so it
+stays.
+
+The kind labels stay as well: `task`, `research`, `grilling`, `map`, `prototype`, and Dependabot's
+below. They say what an issue was, which closing does not change.
+
 ## The labels Dependabot adds
 
 Dependabot creates its own on first use: `dependencies`, plus one per ecosystem — `javascript`,
