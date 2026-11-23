@@ -12,7 +12,7 @@ COPY package.json pnpm-lock.yaml ./
 # `--ignore-scripts` because the root's `prepare` installs git hooks, which
 # have no business in an image and whose tool is a devDependency.
 RUN pnpm install --prod --frozen-lockfile --ignore-scripts
-COPY mock-source/server.ts mock-source/mock.json ./
+COPY mock-source/server.ts mock-source/newcomers.ts mock-source/mock.json ./
 USER node
 # Node runs TypeScript itself by stripping the types: nothing to compile.
 CMD ["node", "server.ts"]

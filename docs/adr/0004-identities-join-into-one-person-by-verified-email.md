@@ -9,7 +9,8 @@ Identity first arrives, and never consulted again.
 The word *Verified* carries the whole decision. Google and GitHub affirm the address themselves. A
 source that affirms nothing — ORCID affirms no email at all — or that offers an unverified one causes
 the Broker to **ask for an address and confirm it by mail**, which is also what ORCID's own
-integration guide tells integrators to do. An unverified email joins nothing, ever.
+integration guide tells integrators to do. An unverified email joins nothing on its own word: either
+the source affirmed the address, or the Broker confirms it by mail before the join.
 
 ## Considered Options
 
@@ -52,8 +53,9 @@ stays off and the Broker asks for an address and confirms it, as it already does
 
 The Keycloak version is pinned, `trustEmail` is set per Identity Source rather than globally, and
 seam 1 asserts the **negative** property: an Identity presenting an unverified email does not join an
-existing Person. That inverted test is the only thing standing between this decision and account
-takeover, so it is a first-class assertion and not a nice-to-have.
+existing Person on the strength of that address — it is mailed, and joins only if the mail is
+answered. That inverted test is the only thing standing between this decision and account takeover,
+so it is a first-class assertion and not a nice-to-have.
 
 ## What enforces the negative direction
 
@@ -69,18 +71,25 @@ conditional subflow ahead of the join. It reads the two facts Keycloak itself re
 Person — this source is trusted on addresses, and it said it verified this one — so the join path
 cannot drift away from the create path. Whatever it cannot establish counts as unverified.
 
-An Identity it refuses is **turned away** today, told the service it came from did not confirm the
-address. That refusal fires only where a Person already holds the address, which is the one case the
-rule below does not cover, and it is still a closed door: `idp-email-verification` is what should
-take its place in that subflow, so that whoever reads the mailbox joins (`issue #149`).
+An Identity it holds back is **mailed at the address it is arriving at**, the one that Person already
+holds, and joins them when the link is followed (`issue #149`). That is the top of this record
+applied to the join: the Broker asks for nothing the arrival could simply claim, and takes the
+mailbox's word instead. It adds no risk this decision has not already taken — whoever controls a
+mailbox can become that Person — and it is why nothing in the flow is now a closed door.
+
+**It is paid for by the Person who holds the address.** They get a mail nobody asked them for
+whenever somebody arrives badly at it, one per attempt: Keycloak's guard against resending covers a
+repeat inside one sign-in and nothing more, and nothing here rate-limits the rest. The refusal sent
+none. That is the price of the door being open, and it is the Person's price rather than the
+arrival's.
 
 ## An Identity does not bring an address its source did not affirm
 
-Refusing the join is not enough on its own, because the takeover works by arriving **first**: take an
-address at a source that affirms nothing — ORCID affirms none — and the Broker hands the genuine
-holder's verified arrival to the Person you made. Nothing asks whether the Person being joined holds
-that address affirmed, and no configuration can: `idp-create-user-if-unique` matches on the address
-alone, exactly as `idp-auto-link` does.
+Holding the join back is not enough on its own, because the takeover works by arriving **first**:
+take an address at a source that affirms nothing — ORCID affirms none — and the Broker hands the
+genuine holder's verified arrival to the Person you made. Nothing asks whether the Person being
+joined holds that address affirmed, and no configuration can: `idp-create-user-if-unique` matches on
+the address alone, exactly as `idp-auto-link` does.
 
 Refusing the verified arrival instead was rejected. It trades a takeover for a lockout of the same
 victim, who could then never sign in at their own address. Giving that arrival a Person of its own

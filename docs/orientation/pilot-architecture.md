@@ -50,8 +50,8 @@ not happen: that is what makes moving between projects feel like one system.
 
 Two Identities are the same Person when they present the same **Verified Email**, read once, when
 that Identity first arrives, and never consulted again (ADR-0004). There is no linking flow to walk
-through. An unverified address joins nothing; a source that affirms no address makes the Broker ask
-for one and confirm it by mail.
+through. An unverified address joins nobody until the Broker has confirmed it by mail itself, and a
+source that affirms no address makes the Broker ask for one and confirm that.
 
 The price is stated rather than hidden: one human reachable at two unrelated addresses is **two
 Persons**, and the pilot offers no merge. A later merge must add an alias, never reassign.

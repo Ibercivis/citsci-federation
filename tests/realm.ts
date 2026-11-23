@@ -25,10 +25,6 @@ interface ImportedRealm {
     trustEmail: boolean;
     config?: Record<string, string>;
   }>;
-  authenticatorConfig?: ReadonlyArray<{
-    alias: string;
-    config?: Record<string, string>;
-  }>;
 }
 
 const MODE = configured("BROKER_MODE");
@@ -91,31 +87,6 @@ export function declaredCredentials(alias: string): {
     );
   }
   return { clientId, clientSecret };
-}
-
-/**
- * The refusal the realm words for an authenticator, by that authenticator's
- * config alias.
- *
- * A case holding a phrase of its own would go red once somebody reworded the
- * message, having found nothing wrong — and a phrase is free to turn up on a
- * page that means something else.
- */
-export function declaredRefusal(alias: string): string {
-  const declared = realm.authenticatorConfig?.find(
-    (entry) => entry.alias === alias,
-  )?.config;
-  const message =
-    declared && "denyErrorMessage" in declared
-      ? declared.denyErrorMessage
-      : undefined;
-  if (!message) {
-    throw new Error(
-      `The realm declares no denyErrorMessage under ${alias}: either that ` +
-        "alias moved, or the refusal stopped being worded by us.",
-    );
-  }
-  return message;
 }
 
 /**

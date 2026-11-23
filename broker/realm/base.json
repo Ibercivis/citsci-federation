@@ -284,12 +284,6 @@
       "config": {
         "update.profile.on.first.login": "missing"
       }
-    },
-    {
-      "alias": "citsci-refuse-an-unverified-join",
-      "config": {
-        "denyErrorMessage": "We could not sign you in, because the service you signed in with did not confirm your email address."
-      }
     }
   ],
   "authenticationFlows": [
@@ -372,13 +366,13 @@
     },
     {
       "alias": "citsci join the Person holding this address",
-      "description": "The address already belongs to a Person. The refusal is asked before the join, so a refused Identity never reaches idp-auto-link.",
+      "description": "The address already belongs to a Person. Whether its source affirmed it is asked before the join, so an Identity reaches idp-auto-link only once somebody has affirmed the address.",
       "providerId": "basic-flow",
       "topLevel": false,
       "builtIn": false,
       "authenticationExecutions": [
         {
-          "flowAlias": "citsci refuse an unverified address",
+          "flowAlias": "citsci confirm an unverified address by mail",
           "requirement": "CONDITIONAL",
           "priority": 10,
           "authenticatorFlow": true,
@@ -394,8 +388,8 @@
       ]
     },
     {
-      "alias": "citsci refuse an unverified address",
-      "description": "Refuses an address the arriving source did not verify. Nothing else checks it: idp-auto-link reads the address alone (issue #75).",
+      "alias": "citsci confirm an unverified address by mail",
+      "description": "The arriving source did not verify the address, so the Broker mails it and joins on the click. Nothing else checks it: idp-auto-link reads the address alone (issue #75).",
       "providerId": "basic-flow",
       "topLevel": false,
       "builtIn": false,
@@ -408,8 +402,7 @@
           "userSetupAllowed": false
         },
         {
-          "authenticator": "deny-access-authenticator",
-          "authenticatorConfig": "citsci-refuse-an-unverified-join",
+          "authenticator": "idp-email-verification",
           "requirement": "REQUIRED",
           "priority": 20,
           "authenticatorFlow": false,
