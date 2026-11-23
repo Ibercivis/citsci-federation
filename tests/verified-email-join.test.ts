@@ -14,6 +14,7 @@ import { linkMailedTo, mailCountTo } from "./mailbox.ts";
 import {
   AFFIRMING_SOURCE_A,
   AFFIRMING_SOURCE_B,
+  AFFIRMING_SOURCE_ASKING_FOR_NAMES,
   SOURCE_AFFIRMING_NOTHING,
   type MockIdentity,
   aNewcomerArriving,
@@ -195,6 +196,43 @@ describe("an unverified address joins no existing Person until its mail is answe
     expect(afterwards.claims.sub).toBe(person);
     expect(unanswered.outcome).toBe("refused-in-the-browser");
     expect(JSON.stringify(unanswered)).not.toContain(person);
+  });
+
+  /**
+   * The reported advisory: with `trustEmail` on, the address is read from
+   * userinfo while `email_verified` is read from the ID token. Were it real,
+   * a source could verify one address in its ID token and hand over another in
+   * userinfo, and the Broker would join the Person holding the second. Each
+   * arrival below goes to the Person at `advisory@mock.test` if it is.
+   * `docs/notes/2026-11-23-trust-email-and-userinfo.md` has what 26.8.1 does.
+   */
+  it.each([
+    {
+      what: "an address from userinfo, verified only in the ID token for another",
+      through: AFFIRMING_SOURCE_B,
+      identity: "advisory-split",
+    },
+    {
+      what: "the same, with names in the ID token",
+      through: AFFIRMING_SOURCE_ASKING_FOR_NAMES,
+      identity: "advisory-split-named",
+    },
+    {
+      what: "an address from userinfo that says nothing about verifying it",
+      through: AFFIRMING_SOURCE_B,
+      identity: "advisory-silent",
+    },
+  ] as const)("refuses $what", async ({ through, identity }) => {
+    const person = await personArrivingWithAVerifiedEmail("advisory-verified");
+
+    const split = await attempt(
+      CONFIDENTIAL_CLIENT,
+      arriving(through, identity),
+    );
+
+    expect(split.outcome).toBe("refused-in-the-browser");
+    expect(JSON.stringify(split)).not.toContain(person);
+    expect(whatThePersonWasTold(split)).toContain(REFUSAL);
   });
 });
 
