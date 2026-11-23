@@ -205,12 +205,13 @@ describe("an unverified address joins no existing Person until its mail is answe
 
   /**
    * The reported advisory: with `trustEmail` on, the address is read from
-   * userinfo while `email_verified` is read from the ID token. Real up to
-   * Keycloak 26.7.1: a source could verify one address in its ID token and hand
-   * over another in userinfo, and the Broker would join the Person holding the
-   * second. Each
-   * arrival below goes to the Person at `advisory@mock.test` if it is.
-   * `docs/notes/2026-11-23-trust-email-and-userinfo.md` has what 26.8.1 does.
+   * userinfo while `email_verified` is read from the ID token. A source can
+   * then verify one address in its ID token and hand over another in
+   * userinfo, and the Broker joins the Person holding the second. Each
+   * arrival below is that shape, and reaches the Person at
+   * `advisory@mock.test` if the pinned version still reads the two apart.
+   * `docs/notes/2026-11-23-trust-email-and-userinfo.md` has which versions
+   * do, and `broker/Dockerfile` carries the floor that follows from it.
    */
   it.each([
     {
