@@ -157,6 +157,17 @@ describe("an unverified address joins no existing Person until its mail is answe
     );
 
     expect(joined.claims.sub).toBe(person);
+
+    // And the Person kept the address. `WithholdUnverifiedEmail` runs on this
+    // path too, and taking the address off the Person it just joined would
+    // leave the line above passing: the link is by Identity, not by address.
+    // A third source affirming the same address is what reads it.
+    const byAddress = await authenticate(
+      CONFIDENTIAL_CLIENT,
+      newcomer.through(AFFIRMING_SOURCE_B),
+    );
+
+    expect(byAddress.claims.sub).toBe(person);
   });
 
   it("leaves both of them where they were when the mail goes unanswered", async () => {
@@ -191,7 +202,7 @@ describe("a Verified Email joins the Person that holds it", () => {
   it("gives one Person Identifier to the same address through two sources", async () => {
     // What the pilot exists to demonstrate, and what the rule above must not
     // have cost. An enforcement that asked everyone for a mail, or turned them
-    // away, would pass every case above (#25).
+    // away, would pass every case above (issue #25).
     const person = await personArrivingWithAVerifiedEmail("merge-verified");
 
     const second = await authenticate(
