@@ -74,5 +74,9 @@ before reaching that question, at the verified Person each one starts from.
   instead of the brokered verdict inherits the gap.
 - **No case pins the create path for this shape.** The silent row after PR #155 was measured by
   hand; the cases in `tests/verified-email-join.test.ts` cover it only at an address somebody holds.
-- **Real sources.** Google's userinfo carries `email_verified`. The gap needs a trusted source that
-  leaves it out, which is a reason to check a source's userinfo before turning `trustEmail` on.
+- **Google does not promise `email_verified` in userinfo.** Its OpenID Connect page promises it in
+  the ID token whenever the `email` scope is asked for, which issue #28 does. For userinfo it promises
+  only the standard claims and `claims_supported`, and warns that "users or their organizations may
+  choose to supply or withhold certain fields". Were it withheld, a Person Google verified would lose
+  the verdict and meet the closed door or the mailed confirmation, never another Person. A source's
+  userinfo is worth checking before its `trustEmail` is turned on.
