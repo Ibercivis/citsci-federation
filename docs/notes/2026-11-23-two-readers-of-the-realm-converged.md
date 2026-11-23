@@ -20,9 +20,14 @@ The independence is visible because the two collided textually: each added `conf
 field of `ImportedRealm.identityProviders`, with different types, `PR #178` then taking the wider
 spelling `main` had.
 
-## There is nothing to fold until `issue #24` reaches `main`
+## Both readers are on `main`, and the fold is no longer blocked
 
-`PR #178` merged into `issue-24`, a branch cut before `PR #176` landed, so one of these readers is
-on `main` and the other is not. A single function factors into nothing, and extracting one from it
-now would be a helper with one caller. Once `issue #24` merges, `tests/realm.ts` holds both and the
-refactor is small and real. Not before.
+`PR #178` merged into `issue-24`, a branch cut before `PR #176` landed, so for most of a day one
+reader was on `main` and the other was not. `PR #174` ended that: `issue-24` landed as `4dd5797` on
+23 November, and `tests/realm.ts` holds `declaredSource` and `declaredCredentials` together. Nothing
+is waiting on a branch any more.
+
+They are not the same function yet. `declaredSource` throws once for an alias the realm does not
+declare, and again for a provider declaring no scope; `declaredCredentials` reaches through
+`?.config` and reports both of those as one error about missing credentials. A helper over the two
+has to choose which error a caller gets, and that choice is the fold's only real question.
