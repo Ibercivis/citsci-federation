@@ -32,6 +32,23 @@ by eye.
 
 For a checkout from nothing as well, `rm -rf apps/` first: the five repositories are cloned again.
 
+## In front of people
+
+```sh
+pnpm clean-slate
+BROKER_MODE=demo pnpm apps:up
+```
+
+`demo` is the realm a deployment imports, with the mail catcher beside it: no `demo` Identity, no
+Mock Identity Source, and Google and GitHub as the only Identity Sources. Fill in `.env.local` as in
+step 9 first, or both buttons refuse you at the source. A Person then arrives through Google or
+GitHub, or registers at the Broker (step 2's **Register**). Wherever a step below says `demo` /
+`demo-password`, use one of those, and skip step 3.
+
+The mode holds only through a reset: `--import-realm` does not replace a realm already in the
+database. Back to `testing` is `pnpm apps:reset` without the variable. `pnpm apps:up` refuses
+`production`, which runs no mail catcher for the applications to send to.
+
 ## The addresses
 
 | | |
@@ -93,8 +110,8 @@ instead of registered.
 The same URL, but instead of typing a password choose **Mock source**: `mock-verified` / `mock`.
 
 That source is a server this repository runs ([`mock-source/`](../mock-source/)) so that the tests
-can decide what a source says about an address. It is not a launch source, and it starts only when
-`BROKER_MODE=testing`.
+can decide what a source says about an address. It is not a launch source, and it starts only in
+`testing`: in `demo` the sign-in page has no **Mock source**.
 
 ### 4. The Person, as the Broker holds them
 
@@ -189,14 +206,13 @@ registered with, and `pnpm broker:reset`. A line left empty breaks that button; 
 - **GitHub, at the address Google used**: the Broker refuses you. It does not read whether GitHub
   verified the address, so it joins nobody through GitHub (`issue #145`).
 
-**TODO — where this step goes is not settled.** `pnpm broker:reset` takes the Broker's database and
+**TODO — where this step goes in `testing` is not settled.** `pnpm broker:reset` takes the Broker's database and
 the mail catcher with it, so the step throws away the Persons, the Identities and the mail that
 steps 2 to 7 just built, and then refers back to all three. The applications stay up from
-`compose.apps.yaml`, holding accounts that name Person Identifiers nobody has any more. A demo
-environment that runs the real sources with the mail catcher and no Mock Identity Source is being
-prepared, and it rewrites this walkthrough rather than this step; revisit then. If it does not
-arrive, `pnpm apps:reset` leaves the whole composition coherent with the new Broker, and is the
-one-line fix. `PR #164` weighed the three.
+`compose.apps.yaml`, holding accounts that name Person Identifiers nobody has any more. In `demo`
+the question does not arise: the credentials are in `.env.local` before the first `apps:up`, so no
+reset follows. In `testing`, `pnpm apps:reset` leaves the whole composition coherent with the new
+Broker, and is the one-line fix. `PR #164` weighed the three.
 
 ## What does not work yet, on purpose
 

@@ -20,8 +20,8 @@ network, and `.env` says why.
 
 In `testing`, the one Identity the realm declares is `demo` / `demo-password`, and its
 sign-in page also offers the Mock Identity Sources, whose Identities are
-declared in `mock-source/mock.json` (password `mock`). In `production` there
-are neither.
+declared in `mock-source/mock.json` (password `mock`). In `production` and
+`demo` there are neither: Google and GitHub are the only Identity Sources.
 
 Admin console: under the same origin, at `/admin` (`admin` / `admin`) — **for
 looking, not for changing.** A change made there is configuration no reviewer
@@ -32,9 +32,15 @@ belongs in the declaration.
 
 `realm/base.json` is the Broker anywhere it runs. `realm/testing.json` is
 what exists only so that it can be tested. `BROKER_MODE` in `.env` picks one of
-two Brokers: `testing` is the base plus the testing layer, with the Mock
-Identity Source running, and `production` is the base alone. Anything meant to
-be deployed runs `production`.
+three Brokers: `testing` is the base plus the testing layer, with the Mock
+Identity Source and the mail catcher running; `production` is the base alone;
+and `demo` is the base alone with the mail catcher, so that the Brokered
+Composition's applications come up for showing the system to people. Anything
+meant to be deployed runs `production`.
+
+In `production` and `demo`, `tests/declaration.test.ts` is the only test file
+that means anything. The rest of the suite signs Identities in through the Mock
+Identity Sources, which only `testing` has.
 
 Keycloak imports one complete realm per file and cannot layer two, so
 `realm/derive.ts` does it inside the image build and writes the one file
@@ -84,7 +90,7 @@ declaration is the whole configuration, and the image built from this
 directory the whole of the code.
 
 An edit to the declaration does **not** reach a stack that is already up, and
-neither does a change of `BROKER_MODE`. A `reset` is how either lands. Seam 2 fails on a Broker left in the other mode. A
+neither does a change of `BROKER_MODE`. A `reset` is how either lands. Seam 2 fails on a Broker left in another mode. A
 Broker holding state worth keeping will need a migration path that this pilot
 does not have yet.
 
@@ -321,8 +327,8 @@ off. What else that API can and cannot do is in
 `docs/notes/2026-11-18-account-rest-api-credential-operations.md`.
 
 The base names its mail server as `${SMTP_HOST}` and `${SMTP_PORT}`. In
-`testing` they point at the mail catcher `compose.yaml` runs, whose inbox is
-<http://localhost:8026/>.
+`testing` and `demo` they point at the mail catcher `compose.yaml` runs, whose
+inbox is at `MAIL_BASE_URL` in `.env`.
 
 ### The first broker login flow, and the two rules in it
 
