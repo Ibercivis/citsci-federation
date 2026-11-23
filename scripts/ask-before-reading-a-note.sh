@@ -1,11 +1,12 @@
 #!/bin/sh
 # Research notes are opened on purpose, never in passing.
 #
-# `AGENTS.md` keeps a verdict per note and says to take it from there, opening a
-# note "only when one of its branches is yours"; the `deferred/` rule says not
-# to read those at all unless the task at hand is that topic. Both are prose,
-# and prose did not hold: one session read all four notes with those two lines
-# in its context, and the biggest of them is 4,846 words.
+# `docs/agents/research-notes.md` keeps a verdict per note and says to take it
+# from there, opening a note "only when one of its branches is yours"; the
+# `deferred/` rule in `AGENTS.md` says not to read those at all unless the task
+# at hand is that topic. Both are prose, and prose did not hold: one session
+# read all four notes with those two lines in its context, and the biggest of
+# them is 4,846 words.
 #
 # Claude Code runs this as a PreToolUse hook. It answers "ask", which forces a
 # permission prompt, so a person decides per file. In a headless run nobody can
@@ -53,9 +54,8 @@ jq -n '{
     permissionDecision: "ask",
     permissionDecisionReason: (
       "This is a research note: dated evidence for one topic, long on purpose. "
-      + "AGENTS.md carries its verdict in the Research notes index, which is the "
-      + "cheaper read. Approve this only if the topic of that note is the task "
-      + "at hand."
+      + "docs/agents/research-notes.md carries its verdict, which is the cheaper "
+      + "read. Approve this only if the topic of that note is the task at hand."
     )
   }
 }'
