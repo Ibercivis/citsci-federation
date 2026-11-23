@@ -32,10 +32,34 @@ compose() {
 
 # Every address the composition serves is declared in `.env` and read from
 # there — by the proxy, by the realm, by each application, and here.
+#
+# Except BROKER_MODE when the shell sets it: compose lets the shell override
+# `.env`, and `BROKER_MODE=demo pnpm apps:reset` has to mean what it says.
+# Sourcing the file would put `testing` back, and COMPOSE_PROFILES with it.
+shell_mode=${BROKER_MODE-}
 set -a
 # shellcheck disable=SC1091
 . ./.env
+if [ -n "$shell_mode" ]; then
+  BROKER_MODE=$shell_mode
+  # Read by compose, which `set -a` exports it to.
+  # shellcheck disable=SC2034
+  COMPOSE_PROFILES=$shell_mode
+fi
 set +a
+
+# The mode is left to `.env` and the shell rather than chosen here, so the
+# applications come up in `testing` or `demo`, whichever they say. In
+# `production` they cannot: each sends its mail to the catcher, which that mode does not run,
+# and compose would refuse with an error that names a dependency, not the
+# mode.
+if [ "$BROKER_MODE" = production ]; then
+  echo "BROKER_MODE is production, which runs no mail catcher, and every" >&2
+  echo "application of the composition sends its mail there." >&2
+  echo "Bring them up in demo or testing instead; a change of mode needs a reset:" >&2
+  echo "  BROKER_MODE=demo pnpm apps:reset" >&2
+  exit 1
+fi
 
 # The Broker-only stack and this one are one proxy and one port 8080 apart, so
 # compose fails to bind rather than explaining itself. Said here instead.
