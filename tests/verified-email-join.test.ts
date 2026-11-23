@@ -51,6 +51,11 @@ const whatThePersonWasTold = (result: Attempt): string =>
 const takeTheAddressFirst = (identity: MockIdentity) =>
   attempt(CONFIDENTIAL_CLIENT, arriving(SOURCE_AFFIRMING_NOTHING, identity));
 
+/** Somebody taking an address through a source the Broker trusts, whose
+ *  userinfo says nothing about verifying it. */
+const arriveSilentlyFirst = () =>
+  attempt(CONFIDENTIAL_CLIENT, arriving(AFFIRMING_SOURCE_B, "silent-squat"));
+
 /** A Person whose address was verified — the only kind the Broker will join an
  *  Identity to. */
 async function personArrivingWithAVerifiedEmail(
@@ -225,6 +230,24 @@ describe("a Person is never created at an address nobody affirmed", () => {
     // And left where the rule leaves them: on a Person of their own, with the
     // Broker asking for an address it will confirm itself. Without this, a
     // retry that broke for any other reason would satisfy the line above.
+    expect(whatThePersonWasTold(squatter)).toContain("Asks for field: email");
+  });
+
+  it("does not hand the holder of an address to whoever arrived first with a silent userinfo", async () => {
+    // A source the Broker trusts, whose ID token says unverified and whose
+    // userinfo gives the address without a verdict. Keycloak 26.8 loses the
+    // verdict and would store the Person verified; only our condition, reading
+    // the lost verdict as unaffirmed, keeps the address off them.
+    // `docs/notes/2026-11-23-trust-email-and-userinfo.md` has the measurement.
+    await arriveSilentlyFirst();
+
+    const genuine = await personArrivingWithAVerifiedEmail(
+      "silent-squat-verified",
+    );
+
+    const squatter = await arriveSilentlyFirst();
+
+    expect(JSON.stringify(squatter)).not.toContain(genuine);
     expect(whatThePersonWasTold(squatter)).toContain("Asks for field: email");
   });
 

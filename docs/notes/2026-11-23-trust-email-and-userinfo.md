@@ -72,8 +72,9 @@ before reaching that question, at the verified Person each one starts from.
 - **Keycloak's own `emailVerified` is wrong for this shape.** Only our condition stands between it
   and a Person stored verified from an unverified ID token. Anything that reads the stored flag
   instead of the brokered verdict inherits the gap.
-- **No case pins the create path for this shape.** The silent row after PR #155 was measured by
-  hand; the cases in `tests/verified-email-join.test.ts` cover it only at an address somebody holds.
+- **Both paths are pinned.** `advisory-silent` holds the join, and `silent-squat` the create path:
+  with `WithholdUnverifiedEmail` switched off, the silent arrival is stored verified, the genuine
+  holder of the address joins it, and the squatter signs in as them.
 - **Google does not promise `email_verified` in userinfo.** Its OpenID Connect page promises it in
   the ID token whenever the `email` scope is asked for, which issue #28 does. For userinfo it promises
   only the standard claims and `claims_supported`, and warns that "users or their organizations may
