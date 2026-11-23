@@ -1,9 +1,10 @@
 # The Broker, and the one Identity Source its tests need to steer.
 #
 # BROKER_MODE in `.env` decides which Broker this is: `testing` adds the
-# testing layer to the realm and starts the Mock Identity Source, and
-# `production` does neither. `.env` derives COMPOSE_PROFILES from it, which is
-# how the Mock Identity Source follows the same switch.
+# testing layer to the realm and starts the Mock Identity Source and the mail
+# catcher, `production` does none of it, and `demo` starts the mail catcher
+# alone. `.env` derives COMPOSE_PROFILES from it, which is how those two
+# services follow the same switch.
 #
 # Three services make up what a Brokered App sees as one frontier: a reverse
 # proxy, the OpenID provider behind it, and the provider's own database. A
@@ -225,10 +226,11 @@ services:
   # applications send with the settings their own stacks use: a catcher that
   # refused them would fail a sign-up for a reason production does not have.
   #
-  # Testing only: a deployment sends real mail, and a catcher beside it would
-  # swallow every confirmation.
+  # Not in `production`: a deployment sends real mail, and a catcher beside it
+  # would swallow every confirmation. In `demo` catching every message is the
+  # point, because nobody watching a demo should be mailed by accident.
   mailpit:
-    profiles: [testing]
+    profiles: [testing, demo]
     image: axllent/mailpit:v1.34.0
     environment:
       MP_SMTP_AUTH_ACCEPT_ANY: "1"
