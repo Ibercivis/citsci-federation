@@ -48,6 +48,7 @@ agree, because making them disagree is what this source is for.
 | `squat-untrusted` | `squat@mock.test`, verified | the same |
 | `squat-verified` | `squat@mock.test`, verified | the same |
 | `renamed-verified` | `renamed@mock.test`, verified | the same |
+| `either-verified` | `either@mock.test`, verified | the same |
 
 The `-untrusted` half of each pair is the same claim read through `mock`, whose
 word on an address the Broker does not take, so it arrives affirmed by nobody.
@@ -58,8 +59,8 @@ word on an address the Broker does not take, so it arrives affirmed by nobody.
 case that made them, so two cases at the same address decide each other's
 outcome — and no case can see which of them ran first. `takeover`, `merge`,
 `untrusted`, `lockout` and `squat` belong to
-`tests/verified-email-join.test.ts`, and `renamed` to
-`tests/local-credential.test.ts`.
+`tests/verified-email-join.test.ts`, `renamed` to
+`tests/local-credential.test.ts`, and `either` to `tests/mock-source.test.ts`.
 
 A case that needs another combination adds an Identity here. The source's
 answer cannot yet change between two sign-ins; #25 needs that, and adds it.

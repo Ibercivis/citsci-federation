@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { CONFIDENTIAL_CLIENT } from "./clients.ts";
 import {
   authenticate,
+  everyPlace,
   introspect,
   linkTextsOn,
   userinfo,
@@ -10,6 +11,7 @@ import {
 import { PERSON_IDENTIFIER } from "./broker.ts";
 import {
   AFFIRMING_SOURCE_A,
+  AFFIRMING_SOURCE_B,
   MOCK_SOURCES,
   type MockIdentity,
   arriving,
@@ -85,6 +87,44 @@ describe("a Person arriving through the Mock Identity Source", () => {
 
     for (const [place, body] of places) {
       expect(JSON.stringify(body), place).not.toContain(sourceSub);
+    }
+  });
+});
+
+describe("a Person arriving through either of two sources", () => {
+  it("leaves a Brokered App unable to tell which one they used", async () => {
+    // The same Person, through two sources that affirm the address, so the
+    // second arrival joins the first. A Brokered App that
+    // could tell the two apart would come to depend on it, and adding or
+    // removing a source would become its problem.
+    const throughA = await everyPlace(
+      CONFIDENTIAL_CLIENT,
+      arriving(AFFIRMING_SOURCE_A, "either-verified"),
+    );
+    const throughB = await everyPlace(
+      CONFIDENTIAL_CLIENT,
+      arriving(AFFIRMING_SOURCE_B, "either-verified"),
+    );
+    expect(throughB.idToken.sub).toBe(throughA.idToken.sub);
+
+    const address = String(throughA.idToken.email);
+    const sourceNames = MOCK_SOURCES.flatMap((source) => [
+      source.alias,
+      source.name,
+    ]);
+    for (const [index, [place, body]] of throughA.places.entries()) {
+      const [, other] = throughB.places[index] ?? [place, {}];
+      expect(Object.keys(other).toSorted(), place).toEqual(
+        Object.keys(body).toSorted(),
+      );
+      for (const seen of [body, other]) {
+        // Without the address, wherever it appears: it is the Person's own,
+        // the same through both, and `mock` is part of its domain.
+        const text = JSON.stringify(seen).replaceAll(address, "");
+        for (const name of sourceNames) {
+          expect(text, place).not.toContain(name);
+        }
+      }
     }
   });
 });

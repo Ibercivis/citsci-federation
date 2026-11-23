@@ -53,6 +53,46 @@
       "config": {}
     }
   ],
+  "identityProviders": [
+    {
+      "alias": "google",
+      "displayName": "Google",
+      "providerId": "google",
+      "enabled": true,
+      "trustEmail": true,
+      "storeToken": false,
+      "addReadTokenRoleOnCreate": false,
+      "linkOnly": false,
+      "hideOnLogin": false,
+      "config": {
+        "clientId": "${GOOGLE_CLIENT_ID:not-configured}",
+        "clientSecret": "${GOOGLE_CLIENT_SECRET:not-configured}",
+        "clientAuthMethod": "client_secret_post",
+        "defaultScope": "openid email",
+        "pkceEnabled": "true",
+        "pkceMethod": "S256",
+        "syncMode": "IMPORT"
+      }
+    },
+    {
+      "alias": "github",
+      "displayName": "GitHub",
+      "providerId": "github",
+      "enabled": true,
+      "trustEmail": false,
+      "storeToken": false,
+      "addReadTokenRoleOnCreate": false,
+      "linkOnly": false,
+      "hideOnLogin": false,
+      "config": {
+        "clientId": "${GITHUB_CLIENT_ID:not-configured}",
+        "clientSecret": "${GITHUB_CLIENT_SECRET:not-configured}",
+        "clientAuthMethod": "client_secret_post",
+        "defaultScope": "user:email",
+        "syncMode": "IMPORT"
+      }
+    }
+  ],
   "clients": [
     {
       "clientId": "${LOSTATNIGHT_CLIENT_ID}",

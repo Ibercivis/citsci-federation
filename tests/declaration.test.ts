@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { configured } from "./broker.ts";
-import { type Client, PUBLIC_CLIENT } from "./clients.ts";
+import { ACCOUNT_CONSOLE, type Client, PUBLIC_CLIENT } from "./clients.ts";
 import { asImported } from "./realm.ts";
 import {
   Browser,
@@ -91,11 +91,15 @@ async function offersSignIn(client: Client): Promise<boolean> {
 }
 
 /** The link texts on the sign-in page a Person meets, which is where the
- *  Identity Sources are offered. */
+ *  Identity Sources are offered. Reached from the Account Console, which every
+ *  realm has: a client from the testing layer would find no page at all on a
+ *  `production` Broker, and the base's sources would read as absent. */
 async function signInPageLinks(): Promise<string[]> {
-  const landing = await landingFor(PUBLIC_CLIENT);
+  const landing = await landingFor(ACCOUNT_CONSOLE);
   if (landing.at !== "a page") {
-    throw new Error("The public client was sent back without a sign-in page.");
+    throw new Error(
+      "The Account Console was sent back without a sign-in page.",
+    );
   }
   return linkTextsOn(landing.page.html);
 }

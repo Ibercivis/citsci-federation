@@ -396,6 +396,37 @@ and not `VERIFY_EMAIL`; and
 `docs/notes/2026-11-20-withholding-an-unaffirmed-address.md` for the
 measurements.
 
+### The launch sources: Google and GitHub
+
+Both are in the base, because a real deployment ships them. A source added
+later decides its own `trustEmail` (ADR-0004).
+
+- **Google has `trustEmail` on; GitHub has it off.** Google sends
+  `email_verified`. GitHub sends no such claim, and Keycloak's GitHub provider
+  ignores the `verified` flag in GitHub's `/user/emails` list. With
+  `trustEmail` on, an address the GitHub account never confirmed would be
+  marked confirmed, and its real owner would later arrive into that Person.
+  Off, a new GitHub Person confirms the address by mail first, and a GitHub
+  arrival at an address somebody holds is refused like any unverified one.
+  Reading GitHub's flag ourselves is issue #145.
+- **Their credentials are `${NAME:not-configured}`.** The value comes from
+  outside the repository (`.env.example` names them). A name nobody valued
+  would otherwise be imported as the literal `${NAME}`. The default makes the
+  request a Person is sent with say `client_id=not-configured`, and Google or
+  GitHub refuses it on their own page. The buttons stay, so a stack without
+  credentials is still the declared one. The default applies only to a name
+  that is unset: `NAME=` with nothing after it is set to the empty string,
+  and that source's button fails at the Broker. So `.env.example` names
+  them commented out.
+- **Each source's callback is `${BROKER_ISSUER}/broker/<alias>/endpoint`.** That
+  is the redirect URI registered with Google and GitHub, so renaming an alias
+  breaks every sign-in through it until the registration follows.
+- **Only the address is asked for**: `openid email` from Google, and
+  `user:email` from GitHub. Keycloak's default for Google adds `profile`, and
+  names are optional here.
+- **PKCE on Google, not on GitHub.** Nothing here has shown GitHub accepting it.
+  A real sign-in that does is the reason to turn it on.
+
 ### The Mock Identity Source
 
 A test Identity Source this repository runs itself (`mock-source/`), so
@@ -429,4 +460,7 @@ second Identity arrives. One source cannot stage either half of it.
 Every credential here is a development constant on purpose. This stack is
 meant to be destroyed and recreated, and a secret worth protecting has no
 business being reproducible from a file in a public repository. Real secrets
-are referenced, never declared.
+are referenced, never declared: the realm names them, `.env.example` lists
+them with no values, and `.env.local`, which git ignores, values them.
+`tests/referenced-secrets.test.ts` fails when a referenced name is valued in
+any tracked file.
