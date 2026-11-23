@@ -1,14 +1,15 @@
 <!-- Research note, not a decision. Read 23 November 2026, across `PR #176` and `PR #178`. -->
 
-# Two readers of the realm came out the same shape, invented nine minutes apart
+# Two readers of the realm came out the same shape, nine minutes after the first reached `main`
 
 **Verdict.** `declaredCredentials` in `PR #176` and `DeclaredSource.asksFor` in `PR #178` were
-written nine minutes apart by two authors, neither aware of the other's work, and both came out as:
-find the Identity Source by alias, take one fact out of its `config`, throw a worded error when the
-realm declares none. The header of `tests/realm.ts` asks for exactly that. What the convergence adds is
-that nobody had to be told — it is where the test layer arrives unprompted whenever a case leans on
-something the realm owns. Hold the next one to it: read such a fact through a thrower in
-`tests/realm.ts`, rather than writing the value into the case.
+written by two authors neither aware of the other's work, the second nine minutes after the first
+reached `main`, and both came out as: find the Identity Source by alias, take one fact out of its
+`config`, throw a worded error when the realm declares none. The header of `tests/realm.ts` asks
+for exactly that. What the convergence adds is that nobody had to be told — it is where the test
+layer arrives unprompted whenever a case leans on something the realm owns. Hold the next one to
+it: read such a fact through a thrower in `tests/realm.ts`, rather than writing the value into the
+case.
 
 **Read on only if** you are writing a case that leans on a realm-declared fact, or you mean to
 fold that shape into a single helper.

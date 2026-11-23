@@ -207,7 +207,7 @@ citation, not the authority.
   our condition stops it. Open it before moving the Keycloak pin, or before reading a Person's
   `emailVerified` to decide anything.
 - **Two readers of the realm** (`2026-11-23-two-readers-of-the-realm-converged.md`) — two authors
-  nine minutes apart, neither knowing of the other, wrote one shape into `tests/realm.ts`: a fact out
+  minutes apart, neither knowing of the other, wrote one shape into `tests/realm.ts`: a fact out
   of an Identity Source's `config`, and a refusal in words where it is missing. A case leaning on a
   realm fact reads it through a thrower there. Open it before extracting that shape into one helper:
   both readers reached `main` with `PR #174`, and they differ in what they throw.
