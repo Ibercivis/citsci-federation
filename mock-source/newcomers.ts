@@ -63,9 +63,9 @@ for (const shape of Object.values(NEWCOMERS)) {
  * destination they are for.
  *
  * Generic rather than typed as the ID token's claims, which it is also called
- * with userinfo's. The two carry the same claims today and the lie costs
- * nothing; it costs something the moment a source declares a userinfo that
- * says less, because the error lands here rather than where that source is.
+ * with userinfo's. The two no longer carry the same claims — `advisory-silent`
+ * hands over an address with no verdict — so typing one as the other would put
+ * the error here rather than on the source that declared it.
  */
 const filledIn = <Claims extends { email: string }>(
   claims: Claims,
