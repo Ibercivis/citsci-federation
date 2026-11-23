@@ -104,6 +104,11 @@ rather than no Person ever being created at one.
 affirms no address at all is asked for one twice in a single sign-in, once to give Keycloak a
 username and once to have it confirmed. ORCID is that shape (`issue #19`).
 
+**A Person who never answers is not stranded.** Keycloak writes the Identity's link whether or not
+the flow finished, so the next arrival through the same source reaches that same Person and is put
+back on the page asking for an address. No second Person is made, so an abandoned arrival accumulates
+nothing. Until an address is confirmed that Person reaches no Brokered App.
+
 **The Broker's own registration is the half still open.** It creates the Person at the typed address
 before the mail is answered, so a registration nobody confirmed still absorbs a later verified
 arrival at it. That is not a takeover — the Person it makes holds no credential and no way to set one
