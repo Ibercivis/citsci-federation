@@ -25,13 +25,12 @@ const IDENTITIES: Record<string, Identity> = declaration.identities;
 
 /**
  * An Identity this source has never served before: any username under the
- * declared prefix, at an address of its own name, affirmed by nobody.
+ * prefix `mock.json` declares, at an address of its own name, affirmed by
+ * nobody. Still only what it was told — the declaration names the prefix, the
+ * password and the claims, and `{username}` in them is filled in with whoever
+ * signed in.
  *
- * It exists because a case about what happens on a Person's **first** arrival
- * can only run once against a Broker, and `mock.json` cannot declare a new
- * username per run. The source is still only saying what it was told: the
- * declaration names the prefix, the password and the claims, and `{username}`
- * in them is filled in with the one that signed in.
+ * Why a case needs one: `mock-source/README.md`.
  */
 function identityNamed(username: string): Identity | undefined {
   const declared = IDENTITIES[username];

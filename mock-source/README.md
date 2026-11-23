@@ -47,12 +47,12 @@ agree, because making them disagree is what this source is for.
 | `lockout-verified` | `lockout@mock.test`, verified | the same |
 | `squat-untrusted` | `squat@mock.test`, verified | the same |
 | `squat-verified` | `squat@mock.test`, verified | the same |
+| `renamed-verified` | `renamed@mock.test`, verified | the same |
 
 The `-untrusted` half of each pair is the same claim read through `mock`, whose
 word on an address the Broker does not take, so it arrives affirmed by nobody.
-`untrusted-verified` is the same idea for the join; these two pairs are for
-arriving *first* (`issue #88`).
-| `renamed-verified` | `renamed@mock.test`, verified | the same |
+`untrusted-verified` is that idea for the join; these two pairs are for arriving
+*first* (`issue #88`).
 
 **An address per case.** The suite drives one Broker and a Person outlives the
 case that made them, so two cases at the same address decide each other's

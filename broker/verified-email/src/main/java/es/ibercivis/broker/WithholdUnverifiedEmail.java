@@ -21,29 +21,15 @@ import org.keycloak.provider.ProviderConfigProperty;
  * Identity whose source did not affirm it, and has the Broker ask for an
  * address and confirm it by mail instead.
  *
- * <p>A Person holds a Verified Email or none at all. That is what makes the
- * address safe to join on: {@code idp-create-user-if-unique} matches an
- * arriving Identity against it and asks nothing else, exactly as
- * {@code idp-auto-link} does. Leave an unaffirmed address on a Person and the
- * takeover ADR-0004 refuses works by arriving <em>first</em>: take an address
- * at a source that checks nothing, and its genuine holder's verified arrival
- * lands on the Person you made (issue #88).
+ * <p>It runs on the create path of the first broker login flow, on the Person
+ * that path has just made, in the same request and therefore the same
+ * transaction: no committed Person ever holds an address nobody affirmed.
+ * Never on a Person who already existed — their address is not an arrival's to
+ * take away.
  *
- * <p>Nothing here is ever done to a Person who already existed. This runs on
- * the create path of the first broker login flow, on the Person that path has
- * just made, in the same request and therefore the same transaction: no
- * committed Person ever holds an address nobody affirmed, and no other flow
- * can see one in between.
- *
- * <p>Two things here are not obvious and are measured in
- * {@code docs/notes/2026-11-20-withholding-an-unaffirmed-address.md}, which is
- * the first thing to read before changing any of it. The username goes with
- * the address, because this realm signs in with the address as the username
- * and the next arrival is matched on that column too. And the address is
- * removed from the brokered context as well as from the Person, because the
- * request after this one writes the Person again from that context.
- *
- * <p>ADR-0004 has the rule, what it rules out, and what it still leaves open.
+ * <p>Why the rule exists and what it leaves open: ADR-0004. What was measured
+ * to arrive at this shape, and the first thing to read before changing any of
+ * it: {@code docs/notes/2026-11-20-withholding-an-unaffirmed-address.md}.
  */
 public class WithholdUnverifiedEmail
     extends AbstractIdpAuthenticator implements AuthenticatorFactory {
@@ -52,15 +38,13 @@ public class WithholdUnverifiedEmail
 
   /**
    * The note {@code idp-create-user-if-unique} leaves behind when the Person
-   * in this flow is one it has just made. It is what keeps this rule off a
-   * Person who already existed: the realm only reaches here with an
-   * unaffirmed address on the create path today, because the join path
-   * refuses one before {@code idp-auto-link}, but that refusal is meant to be
-   * replaced by a confirmation one day (ADR-0004) and this execution must not
-   * start taking addresses off strangers when it is.
+   * in this flow is one it has just made. Only the create path reaches here
+   * with an unaffirmed address today, but the join path's refusal is meant to
+   * become a confirmation (issue #149), so the guard is read rather than
+   * assumed.
    *
-   * <p>No public API promises the note, which is the reason the image is
-   * pinned (broker/Dockerfile) and the reason the cases in
+   * <p>No public API promises the note, which is why the image is pinned
+   * (broker/Dockerfile) and why the cases in
    * {@code tests/verified-email-join.test.ts} drive a real sign-in: a version
    * that renamed it would leave this finding nothing, and finding nothing here
    * means an address is kept.
@@ -68,14 +52,12 @@ public class WithholdUnverifiedEmail
   private static final String REGISTERED_BY_THIS_FLOW = "BROKER_REGISTERED_NEW_USER";
 
   /**
-   * What the Broker asks a Person with no address for. It writes nothing
-   * until the link it mails is followed, which is the whole reason it is this
-   * action and not {@code VERIFY_EMAIL}: that one confirms an address the
-   * Person is already holding, and holding it is what must not happen.
-   *
-   * <p>Adding it also keeps {@code VERIFY_EMAIL} away. Keycloak evaluates that
-   * trigger after the flow, and skips it both for a Person with no address and
-   * for one already asked to update it.
+   * What the Broker asks a Person with no address for. It writes nothing until
+   * the link it mails is followed, which {@code VERIFY_EMAIL} cannot do: that
+   * one confirms an address the Person is already holding, and holding it is
+   * what must not happen. Adding it also keeps {@code VERIFY_EMAIL} away —
+   * Keycloak skips that trigger for a Person with no address and for one
+   * already asked to update it.
    */
   private static final UserModel.RequiredAction ASK_FOR_AN_ADDRESS =
       UserModel.RequiredAction.UPDATE_EMAIL;
@@ -102,10 +84,14 @@ public class WithholdUnverifiedEmail
       return;
     }
 
+    // The username too: this realm signs in with the address as the username,
+    // so the next arrival is matched on that column as well.
     person.setUsername(person.getId());
     person.setEmail(null);
     person.addRequiredAction(ASK_FOR_AN_ADDRESS);
 
+    // And out of the brokered context, because the request after this one
+    // writes the Person again from it.
     serializedCtx.setEmail(null);
     serializedCtx.saveToAuthenticationSession(
         context.getAuthenticationSession(), BROKERED_CONTEXT_NOTE);

@@ -91,13 +91,9 @@ export const arriving = (through: string, identity: MockIdentity) => ({
 
 /**
  * An arrival from an Identity the Broker has never met, at an address of its
- * own that nobody affirmed, giving `address` when the Broker asks for one.
- *
- * A case about what the Broker does on a Person's **first** arrival can run
- * only once against the same Broker, so it cannot use a declared Identity: the
- * second run signs in as the Person the first one made. `mock.json` declares
- * what this source says about a newcomer, and `mock-source/server.ts` fills in
- * the username.
+ * own that nobody affirmed, giving `address` when the Broker asks for one. A
+ * fresh one per run, which is what a case about a **first** arrival needs:
+ * `mock-source/README.md` says why.
  */
 export const aNewcomerArriving = (through: string, address: string) => ({
   as: {

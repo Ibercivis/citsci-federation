@@ -368,40 +368,33 @@ against.
 
 **`deny-access-authenticator` is still temporary**, and now serves one case
 rather than all of them: an unverified arrival at an address a Person already
-holds. Everything arriving at an address nobody holds is covered by the rule
-below instead. `idp-email-verification` should take this slot, so that whoever
-reads the mailbox joins and nobody meets a closed door — `issue #149`.
+holds. Everything arriving at an address nobody holds meets the rule below
+instead. `idp-email-verification` is what should take this slot — `issue #149`.
 
 ### The rule on the create path: no Person keeps an address nobody affirmed
 
-The refusal above guards the join. The takeover it refuses also works by
-arriving **first** — take an address at a source that affirms nothing, and the
-Broker hands the genuine holder's verified arrival to the Person you made
-(issue #88) — and that path never reaches `idp-auto-link`, so the subflow above
-never sees it.
+The refusal above guards the join, and the same takeover works by arriving
+**first**, on a path that never reaches `idp-auto-link`. ADR-0004 has that
+argument.
 
-So a second conditional subflow sits at the **end** of the flow, with the same
-condition and `citsci-withhold-unverified-email` from `verified-email/` behind
-it: the address comes off the Person who was just created, and Keycloak's
-`UPDATE_EMAIL` asks them for one it confirms by mail itself.
+What the realm does about it: a second conditional subflow at the **end** of
+the flow, the same condition, and `citsci-withhold-unverified-email` from
+`verified-email/` behind it. The address comes off the Person who was just
+created, and Keycloak's `UPDATE_EMAIL` asks them for one it confirms by mail
+itself.
 
-Three things about that shape are decisions rather than taste:
+**At the end of the flow rather than inside the create path**, because
+`idp-create-user-if-unique` has to stay `ALTERNATIVE` beside the join subflow:
+there is nowhere inside the create path to put it. So the rule runs after the
+decision and reads which way it went — which is also why it only ever reaches
+a Person this flow has just made.
 
-- **`UPDATE_EMAIL` is what the Person is asked for.** It asks for an address
-  and writes nothing until the link is followed, which `VERIFY_EMAIL` cannot
-  do: that one confirms an address the Person is already holding, and holding
-  it is the thing to prevent.
-- **At the end of the flow, not inside the create path.**
-  `idp-create-user-if-unique` has to stay `ALTERNATIVE` beside the join
-  subflow, so there is nowhere inside the create path to put this. The rule
-  runs after the decision instead, and reads which way it went.
-- **It reaches only a Person the flow has just made.** An address belonging to
-  a Person who was already there is not an arrival's to take away.
-
-Why the address is taken off rather than never written, what the removal costs,
-and the half still open — the Broker's own registration, `issue #148` — are in
-ADR-0004 and in
-`docs/notes/2026-11-20-withholding-an-unaffirmed-address.md`.
+Everything else about the shape is decided elsewhere: ADR-0004 for why the
+address is taken off rather than never written, what that costs a Person, and
+the half still open (`issue #148`); the authenticator for why `UPDATE_EMAIL`
+and not `VERIFY_EMAIL`; and
+`docs/notes/2026-11-20-withholding-an-unaffirmed-address.md` for the
+measurements.
 
 ### The Mock Identity Source
 
