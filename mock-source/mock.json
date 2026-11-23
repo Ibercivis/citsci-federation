@@ -75,6 +75,34 @@
       "password": "mock",
       "idToken": { "email": "renamed@mock.test", "email_verified": true },
       "userinfo": { "email": "renamed@mock.test", "email_verified": true }
+    },
+    "advisory-verified": {
+      "password": "mock",
+      "idToken": { "email": "advisory@mock.test", "email_verified": true },
+      "userinfo": { "email": "advisory@mock.test", "email_verified": true }
+    },
+    "advisory-split": {
+      "password": "mock",
+      "idToken": {
+        "email": "advisory-decoy@mock.test",
+        "email_verified": true
+      },
+      "userinfo": { "email": "advisory@mock.test", "email_verified": false }
+    },
+    "advisory-split-named": {
+      "password": "mock",
+      "idToken": {
+        "email": "advisory-decoy@mock.test",
+        "email_verified": true,
+        "name": "Advisory Split",
+        "preferred_username": "advisory-split"
+      },
+      "userinfo": { "email": "advisory@mock.test", "email_verified": false }
+    },
+    "advisory-silent": {
+      "password": "mock",
+      "idToken": { "email": "advisory@mock.test", "email_verified": false },
+      "userinfo": { "email": "advisory@mock.test" }
     }
   }
 }

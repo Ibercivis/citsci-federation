@@ -72,15 +72,23 @@ declares a `newcomer` — any username under its prefix, at an address of its ow
 name that nobody affirmed, with `{username}` in the claims filled in by the
 server. `tests/mock-source.ts` mints one per run.
 
-## Keep the ID tokens free of names
+## The advisory's Identities
 
-A split Identity like `mock-split` only stages the reported advisory if the
-Broker actually calls userinfo, and that is **unverified** against the pinned
-version: Keycloak is understood to call it only when the ID token lacks one of
-`name`, `preferred_username` or `email` — here, because no Identity declares a
-name. Add `name` or `preferred_username` to an Identity's `idToken` and the
-case built on it may pass without userinfo ever being read. #24 checks this by
-experiment and records what it finds; until then, keep names out.
+The reported advisory says that with `trustEmail` on, the address is read from
+userinfo while `email_verified` is read from the ID token. These Identities
+stage it, and `tests/verified-email-join.test.ts` holds them against a Person
+already at `advisory@mock.test`:
+
+| Identity | ID token | userinfo |
+|---|---|---|
+| `advisory-verified` | `advisory@mock.test`, verified | the same |
+| `advisory-split` | `advisory-decoy@mock.test`, verified | `advisory@mock.test`, **unverified** |
+| `advisory-split-named` | as `advisory-split`, with `name` and `preferred_username` | as `advisory-split` |
+| `advisory-silent` | `advisory@mock.test`, **unverified** | `advisory@mock.test`, nothing said |
+
+A name reaches the ID token only through `mock-affirming-named`, the one
+source that asks for `profile`. Through any other, `advisory-split-named` is
+`advisory-split`.
 
 Why the source is built the way it is lives next to what it explains:
 `server.ts` for the source itself, `compose.yaml` and `.env` for where it runs.
