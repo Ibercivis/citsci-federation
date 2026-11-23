@@ -478,9 +478,9 @@ second Identity arrives. One source cannot stage either half of it.
   ask for `openid email`, which is all issue #28 asks Google for, so the
   cases built on them see what a launch source sends.
 - **Userinfo is on**, because the reported advisory this source exists to
-  stage is about the address being read from userinfo. Being on is not the
-  same as being called: `mock-source/README.md` says what else that
-  takes.
+  stage is about the address being read from userinfo. On is enough: Keycloak
+  calls it on every sign-in that returns an access token, names or not
+  (`docs/notes/2026-11-23-trust-email-and-userinfo.md`).
 - **Its endpoints are `${MOCK_ISSUER}/…`**, written in by the image build, so
   the address is declared once, in `.env`, and a testing build without it
   fails.

@@ -201,6 +201,11 @@ citation, not the authority.
   Identifier both survive. The Account Console offers the same from the Person's own session. A
   Person holding no address is reachable by neither. Open it before ADR-0005 says what a Person's
   second Identity is, or to cost closing either path — `issue #124` holds the decision.
+- **`trustEmail` and userinfo** (`2026-11-23-trust-email-and-userinfo.md`) — the reported advisory
+  was real up to Keycloak 26.7.1 and is fixed from 26.8.0; our condition needs 26.8.0 too. When a
+  trusted source's userinfo omits `email_verified`, Keycloak would store the Person verified, and only
+  our condition stops it. Open it before moving the Keycloak pin, or before reading a Person's
+  `emailVerified` to decide anything.
 
 ### Internal notes
 
