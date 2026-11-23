@@ -247,7 +247,7 @@ services:
     # PostGIS, from the same maintainer's multi-arch build rather than
     # postgis/postgis, which is amd64 only — the application's own compose file
     # says so and this follows it.
-    image: imresamu/postgis:16-3.5
+    image: imresamu/postgis:18-3.6
     environment:
       POSTGRES_DB: citsci
       POSTGRES_USER: citsci
