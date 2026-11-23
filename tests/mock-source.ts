@@ -62,12 +62,38 @@ function sourceNamed(alias: string, affirming: boolean): string {
 export const AFFIRMING_SOURCE_A = sourceNamed("mock-affirming-a", true);
 export const AFFIRMING_SOURCE_B = sourceNamed("mock-affirming-b", true);
 
-/** The one source that also asks for `profile`: `broker/README.md` says
- *  why. */
-export const AFFIRMING_SOURCE_ASKING_FOR_NAMES = sourceNamed(
+/**
+ * The one source the Broker asks for `profile` as well: `broker/README.md`
+ * says why.
+ *
+ * Guarded like `sourceNamed`, and for the same reason. An arrival with names
+ * in its ID token is only a different case from one without while the realm
+ * asks this source for `profile`. Take that scope out and the pair would both
+ * still pass, asserting the same thing twice, so the realm is held to it here
+ * rather than in a comment.
+ */
+function sourceAskingForNames(alias: string): string {
+  const name = sourceNamed(alias, true);
+  const { asksFor } = declaredSource(alias);
+  if (!asksFor.includes("profile")) {
+    throw new Error(
+      `The realm has the Broker ask ${alias} for ${asksFor}, and this case ` +
+        "asked for the source that is also asked for names.",
+    );
+  }
+  return name;
+}
+
+export const AFFIRMING_SOURCE_ASKING_FOR_NAMES = sourceAskingForNames(
   "mock-affirming-named",
-  true,
 );
+
+/** What the Broker asks that source for. A case at the source's own seam
+ *  sends this rather than spelling a scope, so what it asks for cannot drift
+ *  from what the Broker asks for. */
+export const SCOPE_ASKING_FOR_NAMES = declaredSource(
+  "mock-affirming-named",
+).asksFor;
 
 /** The source that affirms nothing: every address arriving through it is
  *  unverified, whatever its claims say. */
@@ -152,9 +178,10 @@ type SourceDiscovery = Pick<
  */
 export async function signInAtMock(
   identity: MockIdentity,
-  /** What the Broker asks the source for: what `mock` asks for, unless the
-   *  case is about a source that asks for more. */
-  scope = "openid email",
+  /** What the Broker asks the source for, read from the realm: what most
+   *  sources are asked for, unless the case is about the one asked for
+   *  more. */
+  scope = declaredSource("mock").asksFor,
 ): Promise<MockAnswer> {
   const discovery = (await (
     await fetch(`${MOCK_SOURCE.issuer}/.well-known/openid-configuration`)
