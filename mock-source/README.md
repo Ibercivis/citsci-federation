@@ -12,12 +12,13 @@ layer (`broker/realm/testing.json`).
 `mock.json` holds the Identity Sources this one server stands behind, the
 client it serves — the Broker — and its Identities.
 
-### Three sources, one server
+### Four sources, one server
 
-Three, because a Person holds **one Identity per source** — `federated_identity`
-says so with a primary key — and the join is about their *second* Identity. Two
-affirming sources to stage the silent join, one affirming nothing to stage the
-arrival that has to answer the Broker's mail first.
+A Person holds **one Identity per source** — `federated_identity` says so with
+a primary key — and the join is about their *second* Identity. Two affirming
+sources to stage the silent join, one affirming nothing to stage the arrival
+that has to answer the Broker's mail first, and one that affirms and asks for
+`profile` as well (`broker/README.md` says why).
 
 `sources` is the list of aliases and nothing more: `server.ts` registers one
 Broker callback per alias, and the realm repeats them because JSON imports
@@ -81,15 +82,28 @@ a case usually turns on: `unverified` for an address nobody affirmed, and
 an affirming source and then through `mock`, which is `untrusted-verified`
 above with nothing left over from the last run.
 
-## Keep the ID tokens free of names
+## The advisory's Identities
 
-A split Identity like `mock-split` only stages the reported advisory if the
-Broker actually calls userinfo, and that is **unverified** against the pinned
-version: Keycloak is understood to call it only when the ID token lacks one of
-`name`, `preferred_username` or `email` — here, because no Identity declares a
-name. Add `name` or `preferred_username` to an Identity's `idToken` and the
-case built on it may pass without userinfo ever being read. #24 checks this by
-experiment and records what it finds; until then, keep names out.
+These Identities stage the `trustEmail` advisory the spec names, which was real
+up to Keycloak 26.7.1 (`docs/notes/2026-11-23-trust-email-and-userinfo.md`). They
+stage it and `tests/verified-email-join.test.ts` holds them against a Person
+already at `advisory@mock.test`:
+
+| Identity | ID token | userinfo |
+|---|---|---|
+| `advisory-verified` | `advisory@mock.test`, verified | the same |
+| `advisory-split` | `advisory-decoy@mock.test`, verified | `advisory@mock.test`, **unverified** |
+| `advisory-split-named` | as `advisory-split`, with `name` and `preferred_username` | as `advisory-split` |
+| `advisory-silent` | `advisory@mock.test`, **unverified** | `advisory@mock.test`, nothing said |
+| `silent-squat` | `silent-squat@mock.test`, **unverified** | `silent-squat@mock.test`, nothing said |
+| `silent-squat-verified` | `silent-squat@mock.test`, verified | the same |
+
+The `silent-squat` pair is the silent shape arriving *first*, at an address
+nobody holds yet.
+
+A name reaches the ID token only through `mock-affirming-named`, the one
+source that asks for `profile`. Through any other, `advisory-split-named` is
+`advisory-split`.
 
 Why the source is built the way it is lives next to what it explains:
 `server.ts` for the source itself, `compose.yaml` and `.env` for where it runs.

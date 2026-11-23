@@ -1,5 +1,10 @@
 {
-  "sources": ["mock", "mock-affirming-a", "mock-affirming-b"],
+  "sources": [
+    "mock",
+    "mock-affirming-a",
+    "mock-affirming-b",
+    "mock-affirming-named"
+  ],
   "client": {
     "id": "citsci-broker",
     "secret": "mock-source-development-secret"
@@ -83,6 +88,44 @@
       "password": "mock",
       "idToken": { "email": "either@mock.test", "email_verified": true },
       "userinfo": { "email": "either@mock.test", "email_verified": true }
+    },
+    "advisory-verified": {
+      "password": "mock",
+      "idToken": { "email": "advisory@mock.test", "email_verified": true },
+      "userinfo": { "email": "advisory@mock.test", "email_verified": true }
+    },
+    "advisory-split": {
+      "password": "mock",
+      "idToken": {
+        "email": "advisory-decoy@mock.test",
+        "email_verified": true
+      },
+      "userinfo": { "email": "advisory@mock.test", "email_verified": false }
+    },
+    "advisory-split-named": {
+      "password": "mock",
+      "idToken": {
+        "email": "advisory-decoy@mock.test",
+        "email_verified": true,
+        "name": "Advisory Split",
+        "preferred_username": "advisory-split"
+      },
+      "userinfo": { "email": "advisory@mock.test", "email_verified": false }
+    },
+    "advisory-silent": {
+      "password": "mock",
+      "idToken": { "email": "advisory@mock.test", "email_verified": false },
+      "userinfo": { "email": "advisory@mock.test" }
+    },
+    "silent-squat": {
+      "password": "mock",
+      "idToken": { "email": "silent-squat@mock.test", "email_verified": false },
+      "userinfo": { "email": "silent-squat@mock.test" }
+    },
+    "silent-squat-verified": {
+      "password": "mock",
+      "idToken": { "email": "silent-squat@mock.test", "email_verified": true },
+      "userinfo": { "email": "silent-squat@mock.test", "email_verified": true }
     }
   }
 }

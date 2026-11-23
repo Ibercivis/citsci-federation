@@ -13,6 +13,7 @@ import {
   AFFIRMING_SOURCE_A,
   AFFIRMING_SOURCE_B,
   MOCK_SOURCES,
+  SCOPE_ASKING_FOR_NAMES,
   type MockIdentity,
   arriving,
   signInAtMock,
@@ -192,5 +193,35 @@ describe("the Mock Identity Source says what it is told to", () => {
       email: "shared@mock.test",
       email_verified: false,
     });
+  });
+
+  it("puts a name in the ID token when asked for profile, and only then", async () => {
+    // Asked for what `mock-affirming-named` asks for, and then for what the
+    // other sources ask for. Without the second half a source that always sent
+    // names would let every case pass as the named one.
+    const named = await signInAtMock(
+      "advisory-split-named",
+      SCOPE_ASKING_FOR_NAMES,
+    );
+    const unnamed = await signInAtMock("advisory-split-named");
+
+    expect(named.idToken).toMatchObject({
+      name: "Advisory Split",
+      preferred_username: "advisory-split",
+    });
+    expect(named.userinfo).not.toHaveProperty("name");
+    expect(unnamed.idToken).not.toHaveProperty("name");
+  });
+
+  it("can give an address in userinfo and say nothing about whether it is verified", async () => {
+    const { idToken, userinfo: fromUserinfo } =
+      await signInAtMock("advisory-silent");
+
+    expect(idToken).toMatchObject({
+      email: "advisory@mock.test",
+      email_verified: false,
+    });
+    expect(fromUserinfo).toMatchObject({ email: "advisory@mock.test" });
+    expect(fromUserinfo).not.toHaveProperty("email_verified");
   });
 });

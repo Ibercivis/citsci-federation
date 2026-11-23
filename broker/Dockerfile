@@ -81,6 +81,13 @@ RUN node derive.ts "$BROKER_MODE" "$MOCK_ISSUER" > realm-citsci.json
 # An upgrade is therefore: change this line, rebuild, run `pnpm test`, and read
 # what it says before trusting it. Both poms compile against the same version,
 # so they move with it or not at all.
+#
+# Downwards there is a floor: 26.8.0. Below it, Keycloak reads a brokered
+# address and the verdict on it out of two different responses, so
+# `verified-email/` finds no verdict for whichever address arrived. Everyone
+# then counts as unaffirmed, and a Person their own source verified is asked
+# for an address again. Measured on 26.7.1 in
+# `docs/notes/2026-11-23-trust-email-and-userinfo.md`.
 FROM quay.io/keycloak/keycloak:26.8.1
 COPY --from=mapper /build/target/person-identifier.jar /opt/keycloak/providers/
 COPY --from=condition /build/target/verified-email.jar /opt/keycloak/providers/

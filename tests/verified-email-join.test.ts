@@ -14,6 +14,7 @@ import { linkMailedTo, mailCountTo } from "./mailbox.ts";
 import {
   AFFIRMING_SOURCE_A,
   AFFIRMING_SOURCE_B,
+  AFFIRMING_SOURCE_ASKING_FOR_NAMES,
   SOURCE_AFFIRMING_NOTHING,
   type MockIdentity,
   aNewcomerArriving,
@@ -50,6 +51,11 @@ const whatThePersonWasTold = (result: Attempt): string =>
  *  take. Whatever the Broker gives them, it must not be the address. */
 const takeTheAddressFirst = (identity: MockIdentity) =>
   attempt(CONFIDENTIAL_CLIENT, arriving(SOURCE_AFFIRMING_NOTHING, identity));
+
+/** The same, but through a source the Broker trusts — one whose userinfo
+ *  hands over an address with no verdict attached. */
+const takeTheAddressSilently = (identity: MockIdentity) =>
+  attempt(CONFIDENTIAL_CLIENT, arriving(AFFIRMING_SOURCE_B, identity));
 
 /** The Person an arrival that should work comes back as. */
 async function personFrom(arrival: AttemptOptions): Promise<string> {
@@ -196,6 +202,53 @@ describe("an unverified address joins no existing Person until its mail is answe
     expect(unanswered.outcome).toBe("refused-in-the-browser");
     expect(JSON.stringify(unanswered)).not.toContain(person);
   });
+
+  /**
+   * The reported advisory. Address from userinfo, `email_verified` from the ID
+   * token — two different addresses, one verdict. So a source can verify one
+   * address and hand over another:
+   *
+   *     ID token   advisory-decoy@mock.test   verified
+   *     userinfo   advisory@mock.test         unverified
+   *     joined     the Person at advisory@    <- the takeover
+   *
+   * Every arrival below is that shape, and each is mailed rather than joined.
+   * The note says which versions do this; `broker/Dockerfile` carries the
+   * floor that keeps us above them.
+   */
+  it.each([
+    {
+      what: "an address from userinfo, verified only in the ID token for another",
+      through: AFFIRMING_SOURCE_B,
+      identity: "advisory-split",
+    },
+    {
+      what: "the same, with names in the ID token",
+      through: AFFIRMING_SOURCE_ASKING_FOR_NAMES,
+      identity: "advisory-split-named",
+    },
+    {
+      what: "an address from userinfo that says nothing about verifying it",
+      through: AFFIRMING_SOURCE_B,
+      identity: "advisory-silent",
+    },
+  ] as const)("mails $what", async ({ through, identity }) => {
+    const person = await personArrivingWithAVerifiedEmail("advisory-verified");
+    const address = addressOf("advisory-verified");
+    // Baseline rather than zero: all three cases arrive at this one address,
+    // so each adds a mail to the ones before it.
+    const sent = await mailCountTo(address);
+
+    const split = await attempt(
+      CONFIDENTIAL_CLIENT,
+      arriving(through, identity),
+    );
+
+    expect(split.outcome).toBe("refused-in-the-browser");
+    expect(JSON.stringify(split)).not.toContain(person);
+    await linkMailedTo(address, sent);
+    expect(await mailCountTo(address)).toBe(sent + 1);
+  });
 });
 
 describe("a Verified Email joins the Person that holds it", () => {
@@ -268,6 +321,24 @@ describe("a Person is never created at an address nobody affirmed", () => {
     // And left where the rule leaves them: on a Person of their own, with the
     // Broker asking for an address it will confirm itself. Without this, a
     // retry that broke for any other reason would satisfy the line above.
+    expect(whatThePersonWasTold(squatter)).toContain("Asks for field: email");
+  });
+
+  it("does not hand the holder of an address to whoever arrived first with a silent userinfo", async () => {
+    // A source the Broker trusts, whose ID token says unverified and whose
+    // userinfo gives the address without a verdict. Keycloak 26.8 loses the
+    // verdict and would store the Person verified; only our condition, reading
+    // the lost verdict as unaffirmed, keeps the address off them.
+    // `docs/notes/2026-11-23-trust-email-and-userinfo.md` has the measurement.
+    await takeTheAddressSilently("silent-squat");
+
+    const genuine = await personArrivingWithAVerifiedEmail(
+      "silent-squat-verified",
+    );
+
+    const squatter = await takeTheAddressSilently("silent-squat");
+
+    expect(JSON.stringify(squatter)).not.toContain(genuine);
     expect(whatThePersonWasTold(squatter)).toContain("Asks for field: email");
   });
 

@@ -66,6 +66,38 @@ function sourceNamed(alias: string, affirming: boolean): string {
 export const AFFIRMING_SOURCE_A = sourceNamed("mock-affirming-a", true);
 export const AFFIRMING_SOURCE_B = sourceNamed("mock-affirming-b", true);
 
+/**
+ * The one source the Broker also asks for `profile`. `broker/README.md` says
+ * why.
+ *
+ * Guarded, like `sourceNamed`. The guard matters: names in the ID token are
+ * the only thing that makes `advisory-split-named` a different case from
+ * `advisory-split`, and names arrive only if the realm asks for `profile`.
+ * Take the scope out and both cases still pass, asserting the same thing
+ * twice. So the realm is held to it here, not in a comment.
+ */
+function sourceAskingForNames(alias: string): string {
+  const name = sourceNamed(alias, true);
+  const { asksFor } = declaredSource(alias);
+  if (!asksFor.includes("profile")) {
+    throw new Error(
+      `This case wants the source the Broker asks for names. The realm ` +
+        `asks ${alias} for ${asksFor}, which brings no names.`,
+    );
+  }
+  return name;
+}
+
+export const AFFIRMING_SOURCE_ASKING_FOR_NAMES = sourceAskingForNames(
+  "mock-affirming-named",
+);
+
+/** What the Broker asks that source for. A case at the source's own seam
+ *  sends this instead of spelling a scope, so the two cannot drift apart. */
+export const SCOPE_ASKING_FOR_NAMES = declaredSource(
+  "mock-affirming-named",
+).asksFor;
+
 /** The source that affirms nothing: every address arriving through it is
  *  unverified, whatever its claims say. */
 export const SOURCE_AFFIRMING_NOTHING = sourceNamed("mock", false);
@@ -174,6 +206,9 @@ type SourceDiscovery = Pick<
  */
 export async function signInAtMock(
   identity: MockIdentity,
+  /** What the Broker asks the source for, read from the realm. Defaults to
+   *  what most sources get; pass `SCOPE_ASKING_FOR_NAMES` for the other. */
+  scope = declaredSource("mock").asksFor,
 ): Promise<MockAnswer> {
   const discovery = (await (
     await fetch(`${MOCK_SOURCE.issuer}/.well-known/openid-configuration`)
@@ -186,7 +221,7 @@ export async function signInAtMock(
     client_id: client.id,
     redirect_uri: client.redirectUri,
     response_type: "code",
-    scope: "openid email",
+    scope,
     state: "mock",
     nonce: "mock",
     code_challenge: pkce.challenge,
