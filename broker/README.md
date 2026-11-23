@@ -340,17 +340,17 @@ is nobody to join.
 
 ```text
 citsci first broker login
-  idp-review-profile                             REQUIRED
-  citsci create a Person, or join one            REQUIRED
-    idp-create-user-if-unique                    ALTERNATIVE
-    citsci join the Person holding this address  ALTERNATIVE
-      citsci refuse an unverified address        CONDITIONAL
-        citsci-condition-unverified-email        REQUIRED
-        deny-access-authenticator                REQUIRED
-      idp-auto-link                              REQUIRED
-  citsci withhold an unverified address          CONDITIONAL
-    citsci-condition-unverified-email            REQUIRED
-    citsci-withhold-unverified-email             REQUIRED
+  idp-review-profile                                REQUIRED
+  citsci create a Person, or join one               REQUIRED
+    idp-create-user-if-unique                       ALTERNATIVE
+    citsci join the Person holding this address     ALTERNATIVE
+      citsci confirm an unverified address by mail  CONDITIONAL
+        citsci-condition-unverified-email           REQUIRED
+        idp-email-verification                      REQUIRED
+      idp-auto-link                                 REQUIRED
+  citsci withhold an unverified address             CONDITIONAL
+    citsci-condition-unverified-email               REQUIRED
+    citsci-withhold-unverified-email                REQUIRED
 ```
 
 `realm/base.json` declares that as a flat list of flows joined by `flowAlias`
