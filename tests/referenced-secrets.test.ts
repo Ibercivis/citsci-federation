@@ -2,6 +2,7 @@ import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { parseEnv } from "node:util";
+import { declaredCredentials } from "./realm.ts";
 
 /**
  * Real secrets are referenced, never declared. The realm names each one as
@@ -79,8 +80,9 @@ describe("the secrets the realm references", () => {
         return false;
       }
       // `NAME=value` in a shell or env file, `NAME: value` or `- NAME=value`
-      // in YAML, the name quoted or not. A value that is itself a `${…}`
-      // only passes the name on, and is not one.
+      // in YAML, the name quoted or not. A value that is itself a `${…}` is
+      // skipped here: it passes a name on rather than holding a secret, and
+      // what it may default to is the case below.
       return secrets.some((name) =>
         new RegExp(
           `^[ \\t]*(?:export[ \\t]+|-[ \\t]+)?(["']?)${name}\\1[ \\t]*[:=][ \\t]*(?!["']?\\$\\{)\\S`,
@@ -90,5 +92,56 @@ describe("the secrets the realm references", () => {
     });
 
     expect(valuedIn).toEqual([]);
+  });
+
+  it("are defaulted to nothing but not-configured, in every tracked file", () => {
+    // A default inside the interpolation is a value in the file as much as
+    // one after the `=`: `${NAME:key}` in the realm, `${NAME:-key}` in
+    // compose. The case above skips both, because it cannot tell a name
+    // being passed on from a name carrying a key. `not-configured` is the
+    // only default declared here, and the realm's reason for having one.
+    const tracked = git("ls-files", "-z").split("\0").filter(Boolean);
+    const defaulted = tracked.flatMap((path) => {
+      let text: string;
+      try {
+        text = read(path);
+      } catch {
+        return [];
+      }
+      return (
+        [...text.matchAll(/\$\{([A-Z_][A-Z0-9_]*):([^}]*)\}/g)]
+          .filter(([, name = ""]) => secrets.includes(name))
+          // `${NAME:key}` is the realm's default and `${NAME:-key}` compose's.
+          // `${NAME:?message}` is compose refusing to start without a value,
+          // and holds none itself.
+          .filter(([, , after = ""]) => {
+            const fallback = after.replace(/^-/, "");
+
+            return !fallback.startsWith("?") && fallback !== "not-configured";
+          })
+          .map(([match = "", name = ""]) => `${path}: ${name} in ${match}`)
+      );
+    });
+
+    expect(defaulted).toEqual([]);
+  });
+
+  it("are what the realm names where a launch source's credentials go", () => {
+    // The one field in the one tracked file that has to carry the real key
+    // for a sign-in to work, which is where somebody pastes it to see the
+    // button work. Written over, the name is gone and every case above is
+    // looking for something no file mentions any more.
+    const reference = /^\$\{([A-Z_][A-Z0-9_]*):not-configured\}$/;
+    const declared = ["google", "github"].flatMap((alias) =>
+      Object.entries(declaredCredentials(alias)).map(
+        ([field, value]) => [`${alias}.${field}`, value] as const,
+      ),
+    );
+
+    expect(
+      declared.filter(
+        ([, value]) => !secrets.includes(reference.exec(value)?.[1] ?? ""),
+      ),
+    ).toEqual([]);
   });
 });
