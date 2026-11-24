@@ -1,7 +1,7 @@
-import { execFileSync } from "node:child_process";
 import { request } from "node:http";
 import { beforeAll, describe, expect, it } from "vitest";
 import { type Discovery, ISSUER, fetchDiscovery } from "./broker.ts";
+import { compose, runningStack } from "./stack.ts";
 
 /** Asks the proxy for the discovery path while claiming to be a given host,
  *  and reports what came back without interpreting it: a hostname the
@@ -32,50 +32,7 @@ function throughTheProxyAsHost(
   });
 }
 
-/**
- * The environment to run `docker` in.
- *
- * Without `COMPOSE_PROFILES`, deliberately. `.env` declares it as
- * `${BROKER_MODE}`, and `broker.ts` loads that file into this process with
- * Node's own loader, which expands nothing — so an inherited literal
- * `${BROKER_MODE}` reaches compose as a profile name, every service gated
- * behind a profile disappears, and the project is refused as invalid because
- * something still depends on one of them. Compose reads `.env` itself, and
- * resolves it properly when nothing in the environment shadows it.
- */
-const { COMPOSE_PROFILES: _shadowed, ...DOCKER_ENV } = process.env;
-
-/**
- * The compose files of the stack that is actually up.
- *
- * Two stacks declare this service and they are different compose projects:
- * `pnpm broker:up` runs the Broker alone, `pnpm apps:up` runs it with every
- * Brokered App. A throwaway container has to join the network of the one that
- * is running, or it reaches a network where nothing answers and
- * `broker.localhost` resolves to nothing at all.
- *
- * The Broker-only stack is the default, because that is what CI runs and what
- * the rest of this file needs nothing more than.
- */
-function filesOfTheRunningStack(): string[] {
-  const composition = ["-f", "compose.yaml", "-f", "compose.apps.yaml"];
-  const running = execFileSync(
-    "docker",
-    [
-      "compose",
-      ...composition,
-      "ps",
-      "--status",
-      "running",
-      "--quiet",
-      "keycloak",
-    ],
-    { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"], env: DOCKER_ENV },
-  ).trim();
-  return running ? composition : ["-f", "compose.yaml"];
-}
-
-const STACK = filesOfTheRunningStack();
+const STACK = runningStack();
 
 /**
  * Reads the discovery document from inside the compose network, speaking to
@@ -104,21 +61,16 @@ function fromInsideTheNetwork(hostname: string, port: string): string {
       `HTTP/1.1\r\nHost: ${hostname}:${port}\r\nConnection: close\r\n\r\n' >&3`,
     "cat <&3",
   ].join(" && ");
-  return execFileSync(
-    "docker",
-    [
-      "compose",
-      ...STACK,
-      "run",
-      "--rm",
-      "-T",
-      "--entrypoint",
-      "sh",
-      "keycloak",
-      "-c",
-      probeScript,
-    ],
-    { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"], env: DOCKER_ENV },
+  return compose(
+    STACK,
+    "run",
+    "--rm",
+    "-T",
+    "--entrypoint",
+    "sh",
+    "keycloak",
+    "-c",
+    probeScript,
   );
 }
 

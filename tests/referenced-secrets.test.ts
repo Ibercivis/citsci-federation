@@ -5,6 +5,8 @@ import { parseEnv } from "node:util";
 import { declaredCredentials } from "./realm.ts";
 
 /**
+ * Seam 2: no credential worth protecting is committed.
+ *
  * Real secrets are referenced, never declared. The realm names each one as
  * `${NAME}`; `.env.local`, which git ignores, values it on a machine that has
  * it; `.env.example` says which names those are, with no values. Receiving

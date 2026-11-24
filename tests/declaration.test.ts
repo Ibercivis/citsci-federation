@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { configured } from "./broker.ts";
 import { ACCOUNT_CONSOLE, type Client, PUBLIC_CLIENT } from "./clients.ts";
 import { asImported } from "./realm.ts";
+import { runningStack } from "./stack.ts";
 import {
   Browser,
   attempt,
@@ -67,6 +68,11 @@ const LOOKED_FOR_IN = LAYERS.filter(([, layer]) =>
 );
 
 const presence = (expected: boolean) => (expected ? "present" : "absent");
+
+/** What every case below says when the Broker is not the mode it claims. A
+ *  realm left in the database by another mode is the usual cause, and only a
+ *  reset replaces it. */
+const NOT_THE_CLAIMED_MODE = `This Broker is not the ${MODE} declaration: built for another BROKER_MODE, or holding a realm a stack in another mode left in the database. Recreate the declared stack with:  ${runningStack().recreate}`;
 
 /** Where an authorization request from this client lands, in a fresh browser. */
 async function landingFor(client: Client) {
@@ -134,7 +140,7 @@ describe(`the running Broker is the ${MODE} declaration`, () => {
           name: declared.name ?? declared.clientId,
           redirectUri: declared.redirectUris?.[0] ?? "",
         };
-        expect(await offersSignIn(client)).toBe(expected);
+        expect(await offersSignIn(client), NOT_THE_CLAIMED_MODE).toBe(expected);
       },
     );
 
@@ -142,9 +148,10 @@ describe(`the running Broker is the ${MODE} declaration`, () => {
       `has Identity Source $alias ${presence(expected)} on the sign-in page`,
       async (declared) => {
         const links = await signInPageLinks();
-        expect(links.some((text) => text.includes(declared.displayName))).toBe(
-          expected,
-        );
+        expect(
+          links.some((text) => text.includes(declared.displayName)),
+          NOT_THE_CLAIMED_MODE,
+        ).toBe(expected);
       },
     );
 
@@ -157,7 +164,9 @@ describe(`the running Broker is the ${MODE} declaration`, () => {
           pkce: createPkce("S256"),
           as: { username: declared.username, password },
         });
-        expect(result.outcome === "authenticated").toBe(expected);
+        expect(result.outcome === "authenticated", NOT_THE_CLAIMED_MODE).toBe(
+          expected,
+        );
       },
     );
   });
