@@ -32,11 +32,9 @@ belongs in the declaration.
 
 `realm/base.json` is the Broker anywhere it runs. `realm/testing.json` is
 what exists only so that it can be tested. `BROKER_MODE` in `.env` picks one of
-three Brokers: `testing` is the base plus the testing layer, with the Mock
-Identity Source and the mail catcher running; `production` is the base alone;
-and `demo` is the base alone with the mail catcher, so that the Brokered
-Composition's applications come up for showing the system to people. Anything
-meant to be deployed runs `production`.
+three Brokers, and which services each starts beside the realm is `.env`'s to
+say: `testing` is the base plus the testing layer, and `production` and `demo`
+are the base alone. Anything meant to be deployed runs `production`.
 
 In `production` and `demo`, `tests/declaration.test.ts` is the only test file
 that means anything. The rest of the suite signs Identities in through the Mock

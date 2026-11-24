@@ -45,9 +45,9 @@ step 9 first, or both buttons refuse you at the source. A Person then arrives th
 GitHub, or registers at the Broker (step 2's **Register**). Wherever a step below says `demo` /
 `demo-password`, use one of those, and skip step 3.
 
-The mode holds only through a reset: `--import-realm` does not replace a realm already in the
-database. Back to `testing` is `pnpm apps:reset` without the variable. `pnpm apps:up` refuses
-`production`, which runs no mail catcher for the applications to send to.
+The mode holds only through a reset, for the reason `.env` gives. Back to `testing` is `pnpm
+apps:reset` without the variable. `pnpm apps:up` refuses `production`, which runs no mail catcher
+for the applications to send to.
 
 ## The addresses
 

@@ -1,10 +1,8 @@
 # The Broker, and the one Identity Source its tests need to steer.
 #
-# BROKER_MODE in `.env` decides which Broker this is: `testing` adds the
-# testing layer to the realm and starts the Mock Identity Source and the mail
-# catcher, `production` does none of it, and `demo` starts the mail catcher
-# alone. `.env` derives COMPOSE_PROFILES from it, which is how those two
-# services follow the same switch.
+# BROKER_MODE in `.env` decides which Broker this is, and `.env` says what each
+# mode means. It derives COMPOSE_PROFILES from it, so the `profiles:` below are
+# where a service declares the modes it runs in.
 #
 # Three services make up what a Brokered App sees as one frontier: a reverse
 # proxy, the OpenID provider behind it, and the provider's own database. A
