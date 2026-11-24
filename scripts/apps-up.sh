@@ -36,15 +36,18 @@ compose() {
 # Except BROKER_MODE when the shell sets it: compose lets the shell override
 # `.env`, and `BROKER_MODE=demo pnpm apps:reset` has to mean what it says.
 # Sourcing the file would put `testing` back, and COMPOSE_PROFILES with it.
+#
+# So the mode is restored and the profiles are dropped rather than restated:
+# unset, COMPOSE_PROFILES is absent from compose's environment, and compose
+# interpolates the `COMPOSE_PROFILES=${BROKER_MODE}` in `.env` against the mode
+# above. Which services a mode starts stays declared in one place.
 shell_mode=${BROKER_MODE-}
 set -a
 # shellcheck disable=SC1091
 . ./.env
 if [ -n "$shell_mode" ]; then
   BROKER_MODE=$shell_mode
-  # Read by compose, which `set -a` exports it to.
-  # shellcheck disable=SC2034
-  COMPOSE_PROFILES=$shell_mode
+  unset COMPOSE_PROFILES
 fi
 set +a
 
