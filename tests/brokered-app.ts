@@ -306,8 +306,9 @@ function question(page: Page, arrival: Arrival): Question | null {
 }
 
 /** What a Person would read on a page: the markup stripped, and the scripts
- *  and stylesheets a browser never shows stripped first. */
-const readableTextOf = (html: string): string =>
+ *  and stylesheets a browser never shows stripped first. Exported because a
+ *  refusal the Broker words itself reaches a case through no other channel. */
+export const readableTextOf = (html: string): string =>
   visibleText(
     html
       .replace(/<script\b[\s\S]*?<\/script>/g, " ")

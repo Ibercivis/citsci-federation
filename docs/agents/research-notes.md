@@ -74,3 +74,11 @@ note only when one of its branches is yours.
   and no tool in common use finds a passage written twice across two files. Open it before making
   `scripts/check-repeated-prose.sh` a gate, or when `issue #165` decides which surface owns *why* —
   not to support a claim about length, which the one paper on it does not.
+- **A withheld confirmation mail**
+  (`2026-11-24-keycloak-withholds-a-second-confirmation-mail.md`) — Keycloak mails one Person one
+  address confirmation every 30 seconds, by a default of its own, keyed on the user id and never
+  logged: it re-renders the form saying so instead, which is what `issue #143` was not reading.
+  Raising `PATIENCE_MS`, minting a fresh address per run, and lowering the limit in `testing.json`
+  are each measured and each useless. Open it before touching `PATIENCE_MS` in `tests/mailbox.ts`,
+  or to cost a testing-only cooldown — which needs `broker/README.md`'s "A layer only adds" changed
+  first.
