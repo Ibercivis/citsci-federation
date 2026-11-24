@@ -79,7 +79,9 @@ fi
 # above: a mode that cannot come up is refused while the data is still there.
 if [ "$reset" = yes ]; then
   echo "== the composition's data, thrown away"
-  compose --profile '*' down -v
+  # Orphans too: a container started under this project's name from files
+  # that are not these is what seam 2 sends a reset to clear.
+  compose --profile '*' down -v --remove-orphans
 fi
 
 # The Broker-only stack and this one are one proxy and one port 8080 apart, so
