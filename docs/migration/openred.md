@@ -10,7 +10,7 @@ section 7 names them.
 ## 1. Identity today
 
 - **One account store, three clients.** `Ibercivis/OpenRed` is a Django API with
-  **django-allauth 65.0.2** and **dj-rest-auth 6.0.0** in `requirements.txt`. Its React app
+  **django-allauth 65.0.2** and, on `main`, **dj-rest-auth 6.0.0**. Its React app
   (`Ibercivis/openred-react`) and its Flutter client (`Ibercivis/openred-flutter`) both sign in
   against it and hold a DRF token.
 - The email address **is** the sign-in identifier: `ACCOUNT_AUTHENTICATION_METHOD = 'email'`,
@@ -28,10 +28,11 @@ section 7 names them.
   creates is a `SocialAccount(provider='ibercivis', uid=<Person Identifier>)` on a new `User` with
   no usable password. An address already held by an account is refused, so today no existing account
   is ever reached through the Broker.
-- **The pilot runs one library version this application does not.** `dj-rest-auth` is 7.2.0 on the
-  `federation` branch's container list, because 6.0.0 and the pinned allauth cannot do the OAuth2
-  code flow together. Production still installs 6.0.0, and a deployment that took the integration
-  without that version would answer every sign-in with a `TypeError` (ADR-0017).
+- **One library version differs between the branches.** `dj-rest-auth` is 7.2.0 on `federation`,
+  in both of its dependency lists, because 6.0.0 and the pinned allauth cannot do the OAuth2 code
+  flow together. `main` keeps 6.0.0, which is what production installs until the integration lands
+  there; both lists on `federation` agree, so nothing deploying that branch is caught out
+  (ADR-0017).
 - A Person's work hangs off Django's own user: devices, tracks, measurements, missions, campaigns
   and stations. Nothing is keyed on an email address, which is what makes a move possible at all.
 - Anonymous reading already exists and produces no account: `IsAuthenticatedOrReadOnly` serves the
@@ -88,8 +89,8 @@ With the consequence of the wrong order, which is the part that is forgettable.
 3. **Decide `/admin/` before removing local passwords.** Django's admin takes a username; a Person
    arriving from the Broker has none, and the staff who administer the platform would lose the
    screen they administer it from.
-4. **Move the `dj-rest-auth` pin in `requirements.txt` before deploying the integration from it.**
-   Out of order, the first sign-in through the Broker raises rather than answers.
+4. **The `dj-rest-auth` move travels with the integration**, which is why both of `federation`'s
+   lists carry it. Separated, the first sign-in through the Broker raises rather than answers.
 
 ## 5. Irreversible steps
 
