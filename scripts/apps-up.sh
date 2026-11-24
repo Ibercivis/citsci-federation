@@ -20,11 +20,22 @@
 # changed. `--build` cannot simply be hardcoded here and added to — compose
 # refuses `--build --no-build` together, and refuses it before anything in this
 # script has run.
+#
+# `--reset` first throws the composition's data away, which is `pnpm
+# apps:reset`. It lives here rather than chained ahead of this script because
+# every refusal below has to come first: chained, `down -v` had already wiped
+# the volumes by the time a `production` stack was told it could not come up.
 
 set -eu
 
 root=$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)
 cd "$root"
+
+reset=no
+if [ "${1-}" = --reset ]; then
+  reset=yes
+  shift
+fi
 
 compose() {
   docker compose -f compose.yaml -f compose.apps.yaml "$@"
@@ -32,10 +43,44 @@ compose() {
 
 # Every address the composition serves is declared in `.env` and read from
 # there — by the proxy, by the realm, by each application, and here.
+#
+# Except BROKER_MODE when the shell sets it: compose lets the shell override
+# `.env`, and `BROKER_MODE=demo pnpm apps:reset` has to mean what it says.
+# Sourcing the file would put `testing` back, and COMPOSE_PROFILES with it.
+#
+# So the mode is restored and the profiles are dropped rather than restated:
+# unset, COMPOSE_PROFILES is absent from compose's environment, and compose
+# interpolates the `COMPOSE_PROFILES=${BROKER_MODE}` in `.env` against the mode
+# above. Which services a mode starts stays declared in one place.
+shell_mode=${BROKER_MODE-}
 set -a
 # shellcheck disable=SC1091
 . ./.env
+if [ -n "$shell_mode" ]; then
+  BROKER_MODE=$shell_mode
+  unset COMPOSE_PROFILES
+fi
 set +a
+
+# The mode is left to `.env` and the shell rather than chosen here, so the
+# applications come up in `testing` or `demo`, whichever they say. In
+# `production` they cannot: each sends its mail to the catcher, which that mode
+# does not run, and compose would refuse with an error that names a dependency,
+# not the mode.
+if [ "$BROKER_MODE" = production ]; then
+  echo "BROKER_MODE is production, which runs no mail catcher, and every" >&2
+  echo "application of the composition sends its mail there." >&2
+  echo "Bring them up in demo or testing instead; a change of mode needs a reset:" >&2
+  echo "  BROKER_MODE=demo pnpm apps:reset" >&2
+  exit 1
+fi
+
+# Nothing above this line destroys anything, which is the point of its being
+# above: a mode that cannot come up is refused while the data is still there.
+if [ "$reset" = yes ]; then
+  echo "== the composition's data, thrown away"
+  compose --profile '*' down -v
+fi
 
 # The Broker-only stack and this one are one proxy and one port 8080 apart, so
 # compose fails to bind rather than explaining itself. Said here instead.

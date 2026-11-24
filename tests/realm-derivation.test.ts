@@ -62,9 +62,15 @@ describe("deriving the realm Keycloak imports", () => {
     expect(realm["identityProviders"]).toEqual([]);
   });
 
+  it("builds the same realm in demo as in production, without the Mock Identity Source's issuer", () => {
+    expect(derive("demo", declaration(), "")).toEqual(
+      derive("production", declaration()),
+    );
+  });
+
   it("refuses a mode it does not know, rather than building the base alone", () => {
     expect(() => derive("testng", declaration())).toThrow(
-      'Unknown BROKER_MODE "testng": it is "testing" or "production".',
+      'Unknown BROKER_MODE "testng": it is "testing", "production" or "demo".',
     );
   });
 

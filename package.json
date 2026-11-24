@@ -11,7 +11,7 @@
     "apps:up": "./scripts/apps-up.sh",
     "apps:down": "docker compose -f compose.yaml -f compose.apps.yaml down",
     "apps:logs": "docker compose -f compose.yaml -f compose.apps.yaml logs -f",
-    "apps:reset": "docker compose -f compose.yaml -f compose.apps.yaml --profile \"*\" down -v && ./scripts/apps-up.sh",
+    "apps:reset": "./scripts/apps-up.sh --reset",
     "clean-slate": "./scripts/clean-slate.sh",
     "sign-in-url": "./scripts/sign-in-url.sh",
     "format": "oxfmt .",
@@ -21,7 +21,8 @@
     "typecheck": "tsc --noEmit",
     "require-issue-link:check": "./scripts/check-require-issue-link.sh",
     "reuse:lint": "./scripts/reuse-lint.sh",
-    "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm require-issue-link:check && pnpm reuse:lint",
+    "demo-services:check": "./scripts/check-demo-services.sh",
+    "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm require-issue-link:check && pnpm reuse:lint && pnpm demo-services:check",
     "check:fix": "pnpm format && pnpm lint:fix",
     "test": "vitest run",
     "prepare": "lefthook install"
