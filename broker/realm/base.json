@@ -228,7 +228,7 @@
       "directAccessGrantsEnabled": false,
       "serviceAccountsEnabled": false,
       "consentRequired": true,
-      "redirectUris": ["${OPENRED_API_BASE_URL}/accounts/oidc/*"],
+      "redirectUris": ["${OPENRED_WEB_BASE_URL}/auth/ibercivis/callback"],
       "webOrigins": [],
       "attributes": {
         "pkce.code.challenge.method": "S256"
