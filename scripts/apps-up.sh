@@ -20,11 +20,22 @@
 # changed. `--build` cannot simply be hardcoded here and added to — compose
 # refuses `--build --no-build` together, and refuses it before anything in this
 # script has run.
+#
+# `--reset` first throws the composition's data away, which is `pnpm
+# apps:reset`. It lives here rather than chained ahead of this script because
+# every refusal below has to come first: chained, `down -v` had already wiped
+# the volumes by the time a `production` stack was told it could not come up.
 
 set -eu
 
 root=$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)
 cd "$root"
+
+reset=no
+if [ "${1-}" = --reset ]; then
+  reset=yes
+  shift
+fi
 
 compose() {
   docker compose -f compose.yaml -f compose.apps.yaml "$@"
@@ -62,6 +73,13 @@ if [ "$BROKER_MODE" = production ]; then
   echo "Bring them up in demo or testing instead; a change of mode needs a reset:" >&2
   echo "  BROKER_MODE=demo pnpm apps:reset" >&2
   exit 1
+fi
+
+# Nothing above this line destroys anything, which is the point of its being
+# above: a mode that cannot come up is refused while the data is still there.
+if [ "$reset" = yes ]; then
+  echo "== the composition's data, thrown away"
+  compose --profile '*' down -v
 fi
 
 # The Broker-only stack and this one are one proxy and one port 8080 apart, so

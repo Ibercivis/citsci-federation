@@ -11,7 +11,7 @@
     "apps:up": "./scripts/apps-up.sh",
     "apps:down": "docker compose -f compose.yaml -f compose.apps.yaml down",
     "apps:logs": "docker compose -f compose.yaml -f compose.apps.yaml logs -f",
-    "apps:reset": "docker compose -f compose.yaml -f compose.apps.yaml --profile \"*\" down -v && ./scripts/apps-up.sh",
+    "apps:reset": "./scripts/apps-up.sh --reset",
     "clean-slate": "./scripts/clean-slate.sh",
     "sign-in-url": "./scripts/sign-in-url.sh",
     "format": "oxfmt .",
