@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  The Maven settings both extension stages of the Dockerfile build with.
+
+  Keycloak's own poms declare a repository with the id
+  `jboss-public-repository`, at repository.jboss.org. Neither of our poms asks
+  for it, but Maven inherits it and asks it first for every artifact it has
+  not got. Everything this build needs is on Central, so a slow or failing
+  JBoss server adds nothing but its timeouts: each request waits on it for
+  minutes before falling back to Central, and enough of them run a job past
+  its `timeout-minutes`.
+
+  Mirroring that id onto Central means the build talks to one server.
+  It names the one id rather than `*`, so that a repository a future pom
+  declares on purpose is still reached, and still visible in the log.
+-->
+<settings xmlns="http://maven.apache.org/SETTINGS/1.2.0"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.2.0 https://maven.apache.org/xsd/settings-1.2.0.xsd">
+  <mirrors>
+    <mirror>
+      <id>central-for-jboss</id>
+      <mirrorOf>jboss-public-repository</mirrorOf>
+      <url>https://repo.maven.apache.org/maven2</url>
+    </mirror>
+  </mirrors>
+</settings>

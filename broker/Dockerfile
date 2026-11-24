@@ -19,6 +19,9 @@
 # was whatever Central called latest that morning (`issue #114`).
 ARG DEPENDENCY_PLUGIN=org.apache.maven.plugins:maven-dependency-plugin:3.7.0
 
+# Both Maven stages copy `maven-settings.xml` into the user settings, so that
+# they resolve from Central alone. The file says why.
+
 FROM maven:3.9-eclipse-temurin-26 AS mapper
 ARG DEPENDENCY_PLUGIN
 WORKDIR /build
@@ -40,6 +43,7 @@ WORKDIR /build
 # `go-offline` does not leave the repository complete, so `package` resolves
 # from Central too. `docs/notes/2026-11-19-what-go-offline-leaves-for-package.md`
 # has the counts.
+COPY maven-settings.xml /root/.m2/settings.xml
 COPY person-identifier/pom.xml .
 RUN mvn --batch-mode "${DEPENDENCY_PLUGIN}:go-offline"
 COPY person-identifier/src ./src
@@ -48,6 +52,7 @@ RUN mvn --batch-mode --quiet package
 FROM maven:3.9-eclipse-temurin-26 AS condition
 ARG DEPENDENCY_PLUGIN
 WORKDIR /build
+COPY maven-settings.xml /root/.m2/settings.xml
 COPY verified-email/pom.xml .
 RUN mvn --batch-mode "${DEPENDENCY_PLUGIN}:go-offline"
 COPY verified-email/src ./src
