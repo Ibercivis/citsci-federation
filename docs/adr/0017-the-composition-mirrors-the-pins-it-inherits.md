@@ -25,6 +25,14 @@ moved to 65.15.0, where the OpenID Connect provider began validating the ID toke
 trusting an unsigned userinfo response (ADR-0016). Argue a move like that in the commit, in the
 application's words, and leave the version they still run in `docs/migration/<app>.md`.
 
+**The exception is only available while the move leaves the application working**, which is not
+something to assume: the same move on OpenRed (`issue #30`) stops registration through its own API
+from sending its confirmation mail and fails two of that project's own tests. There the pin stayed
+and the integration pays for the check itself — with the pinned allauth's own
+`verify_and_decode`, the function behind its Google provider. Run the application's suite on the
+proposed version before arguing for it; a pin that cannot be moved is a cost in our code, not a
+reason to move it anyway.
+
 Two places the rule does not reach. Geonity's two Vite dev servers resolve their trees afresh
 instead of installing what it pins, for the reason beside them in `compose.apps.yaml`. And Geonity's
 PostGIS stays on 16-3.5 until that application moves; whether it ever does is not our question.
