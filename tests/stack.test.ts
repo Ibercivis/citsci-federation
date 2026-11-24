@@ -1,6 +1,8 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { beforeAll, describe, expect, it } from "vitest";
+import { derive, readDeclaration } from "../broker/realm/derive.ts";
+import { configured } from "./broker.ts";
 import { ROOT, type Stack, compose, docker, runningStack } from "./stack.ts";
 
 /**
@@ -155,5 +157,60 @@ describe("the Keycloak running", () => {
       keycloak?.imageVersion,
       `The Broker runs a Keycloak other than the one broker/Dockerfile pins: an image built before the pin moved. ${RECREATE}`,
     ).toBe(pinnedKeycloak());
+  });
+});
+
+/**
+ * The realm running is the one `broker/realm/` declares for this mode, and so
+ * is everything in it that only a reset brings back — the password policy
+ * first among them. Seam 1 shows that policy at work; this is what says the
+ * Broker it was shown on holds the declaration as it stands.
+ *
+ * Two steps stand between the two, and either can be left behind. The image
+ * carries the realm derived when it was built, so an edit to `broker/realm/`
+ * reaches it only through a build. The database keeps the realm it was first
+ * given, because `--import-realm` skips a realm that already exists, so a
+ * new image or a new `.env` reaches it only through a reset.
+ */
+describe("the realm running", () => {
+  const MODE = configured("BROKER_MODE");
+  const declared = derive(
+    MODE,
+    readDeclaration(),
+    MODE === "testing" ? configured("MOCK_ISSUER") : "",
+  );
+
+  it("is what the image carries, derived from broker/realm/ as it stands", () => {
+    const carried: unknown = JSON.parse(
+      compose(
+        STACK,
+        "exec",
+        "-T",
+        "keycloak",
+        "cat",
+        "/opt/keycloak/data/import/realm-citsci.json",
+      ),
+    );
+
+    expect(
+      carried,
+      `The Broker's image carries a realm derived from an earlier broker/realm/, or for another BROKER_MODE. ${RECREATE}`,
+    ).toEqual(declared);
+  });
+
+  it("was imported by the Keycloak container running now", () => {
+    // Keycloak says so once per import, and says nothing of the kind when it
+    // finds the realm already in the database. A container recreated over
+    // the same volume — a new image, a changed `.env` — finds it there.
+    const realm = `Realm '${String(declared["realm"])}'`;
+    const verdicts = compose(STACK, "logs", "--no-log-prefix", "keycloak")
+      .split("\n")
+      .filter((line) => line.includes(realm))
+      .map((line) => line.slice(line.indexOf(realm)));
+
+    expect(
+      verdicts,
+      `The realm in the database was imported by an earlier container, from an image or a .env that may no longer be the declared one, and --import-realm does not replace it. ${RECREATE}`,
+    ).toContain(`${realm} imported`);
   });
 });
