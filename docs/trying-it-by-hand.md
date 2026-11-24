@@ -1,8 +1,10 @@
 # Trying the Brokered Composition by hand
 
-What somebody with a browser does to see the pilot work: the manual pass before a pull request, and
-the walkthrough to run in front of people. What the composition *is* and how it is wired is in the
+What somebody with a browser does to see the pilot work: the manual pass before a pull request,
+feature by feature. What the composition *is* and how it is wired is in the
 [README](../README.md) and ADR-0009 — this file is only the clicking.
+[`demo-script.md`](demo-script.md) is the ordered sequence to run in front of people, and it assumes
+this file has been read once.
 
 ## Before you start
 
