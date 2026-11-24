@@ -1,8 +1,10 @@
 # Trying the Brokered Composition by hand
 
-What somebody with a browser does to see the pilot work: the manual pass before a pull request, and
-the walkthrough to run in front of people. What the composition *is* and how it is wired is in the
+What somebody with a browser does to see the pilot work: the manual pass before a pull request,
+feature by feature. What the composition *is* and how it is wired is in the
 [README](../README.md) and ADR-0009 — this file is only the clicking.
+[`demo-script.md`](demo-script.md) is the ordered sequence to run in front of people, and it assumes
+this file has been read once.
 
 ## Before you start
 
@@ -203,8 +205,10 @@ registered with, and `pnpm broker:reset`. A line left empty breaks that button; 
 - **GitHub, at an address nobody holds**: choose **GitHub** with an account whose primary address
   no Person has. The Broker holds you on "verify your email" and sends the link to the mail catcher
   (step 7). You are signed in only after following it, whatever GitHub said about the address.
-- **GitHub, at the address Google used**: the Broker refuses you. It does not read whether GitHub
-  verified the address, so it joins nobody through GitHub (`issue #145`).
+- **GitHub, at the address Google used**: the Broker holds you on "verify your email" again and
+  mails the address that Person already holds. Following the link joins the two Identities into one
+  Person; nothing is written until it is followed (`issue #149`). It is the mailbox that joins them,
+  because the Broker does not read GitHub's own verified flag (`issue #145`).
 
 **TODO — where this step goes in `testing` is not settled.** `pnpm broker:reset` takes the Broker's database and
 the mail catcher with it, so the step throws away the Persons, the Identities and the mail that
