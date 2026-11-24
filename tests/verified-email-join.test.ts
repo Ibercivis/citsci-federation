@@ -8,6 +8,7 @@ import {
   attempt,
   authenticate,
   follow,
+  userinfo,
 } from "./brokered-app.ts";
 import { PERSON_IDENTIFIER } from "./broker.ts";
 import { linkMailedTo, mailCountTo } from "./mailbox.ts";
@@ -22,6 +23,7 @@ import {
   aNewcomerWhoseAddressIsAffirmed,
   aNewcomerWhoseAffirmedAddressIsUnusable,
   aNewcomerWhoseSourceSendsNoAddress,
+  aRelocatingIdentity,
   addressOf,
   arriving,
 } from "./mock-source.ts";
@@ -65,6 +67,28 @@ async function personFrom(arrival: AttemptOptions): Promise<string> {
   const { claims } = await authenticate(CONFIDENTIAL_CLIENT, arrival);
   expect(claims.sub).toMatch(PERSON_IDENTIFIER);
   return claims.sub as string;
+}
+
+/** What a Brokered App knows a Person by: what it keys their data and their
+ *  roles against (ADR-0003). */
+const thePersonIn = ({
+  sub,
+  email,
+  email_verified,
+}: Record<string, unknown>) => ({
+  sub,
+  email,
+  email_verified,
+});
+
+/** That, in the ID token and in userinfo. */
+async function whoTheAppSees(arrival: AttemptOptions) {
+  const { claims, accessToken } = await authenticate(
+    CONFIDENTIAL_CLIENT,
+    arrival,
+  );
+  const { body } = await userinfo(accessToken);
+  return { idToken: thePersonIn(claims), userinfo: thePersonIn(body) };
 }
 
 /** A Person whose address was verified by their own Identity Source — the only
@@ -360,6 +384,11 @@ describe("a Verified Email joins the Person that holds it", () => {
     // What the pilot exists to demonstrate, and what the rule above must not
     // have cost. An enforcement that asked everyone for a mail, or turned them
     // away, would pass every case above (issue #25).
+    //
+    // The earlier harness asserted the opposite: that linking by email does
+    // not happen. The spec has this case replace that test, inverted, rather
+    // than delete it. Its repository is gone, so this is written from what
+    // the test named, not copied. Do not remove it: it is the case's name.
     const person = await personArrivingWithAVerifiedEmail("merge-verified");
 
     const second = await authenticate(
@@ -368,6 +397,26 @@ describe("a Verified Email joins the Person that holds it", () => {
     );
 
     expect(second.claims.sub).toBe(person);
+  });
+
+  it("shows a Brokered App the same Person whichever Identity they arrive with", async () => {
+    // Roles stay in each Brokered App, keyed on what it is told here. So what
+    // the Person can do there is the same through either source only if this
+    // is.
+    const throughA = await whoTheAppSees(
+      arriving(AFFIRMING_SOURCE_A, "merge-verified"),
+    );
+    const throughB = await whoTheAppSees(
+      arriving(AFFIRMING_SOURCE_B, "merge-verified"),
+    );
+
+    expect(throughA.idToken).toMatchObject({
+      sub: expect.stringMatching(PERSON_IDENTIFIER),
+      email: addressOf("merge-verified"),
+      email_verified: true,
+    });
+    expect(throughA.userinfo).toEqual(throughA.idToken);
+    expect(throughB).toEqual(throughA);
   });
 
   it("asks the Person nothing in between", async () => {
@@ -385,6 +434,84 @@ describe("a Verified Email joins the Person that holds it", () => {
       "choose-source",
       "sign-in",
     ]);
+  });
+});
+
+/**
+ * The limit ADR-0004 declares rather than hides: the address is what joins two
+ * Identities, so two addresses are two Persons, and the Broker never offers to
+ * join them.
+ */
+describe("two Verified Emails are two Persons", () => {
+  it("gives each address its own Person Identifier, and offers to join neither", async () => {
+    const one = aNewcomerWhoseAddressIsAffirmed();
+    const other = aNewcomerWhoseAddressIsAffirmed();
+    const personAtOne = await personFrom(one.through(AFFIRMING_SOURCE_A));
+    const personAtOther = await personFrom(other.through(AFFIRMING_SOURCE_A));
+
+    const oneAgain = await authenticate(
+      CONFIDENTIAL_CLIENT,
+      one.through(AFFIRMING_SOURCE_B),
+    );
+    const otherAgain = await authenticate(
+      CONFIDENTIAL_CLIENT,
+      other.through(AFFIRMING_SOURCE_B),
+    );
+
+    expect(personAtOther).not.toBe(personAtOne);
+    // Each address joined its own Person through the second source. Without
+    // this the case would pass with merging switched off, where every arrival
+    // is a Person of its own.
+    expect(oneAgain.claims.sub).toBe(personAtOne);
+    expect(otherAgain.claims.sub).toBe(personAtOther);
+    // And nothing between: a page offering a join would be a third one.
+    for (const { asked } of [oneAgain, otherAgain]) {
+      expect(asked.map((page) => page.kind)).toEqual([
+        "choose-source",
+        "sign-in",
+      ]);
+    }
+  });
+});
+
+/**
+ * The address joins an Identity to a Person once, when that Identity first
+ * arrives. After that the Identity is the link, and what its source says about
+ * the address later changes nothing: no Person changes, and no join happens
+ * late. The realm's `syncMode: IMPORT` is what this holds up.
+ */
+describe("an Identity's address is read once, when it first arrives", () => {
+  it("keeps the Person it first joined when its source later gives another Person's address", async () => {
+    const identity = aRelocatingIdentity();
+    const first = await authenticate(
+      CONFIDENTIAL_CLIENT,
+      identity.through(AFFIRMING_SOURCE_A, "first"),
+    );
+    // Somebody else at the address it is about to move to. Through another
+    // source, because the first one is already linked to the Person above.
+    const holder = await personFrom(
+      identity.through(AFFIRMING_SOURCE_B, "second"),
+    );
+
+    const moved = await authenticate(
+      CONFIDENTIAL_CLIENT,
+      identity.through(AFFIRMING_SOURCE_A, "second"),
+    );
+    const holderAgain = await personFrom(
+      identity.through(AFFIRMING_SOURCE_B, "second"),
+    );
+
+    expect(holder).not.toBe(first.claims.sub);
+    expect(moved.claims.sub).toBe(first.claims.sub);
+    expect(moved.claims.email).toBe(identity.address("first"));
+    expect(holderAgain).toBe(holder);
+    // And the address it first arrived with still joins its Person. Without
+    // this the case would pass with merging switched off.
+    const joined = await personFrom(
+      identity.through(AFFIRMING_SOURCE_ASKING_FOR_NAMES, "first"),
+    );
+
+    expect(joined).toBe(first.claims.sub);
   });
 });
 

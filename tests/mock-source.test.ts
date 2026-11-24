@@ -15,6 +15,7 @@ import {
   MOCK_SOURCES,
   SCOPE_ASKING_FOR_NAMES,
   type MockIdentity,
+  aRelocatingIdentity,
   arriving,
   signInAtMock,
 } from "./mock-source.ts";
@@ -223,5 +224,28 @@ describe("the Mock Identity Source says what it is told to", () => {
     });
     expect(fromUserinfo).toMatchObject({ email: "advisory@mock.test" });
     expect(fromUserinfo).not.toHaveProperty("email_verified");
+  });
+
+  it("can give one Identity another address the next time it signs in", async () => {
+    // The same `sub` both times, or the second sign-in is a second Identity
+    // and the case about an address changing upstream stages nothing.
+    const identity = aRelocatingIdentity();
+
+    const before = await signInAtMock(identity.credentials("before"));
+    const after = await signInAtMock(identity.credentials("after"));
+
+    for (const [answer, label] of [
+      [before, "before"],
+      [after, "after"],
+    ] as const) {
+      for (const claims of [answer.idToken, answer.userinfo]) {
+        expect(claims).toMatchObject({
+          sub: identity.subject,
+          email: identity.address(label),
+          email_verified: true,
+        });
+      }
+    }
+    expect(identity.address("after")).not.toBe(identity.address("before"));
   });
 });

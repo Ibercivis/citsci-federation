@@ -65,8 +65,7 @@ outcome — and no case can see which of them ran first. `takeover`, `merge`,
 `tests/verified-email-join.test.ts`, `renamed` to
 `tests/local-credential.test.ts`, and `either` to `tests/mock-source.test.ts`.
 
-A case that needs another combination adds an Identity here. The source's
-answer cannot yet change between two sign-ins; #25 needs that, and adds it.
+A case that needs another combination adds an Identity here.
 
 **An Identity the Broker has never met** is the one thing this table cannot
 give: a case about a Person's first arrival runs once against a Broker, and the
@@ -76,12 +75,12 @@ declares `newcomers` — any username under one of their prefixes, with
 refuses a declaration whose prefixes overlap, and is where the tests read the
 address a newcomer will arrive at rather than deriving it a second way.
 
-Three shapes, because what the claims say about that address is the question
-such a case usually turns on. `unverified` is for an address nobody affirmed,
-`verified` for one its source did. The second is how a case stages a Person
-**and** a later arrival at their address in one run — the same username through
-an affirming source and then through `mock`, which is `untrusted-verified`
-above with nothing left over from the last run.
+Four shapes. Three because what the claims say about that address is the
+question such a case usually turns on. `unverified` is for an address nobody
+affirmed, `verified` for one its source did. The second is how a case stages a
+Person **and** a later arrival at their address in one run — the same username
+through an affirming source and then through `mock`, which is
+`untrusted-verified` above with nothing left over from the last run.
 
 `affirmedButNoAddress` is the third, and its claims carry no `{username}`
 because its address is not an address: the source affirms the string `not an
@@ -93,6 +92,13 @@ affirmed by nobody while its source's `email_verified` still says `true`, which
 is the shape `issue #182` is about. The other way is a missing address, which no
 shape can stage on its own: it takes the source the Broker asks for no address
 (`mock-sending-no-address`), and it carries no verdict either.
+
+The fourth, `relocating`, is one Identity whose address changes between two
+sign-ins, the way a Person changes it at their source. The username's part
+before `subjectEndsAt` is the `sub`, and the part after it picks the address:
+sign in under another label and the same `sub` arrives elsewhere. Claims are
+read by `sub`, so `server.ts` remembers which label each `sub` last signed in
+with. It is the one thing the source remembers.
 
 ## The advisory's Identities
 

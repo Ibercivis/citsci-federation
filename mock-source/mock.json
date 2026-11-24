@@ -28,6 +28,13 @@
       "password": "mock",
       "idToken": { "email": "not an address", "email_verified": true },
       "userinfo": { "email": "not an address", "email_verified": true }
+    },
+    "relocating": {
+      "usernamePrefix": "relocating-",
+      "subjectEndsAt": "+",
+      "password": "mock",
+      "idToken": { "email": "{username}@mock.test", "email_verified": true },
+      "userinfo": { "email": "{username}@mock.test", "email_verified": true }
     }
   },
   "identities": {
