@@ -389,6 +389,43 @@ describe("a Verified Email joins the Person that holds it", () => {
 });
 
 /**
+ * The limit ADR-0004 declares rather than hides: the address is what joins two
+ * Identities, so two addresses are two Persons, and the Broker never offers to
+ * join them.
+ */
+describe("two Verified Emails are two Persons", () => {
+  it("gives each address its own Person Identifier, and offers to join neither", async () => {
+    const one = aNewcomerWhoseAddressIsAffirmed();
+    const other = aNewcomerWhoseAddressIsAffirmed();
+    const personAtOne = await personFrom(one.through(AFFIRMING_SOURCE_A));
+    const personAtOther = await personFrom(other.through(AFFIRMING_SOURCE_A));
+
+    const oneAgain = await authenticate(
+      CONFIDENTIAL_CLIENT,
+      one.through(AFFIRMING_SOURCE_B),
+    );
+    const otherAgain = await authenticate(
+      CONFIDENTIAL_CLIENT,
+      other.through(AFFIRMING_SOURCE_B),
+    );
+
+    expect(personAtOther).not.toBe(personAtOne);
+    // Each address joined its own Person through the second source. Without
+    // this the case would pass with merging switched off, where every arrival
+    // is a Person of its own.
+    expect(oneAgain.claims.sub).toBe(personAtOne);
+    expect(otherAgain.claims.sub).toBe(personAtOther);
+    // And nothing between: a page offering a join would be a third one.
+    for (const { asked } of [oneAgain, otherAgain]) {
+      expect(asked.map((page) => page.kind)).toEqual([
+        "choose-source",
+        "sign-in",
+      ]);
+    }
+  });
+});
+
+/**
  * The mirror of the rule above, and why the rule is applied before the Broker
  * decides whether to create a Person or join one.
  *
