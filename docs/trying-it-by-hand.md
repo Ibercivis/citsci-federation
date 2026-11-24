@@ -91,12 +91,12 @@ In order:
    `demo-password`.
 2. The **consent screen**, naming the application. That name comes from the client the realm
    registered for it.
-3. Back to the application's callback with `code=…` in the address bar. For `lostatnight` and
-   `openred` that is `…/accounts/oidc/callback`, **which 404s**. That address is this script's own:
-   LostAtNight serves its callback at `/accounts/oidc/ibercivis/login/callback/` and redeems the code
-   itself, which is step 5. Nothing serves the bare `/accounts/oidc/callback`. For `geonity` it is
-   the web app's `/auth/ibercivis/callback`, which says the sign-in did not work, because this URL
-   was not started by Geonity.
+3. Back to the application's callback with `code=…` in the address bar. For `lostatnight` that is
+   `…/accounts/oidc/callback`, **which 404s**: that address is this script's own, LostAtNight serves
+   its callback at `/accounts/oidc/ibercivis/login/callback/` and redeems the code itself, which is
+   step 5, and nothing serves the bare one. For `geonity` and `openred` it is the web app's
+   `/auth/ibercivis/callback`, which says the sign-in did not work — because this URL was not
+   started there, so the browser kept no verifier for it.
 
 The `code=` in the address bar is the Broker having done all of its half. Redeeming it needs the
 client secret, which is not a thing to put in an address bar; `pnpm test` redeems codes, over the
@@ -152,6 +152,14 @@ and the paragraph beside the button says that an address already used by a Geoni
 refused. Its API's registration endpoint stays open, because the mobile app still creates accounts
 there.
 
+OpenRed, from http://openred.localhost:8080/login (`issue #30`), is Geonity's shape again: the same
+callback page, the same refusal of an address it already holds, the same registration endpoint left
+open for a mobile client. **My Profile** names the identifier, `/register` leads to `/login`, and
+the navbar, the landing page and the confirmation screens no longer offer a sign-up either. Two things there are its own — its
+API checks the ID token's signature itself, because the allauth it pins would otherwise read the
+identity from an unsigned `userinfo` response, and the account it creates is named `user`, because
+the service sends no first name and that application's username generator reads nothing else.
+
 ### 6. An account that existed before the Broker
 
 Every seeded account is invented, on a `.invalid` address that can never receive mail, and its
@@ -190,8 +198,9 @@ Nothing in the composition can deliver to a real address.
 ### 8. The three applications, as the Broker knows them
 
 http://broker.localhost:8080/admin/, `admin` / `admin`, realm `citsci` → Clients: **lostatnight**,
-**geonity** and **openred**. LostAtNight's and OpenRed's redirect URIs are under `/accounts/oidc/*`.
-Geonity's is the one page of its web app, `/auth/ibercivis/callback`.
+**geonity** and **openred**. LostAtNight's redirect URI is under `/accounts/oidc/*`, because its
+own library serves that path. Geonity's and OpenRed's are the one page of each web app that receives
+a code, `/auth/ibercivis/callback`.
 
 ### 9. Google and GitHub, with real credentials
 
@@ -225,9 +234,9 @@ Broker, and is the one-line fix. `PR #164` weighed the three.
 
 ## What does not work yet, on purpose
 
-- **OpenRed has no sign-in through the Broker yet** (`issue #30`). LostAtNight and Geonity both have
-  one (step 5), so single sign-on between those two can be tried by hand; the browser test that
-  asserts it is `issue #34`.
+- **No test asserts single sign-on across two applications.** All three have a button now
+  (step 5), so it can be tried by hand — sign in at one, then open another and press its button,
+  and the Broker should not ask again. The browser test that asserts it is `issue #34`.
 - **Maps are blank.** They need a Mapbox token nobody has locally, and that is settled:
   [`local-development.md`](local-development.md) says not to spend a minute on it.
 - **"Sign in with Google" fails on OpenRed's front end**, and could not do otherwise: it would

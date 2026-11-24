@@ -155,7 +155,9 @@ Four things this one taught that the first two did not:
 Before starting the app, two things: its dev server **defaulted to production** —
 `"proxy": "https://api.open-red.es"` in `package.json`, now a configurable `setupProxy.js` that
 defaults to the local API and warns on a non-local target — and `npm install` produces a tree that
-does not compile, so **use `npm ci`** and leave the committed lockfile alone. Maps need a Mapbox
+does not compile, so **use `npm ci`**. The lock file gained one package with the integration
+(`issue #30`), written with `--package-lock-only` so no other version moved; it is still not a file
+to regenerate. Maps need a Mapbox
 token; everything else works without one. The Flutter client was not exercised: it talks to the
 devices over BLE and needs hardware.
 

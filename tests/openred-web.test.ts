@@ -5,11 +5,11 @@ import { configured } from "./broker.ts";
  * OpenRed's React front end, read the way a browser reads it: at its own
  * hostname, through the proxy, with every API call going to that same origin.
  *
- * It asserts no sign-in through the Broker, because there is none to assert
- * yet — OpenRed's integration is `issue #30`. This front end joins the
- * composition before it (`issue #96`) so that seam 3 (`issue #34`) has a
- * second set of screens to click into, and so the integration lands on an
- * application that already runs here.
+ * It asserts the sign-in this application has always had, and **not** the one
+ * through the Broker, which `issue #30` added: that one is a browser's, since
+ * the code is obtained and the callback page is rendered by JavaScript, and a
+ * browser is seam 3 (`issue #34`). This front end joined the composition
+ * before the integration (`issue #96`), which is why this file predates it.
  *
  * **No screen is rendered here.** This suite fetches documents and calls APIs;
  * it runs no JavaScript, so what it holds is the application's own sign-in
