@@ -26,6 +26,17 @@ const IDENTITIES: Record<string, DeclaredIdentity> = declaration.identities;
 const identityNamed = (username: string): DeclaredIdentity | undefined =>
   IDENTITIES[username] ?? newcomerNamed(username);
 
+/**
+ * The username each `sub` last signed in with. The claims are read by `sub`,
+ * because `oidc-provider` makes the account id the `sub` and lets nothing
+ * override it, so an Identity whose address changes between sign-ins needs
+ * this to know which address it is giving this time (`newcomers.ts`).
+ *
+ * The one thing this source remembers. Every sign-in writes it before any of
+ * its claims are read, so a restart loses nothing a sign-in has not yet set.
+ */
+const lastSignedInAs = new Map<string, string>();
+
 /** What each scope releases. The grant below gives every one of them, so the
  *  scopes are spelled here once. `profile` is what `mock-affirming-named`
  *  asks for, the way a launch source would the day the Broker wants names;
@@ -102,7 +113,7 @@ const provider = new Provider(ISSUER, {
   // token carries what is declared for it and the two can be compared.
   conformIdTokenClaims: false,
   findAccount: (_ctx, sub) => {
-    const identity = identityNamed(sub);
+    const identity = identityNamed(lastSignedInAs.get(sub) ?? sub);
     if (!identity) return undefined;
     return {
       accountId: sub,
@@ -177,15 +188,18 @@ const server = createServer((req, res) => {
     }
     const form = await formBody(req);
     const username = form.get("username") ?? "";
-    if (identityNamed(username)?.password !== form.get("password")) {
+    const identity = identityNamed(username);
+    if (identity?.password !== form.get("password")) {
       res.writeHead(401, { "content-type": "text/html; charset=utf-8" });
       res.end(
         signInPage(uid, "No mock Identity with that username and password."),
       );
       return;
     }
+    const sub = identity.subject ?? username;
+    lastSignedInAs.set(sub, username);
     await provider.interactionFinished(req, res, {
-      login: { accountId: username },
+      login: { accountId: sub },
     });
   };
 

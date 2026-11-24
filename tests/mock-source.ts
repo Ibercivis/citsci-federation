@@ -22,7 +22,11 @@ import {
 import type { Client } from "./clients.ts";
 import { Browser, createPkce, follow, formsOn } from "./brokered-app.ts";
 import declaration from "../mock-source/mock.json" with { type: "json" };
-import { NEWCOMERS, aNewcomerUnder } from "../mock-source/newcomers.ts";
+import {
+  NEWCOMERS,
+  aNewcomerUnder,
+  aRelocatingNewcomer,
+} from "../mock-source/newcomers.ts";
 import { declaredSource } from "./realm.ts";
 
 /**
@@ -254,6 +258,27 @@ export function aNewcomerWhoseSourceSendsNoAddress() {
 }
 
 /**
+ * An Identity the Broker has never met whose source verifies its address, and
+ * can be made to give another one: `as` names the address this sign-in
+ * arrives with, and it is the same Identity whichever it names.
+ *
+ * What a case about an address changing upstream needs, after the Identity
+ * has already arrived once.
+ */
+export function aRelocatingIdentity() {
+  const { subject, password, username, address } = aRelocatingNewcomer();
+  return {
+    subject,
+    address,
+    credentials: (as: string) => ({ username: username(as), password }),
+    through: (source: string, as: string) => ({
+      as: { through: source, username: username(as), password },
+      pkce: createPkce("S256"),
+    }),
+  };
+}
+
+/**
  * The Broker as the source knows it: a client, registered with a callback.
  *
  * The callback is Keycloak's path for an Identity Source with the alias
@@ -292,7 +317,8 @@ type SourceDiscovery = Pick<
  * and not the source's.
  */
 export async function signInAtMock(
-  identity: MockIdentity,
+  /** A declared Identity, or the credentials of one the source mints. */
+  identity: MockIdentity | { username: string; password: string },
   /** What the Broker asks the source for, read from the realm. Defaults to
    *  what most sources get; pass `SCOPE_ASKING_FOR_NAMES` for the other. */
   scope = declaredSource("mock").asksFor,
@@ -326,19 +352,21 @@ export async function signInAtMock(
   const [signIn] = formsOn(shown.page);
   if (!signIn) throw new Error("The source's sign-in page carries no form.");
 
+  const credentials =
+    typeof identity === "string"
+      ? { username: identity, password: MOCK_IDENTITIES[identity].password }
+      : identity;
   const back = await follow(
     browser,
-    await browser.postForm(signIn.action, {
-      username: identity,
-      password: MOCK_IDENTITIES[identity].password,
-    }),
+    await browser.postForm(signIn.action, credentials),
     client,
   );
   const code =
     back.at === "the application"
       ? new URL(back.location).searchParams.get("code")
       : null;
-  if (!code) throw new Error(`The source issued no code for ${identity}.`);
+  if (!code)
+    throw new Error(`The source issued no code for ${credentials.username}.`);
 
   const tokens = (await (
     await fetch(discovery.token_endpoint, {

@@ -24,6 +24,9 @@ import declaration from "./mock.json" with { type: "json" };
  * create a Person.
  */
 export interface DeclaredIdentity {
+  /** The `sub` it is known by, where that is not the username it signs in
+   *  with. Only a relocating newcomer has one: see `aRelocatingNewcomer`. */
+  subject?: string;
   password: string;
   idToken: { email: string; email_verified: boolean };
   userinfo: { email: string; email_verified?: boolean };
@@ -82,7 +85,10 @@ export function newcomerNamed(username: string): DeclaredIdentity | undefined {
     username.startsWith(candidate.usernamePrefix),
   );
   if (!shape) return undefined;
+  const ending =
+    "subjectEndsAt" in shape ? username.indexOf(shape.subjectEndsAt) : -1;
   return {
+    ...(ending === -1 ? {} : { subject: username.slice(0, ending) }),
     password: shape.password,
     idToken: filledIn(shape.idToken, username),
     userinfo: filledIn(shape.userinfo, username),
@@ -105,5 +111,32 @@ export function aNewcomerUnder(shape: NewcomerShape): {
     username,
     password: shape.password,
     address: filledIn(shape.idToken, username).email,
+  };
+}
+
+/**
+ * One Identity whose source changes the address it gives between two sign-ins,
+ * the way a Person changes the address on their account upstream.
+ *
+ * Signed in as `username(label)`, it is the same `sub` whatever the label, and
+ * the label is in the address. So a case changes the address by signing in
+ * under another label, and asks the source to remember nothing but which one
+ * it used last (`server.ts`).
+ */
+export function aRelocatingNewcomer(): {
+  subject: string;
+  password: string;
+  username: (label: string) => string;
+  address: (label: string) => string;
+} {
+  const shape = NEWCOMERS.relocating;
+  const subject = `${shape.usernamePrefix}${randomUUID()}`;
+  const username = (label: string) =>
+    `${subject}${shape.subjectEndsAt}${label}`;
+  return {
+    subject,
+    password: shape.password,
+    username,
+    address: (label) => filledIn(shape.idToken, username(label)).email,
   };
 }
