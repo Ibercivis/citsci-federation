@@ -36,9 +36,11 @@ it: `issue-205` and `issue-205-hooks-read-the-slug` both name issue #205, and `i
 none. The slug is for whoever reads `git branch` — neither hook looks at it, and a branch names one
 issue, so `issue-205-and-206` claims only #205.
 
-The claim is attempted **once per branch per clone**, recorded in the git directory, which is never
-committed. One attempt rather than one success: a hook that retries a failing network call on every
-command is a hook somebody switches off. A failed attempt says so rather than passing in silence.
+The claim is attempted **once per issue per clone**, recorded in the git directory, which is never
+committed. The marker is the number, not the branch name, so a second branch cut for the same ticket
+finds the attempt already spent. One attempt rather than one success: a hook that retries a failing
+network call on every command is a hook somebody switches off. A failed attempt says so rather than
+passing in silence.
 
 `Part of #<n>` is an answer, not a way round the refusal. A pull request that finishes a ticket and
 claims otherwise leaves the ticket open, which is the thing being fixed.

@@ -165,7 +165,7 @@ refused "an issue named by a double-quoted title, and no keyword anywhere" "$unt
   'gh pr create --title "[#52] A thing" --body "It does a thing, at some length."' \
   "the title carries"
 
-# --- The slug every branch here actually carries ------------------------------
+# --- The slug every branch here actually carries -----------------------------
 #
 # The hook read `issue-<n>` and digits to the end of the name, and no branch in
 # this repository is spelled that way: `issue-30-openred-integration`,
@@ -186,10 +186,9 @@ refused "a slugged branch, read from the directory the command came from" "$unti
   'gh pr create --title "A thing" --body "It does a thing, at some length."' \
   "is on \`issue-102-hooks-directory\`"
 
-# The number ends at the first `-` or at the end of the name, and this is the
-# one direction the widening could have gone too far: a rule that merely looked
-# for digits anywhere would read 102 out of this and refuse a pull request over
-# an issue the branch never named.
+# The one direction the widening could have gone too far: a rule that merely
+# looked for digits anywhere would read 102 out of this and refuse a pull
+# request over an issue the branch never named.
 allowed "a branch whose number runs into the slug without a boundary" \
   "$(checkout_on issue-102abc)" \
   'gh pr create --title "A thing" --body "It does a thing, at some length."'

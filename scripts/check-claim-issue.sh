@@ -104,7 +104,7 @@ $(sed 's/^/      /' "$GH_LOG")"
   fi
 }
 
-# --- The slug every branch here actually carries ------------------------------
+# --- The slug every branch here actually carries -----------------------------
 #
 # The hook read `issue-<n>` and digits to the end of the name, and no branch in
 # this repository is spelled that way. So it returned before the network and an
@@ -116,11 +116,10 @@ claims "a slugged branch" issue-102-hooks-directory 102
 
 claims "a bare branch" issue-102 102
 
-# --- The one direction the widening could have gone too far -------------------
+# --- The one direction the widening could have gone too far ------------------
 #
-# The number ends at the first `-` or at the end of the name. A rule that
-# looked for digits anywhere would read 102 out of this and assign an issue
-# the branch never named.
+# A rule that looked for digits anywhere would read 102 out of this and assign
+# an issue the branch never named.
 
 claims_nothing "a branch whose number runs into the slug without a boundary" issue-102abc
 
@@ -128,7 +127,7 @@ claims_nothing "a branch under the prefix that names no number" issue-abc
 
 claims_nothing "a branch that is no issue's" no-issue
 
-# --- One attempt, not one success --------------------------------------------
+# --- One attempt, and it belongs to the issue --------------------------------
 #
 # The attempt is recorded before the call, and the record is what stops a hook
 # that runs after every command from retrying a failing network call. The stub
@@ -141,6 +140,18 @@ exits_zero "a second attempt on the same branch"
 run issue-77-twice
 if [ -s "$GH_LOG" ]; then
   note "a second attempt on the same branch: the hook asked again:
+$(sed 's/^/      /' "$GH_LOG")"
+fi
+
+# Per issue, not per branch. The marker is the number, so once a slug can vary
+# the two readings come apart: a second branch cut for the same ticket finds
+# the attempt spent. The same clone, because the marker lives in its git
+# directory — and the same checkout is the only way to say that from here.
+total=$((total + 1))
+git -C "$work/checkout-issue-77-twice" checkout -q -b issue-77-under-another-name
+run issue-77-twice
+if [ -s "$GH_LOG" ]; then
+  note "a second branch for the same issue in one clone: the hook asked again:
 $(sed 's/^/      /' "$GH_LOG")"
 fi
 
