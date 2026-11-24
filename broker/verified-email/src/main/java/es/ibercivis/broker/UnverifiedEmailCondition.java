@@ -40,9 +40,9 @@ import org.keycloak.provider.ProviderConfigProperty;
  * away from the one Keycloak applies on the create path.
  *
  * <p>Whatever it cannot establish counts as unverified: no brokered context,
- * no claim, an unparseable claim, a source whose word is not trusted. Asking
- * the address itself is the safe answer, so uncertainty falls on that side
- * (ADR-0004).
+ * no claim, an unparseable claim, a source whose word is not trusted, an
+ * address the arrival changed on the review page. Asking the address itself is
+ * the safe answer, so uncertainty falls on that side (ADR-0004).
  */
 public class UnverifiedEmailCondition
     implements ConditionalAuthenticator, ConditionalAuthenticatorFactory {
@@ -72,6 +72,19 @@ public class UnverifiedEmailCondition
     if (serialized == null) {
       // No Identity Source in this flow at all. Nothing affirmed the address,
       // so the guarded subflow runs.
+      return true;
+    }
+    if (Boolean.parseBoolean(
+        context
+            .getAuthenticationSession()
+            .getAuthNote(ReviewPageNotes.ADDRESS_CHANGED))) {
+      // The arrival changed this address itself. Its source affirmed the one
+      // it sent, which is not this one, and nobody affirmed this one. Only
+      // the address note: a username changed there says nothing about an
+      // address, and this realm never shows that field anyway (ADR-0005).
+      //
+      // Finding nothing here means a changed address counts as affirmed, so
+      // what holds this up is a case driving the page: `ReviewPageNotes`.
       return true;
     }
     BrokeredIdentityContext arrival =
@@ -137,9 +150,10 @@ public class UnverifiedEmailCondition
   @Override
   public String getHelpText() {
     return "True when the email address this Identity arrives with was not"
-        + " verified by the Identity Source it came from, or when that source"
-        + " is not trusted to verify addresses. Such an address must not reach"
-        + " a Person who already holds it.";
+        + " verified by the Identity Source it came from, when that source is"
+        + " not trusted to verify addresses, or when the address was changed on"
+        + " the review page rather than sent by the source. Such an address"
+        + " must not reach a Person who already holds it.";
   }
 
   /** Nothing to configure. A setting here would be a way to switch the rule

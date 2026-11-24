@@ -251,6 +251,34 @@
         "pkceMethod": "S256",
         "syncMode": "IMPORT"
       }
+    },
+    {
+      "alias": "mock-sending-no-address",
+      "displayName": "Mock source sending no address, affirms addresses (not for launch)",
+      "providerId": "oidc",
+      "enabled": true,
+      "trustEmail": true,
+      "storeToken": false,
+      "addReadTokenRoleOnCreate": false,
+      "linkOnly": false,
+      "hideOnLogin": false,
+      "config": {
+        "issuer": "${MOCK_ISSUER}",
+        "authorizationUrl": "${MOCK_ISSUER}/auth",
+        "tokenUrl": "${MOCK_ISSUER}/token",
+        "userInfoUrl": "${MOCK_ISSUER}/me",
+        "jwksUrl": "${MOCK_ISSUER}/jwks",
+        "useJwksUrl": "true",
+        "validateSignature": "true",
+        "disableUserInfo": "false",
+        "clientId": "citsci-broker",
+        "clientSecret": "mock-source-development-secret",
+        "clientAuthMethod": "client_secret_post",
+        "defaultScope": "openid",
+        "pkceEnabled": "true",
+        "pkceMethod": "S256",
+        "syncMode": "IMPORT"
+      }
     }
   ],
   "users": [

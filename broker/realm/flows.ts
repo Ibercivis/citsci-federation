@@ -24,6 +24,7 @@ interface Execution {
 
 interface Flow {
   alias: string;
+  description?: string;
   topLevel?: boolean;
   authenticationExecutions?: Execution[];
 }

@@ -15,10 +15,13 @@ import {
   AFFIRMING_SOURCE_A,
   AFFIRMING_SOURCE_B,
   AFFIRMING_SOURCE_ASKING_FOR_NAMES,
+  AFFIRMING_SOURCE_SENDING_NO_ADDRESS,
   SOURCE_AFFIRMING_NOTHING,
   type MockIdentity,
   aNewcomerArriving,
   aNewcomerWhoseAddressIsAffirmed,
+  aNewcomerWhoseAffirmedAddressIsUnusable,
+  aNewcomerWhoseSourceSendsNoAddress,
   addressOf,
   arriving,
 } from "./mock-source.ts";
@@ -249,6 +252,107 @@ describe("an unverified address joins no existing Person until its mail is answe
     await linkMailedTo(address, sent);
     expect(await mailCountTo(address)).toBe(sent + 1);
   });
+
+  /**
+   * The same two addresses and one verdict, reached from the other side: the
+   * review page. Nothing on it edits `email_verified`, so an arrival that
+   * types a held address carries a trusted source's `true` about the address
+   * it is no longer arriving at. Read on its own that `true` affirms whatever
+   * was typed, and the join ran with nothing asked (`issue #182`).
+   *
+   * Both cases arrive through a source the Broker **does** trust, which is
+   * what makes them different from every case above: the claim is true, the
+   * source is trusted, and the address is still nobody's.
+   */
+  it("mails an address typed over the one its source affirmed", async () => {
+    const holder = aNewcomerWhoseAddressIsAffirmed();
+    const person = await personFrom(holder.through(AFFIRMING_SOURCE_A));
+    const arrival = aNewcomerWhoseAffirmedAddressIsUnusable();
+
+    const typed = await attempt(
+      CONFIDENTIAL_CLIENT,
+      arrival({ through: AFFIRMING_SOURCE_B, typesOnReview: holder.address }),
+    );
+
+    expect(typed.outcome).toBe("refused-in-the-browser");
+    expect(JSON.stringify(typed)).not.toContain(person);
+    await linkMailedTo(holder.address);
+    expect(await mailCountTo(holder.address)).toBe(1);
+  });
+
+  /**
+   * The same page reached the other way, and the one the body of `issue #182`
+   * reports: the source sends no address, so `email` is required and empty,
+   * and the arrival types one a Person holds. No verdict is involved here —
+   * nothing arrived to carry one — so what this case holds up is only the
+   * mail. Keycloak's own authenticator declines to send for an address changed
+   * on that page, the one authenticator behind the condition was then
+   * ATTEMPTED, and the Person read "Invalid username or password".
+   */
+  it("mails an address typed by an arrival whose source sent none", async () => {
+    const holder = aNewcomerWhoseAddressIsAffirmed();
+    const person = await personFrom(holder.through(AFFIRMING_SOURCE_A));
+    const arrival = aNewcomerWhoseSourceSendsNoAddress();
+
+    const typed = await attempt(
+      CONFIDENTIAL_CLIENT,
+      arrival({
+        through: AFFIRMING_SOURCE_SENDING_NO_ADDRESS,
+        typesOnReview: holder.address,
+      }),
+    );
+
+    expect(typed.outcome).toBe("refused-in-the-browser");
+    // The second half of what the issue asks for: told what happened, not
+    // blamed. This is the one case that asserts the wording, because the
+    // wording is the symptom the issue reports — a mail could arrive and the
+    // page still be the one about credentials.
+    expect(whatThePersonWasTold(typed)).toContain(
+      "You need to verify your email address",
+    );
+    expect(JSON.stringify(typed)).not.toContain(person);
+    await linkMailedTo(holder.address);
+    expect(await mailCountTo(holder.address)).toBe(1);
+  });
+
+  it("joins it to that Person once the mail is answered", async () => {
+    // What the mail is for, on this path. Without it the subflow holds an
+    // arrival back and has nowhere to put it: Keycloak's own mail declines to
+    // send when the address was changed on the review page, the one
+    // authenticator behind the condition is then ATTEMPTED, and a REQUIRED
+    // subflow with no sibling fails. The Person read "Invalid username or
+    // password", about an address that was somebody else's.
+    const holder = aNewcomerWhoseAddressIsAffirmed();
+    const person = await personFrom(holder.through(AFFIRMING_SOURCE_A));
+    const arrival = aNewcomerWhoseAffirmedAddressIsUnusable();
+    const browser = new Browser();
+
+    const waiting = await attempt(CONFIDENTIAL_CLIENT, {
+      browser,
+      ...arrival({
+        through: AFFIRMING_SOURCE_B,
+        typesOnReview: holder.address,
+      }),
+    });
+
+    expect(waiting.outcome).toBe("refused-in-the-browser");
+
+    await follow(
+      browser,
+      await browser.get(await linkMailedTo(holder.address)),
+      CONFIDENTIAL_CLIENT,
+    );
+
+    // Arriving again with nothing to type: this Identity has met the Broker
+    // now, so the review page is behind it and the Person it reaches is the
+    // one that answered.
+    const joined = await authenticate(
+      CONFIDENTIAL_CLIENT,
+      arrival({ through: AFFIRMING_SOURCE_B }),
+    );
+
+    expect(joined.claims.sub).toBe(person);
+  });
 });
 
 describe("a Verified Email joins the Person that holds it", () => {
@@ -340,6 +444,33 @@ describe("a Person is never created at an address nobody affirmed", () => {
 
     expect(JSON.stringify(squatter)).not.toContain(genuine);
     expect(whatThePersonWasTold(squatter)).toContain("Asks for field: email");
+  });
+
+  it("does not hand the holder of an address to whoever typed it on the review page", async () => {
+    // The create half of `issue #182`. A trusted source's verdict is about the
+    // address that source sent, so a Person created at a typed one would
+    // absorb the genuine holder's arrival later — the same takeover by
+    // arriving first, through a page instead of a claim.
+    const holder = aNewcomerWhoseAddressIsAffirmed();
+    const arrival = aNewcomerWhoseAffirmedAddressIsUnusable();
+
+    // Typed before anybody holds the address, so no Person is there to join
+    // and this is the create path.
+    const squatter = await attempt(
+      CONFIDENTIAL_CLIENT,
+      arrival({ through: AFFIRMING_SOURCE_B, typesOnReview: holder.address }),
+    );
+
+    // Asked for an address rather than given the one it typed, which is what
+    // the Broker does with every address nobody affirmed.
+    expect(whatThePersonWasTold(squatter)).toContain("Asks for field: email");
+    expect(await mailCountTo(holder.address)).toBe(0);
+
+    // And the genuine holder, whose own source affirms it, is a Person of
+    // their own rather than that one.
+    const genuine = await personFrom(holder.through(AFFIRMING_SOURCE_A));
+
+    expect(JSON.stringify(squatter)).not.toContain(genuine);
   });
 
   it("gives a Person of their own to an arrival its source affirmed nothing about, once the Broker's mail is answered", async () => {

@@ -92,6 +92,32 @@ export const AFFIRMING_SOURCE_ASKING_FOR_NAMES = sourceAskingForNames(
   "mock-affirming-named",
 );
 
+/**
+ * The one source the Broker asks for no address at all.
+ *
+ * Guarded on both facts a case needs of it. It must not be asked for `email`:
+ * the scope is what makes the source release neither the address nor a verdict
+ * about one, which is how an arrival reaches `idp-review-profile` with nothing
+ * to fill the field in from. And it must affirm addresses, so that a case
+ * through it cannot be read as passing merely because the Broker distrusts the
+ * source — what nobody affirmed is the address typed on the page (issue #182).
+ */
+function sourceAskedForNoAddress(alias: string): string {
+  const name = sourceNamed(alias, true);
+  const { asksFor } = declaredSource(alias);
+  if (asksFor.includes("email")) {
+    throw new Error(
+      `This case wants the source the Broker asks for no address. The realm ` +
+        `asks ${alias} for ${asksFor}, which brings one.`,
+    );
+  }
+  return name;
+}
+
+export const AFFIRMING_SOURCE_SENDING_NO_ADDRESS = sourceAskedForNoAddress(
+  "mock-sending-no-address",
+);
+
 /** What the Broker asks that source for. A case at the source's own seam
  *  sends this instead of spelling a scope, so the two cannot drift apart. */
 export const SCOPE_ASKING_FOR_NAMES = declaredSource(
@@ -164,6 +190,67 @@ export function aNewcomerWhoseAddressIsAffirmed() {
       pkce: createPkce("S256"),
     }),
   };
+}
+
+/**
+ * An Identity the Broker has never met whose source affirms an address that is
+ * no address at all, returned as a function of how it arrives.
+ *
+ * One of the two ways to reach `idp-review-profile` from the declaration
+ * alone: the page shows when a required field is missing or will not validate,
+ * and the realm requires `email` and nothing else. This is the half that will
+ * not validate, and the one that matters to the condition — the Identity a
+ * case uses to type an address the source never sent, with `email_verified`
+ * still saying `true` about the one it did (`issue #182`). The other half is a
+ * missing address, which `aNewcomerWhoseSourceSendsNoAddress` stages and which
+ * carries no verdict to misread.
+ *
+ * A function because such a case arrives twice as the same Identity: once
+ * typing an address, and once afterwards to see which Person it reaches.
+ */
+export function aNewcomerWhoseAffirmedAddressIsUnusable() {
+  const { username, password } = aNewcomerUnder(NEWCOMERS.affirmedButNoAddress);
+  return (arrival: {
+    through: string;
+    /** What it types over the unusable address, on the review page. */
+    typesOnReview?: string;
+    /** What it gives the Broker if the Broker asks for an address of its
+     *  own, which is a different page and a different question. */
+    address?: string;
+  }) => ({
+    as: { username, password, ...arrival },
+    pkce: createPkce("S256"),
+  });
+}
+
+/**
+ * An Identity the Broker has never met arriving through the source the Broker
+ * asks for no address, returned as a function of how it arrives.
+ *
+ * The other way to reach `idp-review-profile`, and the one the body of
+ * `issue #182` reports: the page shows because `email` is required and nothing
+ * arrived to fill it. The shape is `verified` deliberately — the most its
+ * source could affirm — because the scope releases neither `email` nor
+ * `email_verified`, so what the declaration says about this Identity's address
+ * never leaves the source. A case through here cannot be passing on a claim.
+ *
+ * A function for the same reason as the unusable-address newcomer above: such
+ * a case arrives twice as the same Identity.
+ */
+export function aNewcomerWhoseSourceSendsNoAddress() {
+  const { username, password } = aNewcomerUnder(NEWCOMERS.verified);
+  return (arrival: {
+    through: string;
+    /** What it types into the field nothing arrived to fill, on the review
+     *  page. */
+    typesOnReview?: string;
+    /** What it gives the Broker if the Broker asks for an address of its own,
+     *  which is a different page and a different question. */
+    address?: string;
+  }) => ({
+    as: { username, password, ...arrival },
+    pkce: createPkce("S256"),
+  });
 }
 
 /**

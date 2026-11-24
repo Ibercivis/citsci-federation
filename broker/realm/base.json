@@ -389,7 +389,7 @@
     },
     {
       "alias": "citsci confirm an unverified address by mail",
-      "description": "The arriving source did not verify the address, so the Broker mails it and joins on the click. Nothing else checks it: idp-auto-link reads the address alone (issue #75).",
+      "description": "Nobody affirmed the address, so the Broker mails it and joins on the click. idp-auto-link checks nothing (issue #75), and Keycloak's own mail declines to send for an address changed on the review page, so the mail here is ours (issue #182).",
       "providerId": "basic-flow",
       "topLevel": false,
       "builtIn": false,
@@ -402,7 +402,7 @@
           "userSetupAllowed": false
         },
         {
-          "authenticator": "idp-email-verification",
+          "authenticator": "citsci-confirm-address-by-mail",
           "requirement": "REQUIRED",
           "priority": 20,
           "authenticatorFlow": false,
