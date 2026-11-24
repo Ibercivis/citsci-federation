@@ -10,23 +10,59 @@
 # One stage each, because one jar each: either can be lifted out of this
 # repository on its own.
 
-# `maven-dependency-plugin` by full coordinates and an exact version, never as
-# the `dependency:` prefix. Resolving a prefix means downloading two metadata
-# files from Central — one to learn which plugin the prefix names, one to pick
-# its latest version — and that lookup is the only step of this build that has
-# failed on its own, twice in one day, while the same image built in the same
-# CI run. Naming the plugin completely removes both requests, and pins what
-# was whatever Central called latest that morning (`issue #114`).
-ARG DEPENDENCY_PLUGIN=org.apache.maven.plugins:maven-dependency-plugin:3.7.0
+# How long Maven waits out a Central that is refusing it, which is the failure
+# this build keeps having (`issue #183`). The resolver retries a 429 by
+# itself, and the defaults are three retries at 5 s, 10 s, 15 s: the interval
+# grows by multiplying it by the attempt, so the whole of Maven's patience is
+# 30 seconds, and Central's throttle outlasts it: the `tests` job's own retry
+# comment in `.github/workflows/ci.yaml` says how that is known. Six retries at
+# 10 s ask for 10+20+30+40+50+60 instead: 210 seconds, spent where the refusal
+# happens rather than in a rebuilt image.
+#
+# The prefix is the half of this that cannot be read off the documentation.
+# `aether.transport.http.` is resolver 2.x, which arrives with Maven 4; this
+# image is Maven 3.9 on resolver 1.9, which reads `aether.connector.http.` and
+# ignores — in silence, leaving the 30 seconds in place — every property it
+# does not know. Both spellings were put to a local server that refuses
+# everything it is asked for, and
+# `docs/notes/2026-11-24-maven-retry-and-the-warm-layer.md` carries what each
+# of them did there.
+#
+# `intervalMax` is deliberately not set, and it is the trap of the three. It is
+# not a cap on the wait: once the next interval would pass it, the resolver
+# stops retrying at all. The longest interval asked for above is 60 s and the
+# default ceiling is 300 s, so every value worth typing is either inert or a
+# cut — the ticket's own 120000 would have done nothing, and 30000 would have
+# thrown away three of the six retries.
+ARG MAVEN_RETRY="-Daether.connector.http.retryHandler.count=6 -Daether.connector.http.retryHandler.interval=10000"
 
 # Both Maven stages copy `maven-settings.xml` into the user settings, so that
 # they resolve from Central alone. The file says why.
 
 FROM maven:3.9-eclipse-temurin-26 AS mapper
-ARG DEPENDENCY_PLUGIN
+ARG MAVEN_RETRY
+# Both `mvn` lines below read it, so neither carries the flags itself.
+ENV MAVEN_ARGS="${MAVEN_RETRY}"
 WORKDIR /build
-# The pom first, so that `go-offline` resolves this module's dependencies
-# before the source exists and a change to the Java does not re-resolve them.
+# The pom alone first, and `package` run on it before any source exists. That
+# is the layer a Java-only edit reuses, and `package` is what warms it,
+# because `package` is what follows: the same lifecycle resolves the same
+# plugins and the same classpath. The second line then compiles against a
+# repository that is already complete, which the note below measures with
+# `--offline`.
+#
+# `dependency:go-offline` ran here until `issue #183` counted it, and it was
+# over-inclusive and under-inclusive at once: it fetched a few hundred
+# artifacts `package` never asks for, and still left `package` resolving from
+# Central. The one thing it is named for, leaving the repository complete, is
+# the thing it did not do. The counts are in the note above.
+#
+# No `mvn` line here names a plugin by its `dependency:`-style prefix, and the
+# next one added must not either: a prefix is resolved by two metadata requests
+# to Central, and that lookup failed on its own twice in one day (`issue
+# #114`). `go-offline` was the only goal that needed a plugin named at all, so
+# its coordinate left with it.
+#
 # A cache mount shared by the two Maven stages was tried and reversed
 # (`issue #116`). It saved one of the two downloads, and for that it took the
 # dependencies out of the layer and serialised the stages on the lock that
@@ -34,27 +70,24 @@ WORKDIR /build
 # is prevent the resolution failure it was aimed at, which lands on the first
 # download into an empty cache — and in CI the cache is empty every run.
 #
-# `go-offline` runs loud, so that a refusal from Central says which request it
-# refused. `--quiet` keeps an HTTP status, which the `[ERROR]` summary
-# carries either way, and drops the `Downloading from central:` line that
-# names the request.
-#
-# `package` keeps `--quiet`, and that is the weaker half of the decision:
-# `go-offline` does not leave the repository complete, so `package` resolves
-# from Central too. `docs/notes/2026-11-19-what-go-offline-leaves-for-package.md`
-# has the counts.
+# The warm-up runs loud, so that a refusal from Central says which request it
+# refused. `--quiet` keeps an HTTP status, which the `[ERROR]` summary carries
+# either way, and drops the `Downloading from central:` line that names the
+# request. The second line keeps `--quiet` and gives up nothing for it: it
+# resolves from a complete repository, so it has no download to report.
 COPY maven-settings.xml /root/.m2/settings.xml
 COPY person-identifier/pom.xml .
-RUN mvn --batch-mode "${DEPENDENCY_PLUGIN}:go-offline"
+RUN mvn --batch-mode package
 COPY person-identifier/src ./src
 RUN mvn --batch-mode --quiet package
 
 FROM maven:3.9-eclipse-temurin-26 AS condition
-ARG DEPENDENCY_PLUGIN
+ARG MAVEN_RETRY
+ENV MAVEN_ARGS="${MAVEN_RETRY}"
 WORKDIR /build
 COPY maven-settings.xml /root/.m2/settings.xml
 COPY verified-email/pom.xml .
-RUN mvn --batch-mode "${DEPENDENCY_PLUGIN}:go-offline"
+RUN mvn --batch-mode package
 COPY verified-email/src ./src
 RUN mvn --batch-mode --quiet package
 

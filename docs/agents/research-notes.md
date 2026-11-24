@@ -24,11 +24,17 @@ note only when one of its branches is yours.
   credentials, Identities and sessions, and changes no password and no address: those are
   `kc_action` browser steps. It cannot replace the Account Console from a server. Open it before
   automating a Person's credential operations or building a profile screen.
-- **`go-offline` and `package`** (`2026-11-19-what-go-offline-leaves-for-package.md`) —
-  `dependency:go-offline` does not fill the local repository: `package` fetches 217 artifacts after
-  it and fails with `--offline`, so both Maven commands in `broker/Dockerfile` reach Central. Open
-  it before deciding whether `mvn package` loses `--quiet` too, or before costing anything that
-  assumes a Maven stage resolves once.
+- **`go-offline` and `package`** (`2026-11-19-what-go-offline-leaves-for-package.md`) — **spent as
+  advice.** `dependency:go-offline` did not fill the local repository, and it is no longer in
+  `broker/Dockerfile`; the note below replaced its rows. Open it for what `go-offline` cost while it
+  was there, not to decide anything.
+- **Maven's 429 retry, and the warm dependency layer**
+  (`2026-11-24-maven-retry-and-the-warm-layer.md`) — the resolver we run reads
+  `aether.connector.http.retryHandler.*` and ignores the `aether.transport.http.*` its own
+  documentation gives, in silence; `intervalMax` has no value worth setting. Warming a stage's layer
+  with `package` itself leaves nothing for the build to resolve. Open it before moving the retry
+  configuration, before pinning the Maven image elsewhere, or to cost a build sequence against its
+  rows — `dependency:resolve` among them.
 - **Repeated prose** (`2026-11-20-repeated-prose.md`) — seven consecutive words in two places is
   where prose written twice starts; shorter than that is the domain's own vocabulary.
   `scripts/check-repeated-prose.sh` prints those pairs, and is a reminder rather than a gate. Open
