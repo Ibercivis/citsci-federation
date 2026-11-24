@@ -85,3 +85,13 @@ A hook's own cases stay out of `hooks/` and reach into it:
 `check-require-issue-link.sh` and `check-claim-issue.sh` are gates in
 `pnpm check`, and inside that directory they would be the files there
 disobeying the contract.
+
+What a gate may share, a hook may not. A gate runs under `set -euo pipefail`,
+so a helper it cannot find kills it and the push fails saying why; a hook that
+missed one would exit non-zero, and any status but 0 and 2 hands the tool call
+through unremarked. So the `check-*` gates may source a helper between them,
+and a rule a hook enforces stays written out in that hook.
+
+Issue [#208](https://github.com/Ibercivis/citsci-federation/issues/208) holds
+why the ~30 lines the two hook harnesses share stay duplicated at two callers.
+A third caller is the condition that changes that answer.
