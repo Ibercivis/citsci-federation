@@ -389,7 +389,7 @@
     },
     {
       "alias": "citsci confirm an unverified address by mail",
-      "description": "Nobody affirmed the address, so the Broker mails it and joins on the click. idp-auto-link checks nothing (issue #75), and Keycloak's own mail declines to send for an address typed on the review page, so the mail here is ours (issue #182).",
+      "description": "Nobody affirmed the address, so the Broker mails it and joins on the click. idp-auto-link checks nothing (issue #75), and Keycloak's own mail declines to send for an address changed on the review page, so the mail here is ours (issue #182).",
       "providerId": "basic-flow",
       "topLevel": false,
       "builtIn": false,

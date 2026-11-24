@@ -1,13 +1,14 @@
 package es.ibercivis.broker;
 
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import org.keycloak.Config;
 import org.keycloak.authentication.AuthenticationFlowContext;
 import org.keycloak.authentication.Authenticator;
 import org.keycloak.authentication.AuthenticatorFactory;
 import org.keycloak.authentication.authenticators.broker.IdpEmailVerificationAuthenticator;
 import org.keycloak.authentication.authenticators.broker.util.SerializedBrokeredIdentityContext;
-import org.keycloak.broker.provider.AbstractIdentityProvider;
 import org.keycloak.broker.provider.BrokeredIdentityContext;
 import org.keycloak.models.AuthenticationExecutionModel.Requirement;
 import org.keycloak.models.KeycloakSession;
@@ -48,37 +49,30 @@ public class ConfirmAddressByMail
   public static final String PROVIDER_ID = "citsci-confirm-address-by-mail";
 
   /**
-   * The two notes {@code idp-review-profile} leaves behind, and the only
-   * reason this class exists.
-   *
-   * <p>No public API promises either, which is why the image is pinned
-   * (broker/Dockerfile) and why the cases in
-   * {@code tests/verified-email-join.test.ts} drive the review page: a version
-   * that renamed them would leave this removing nothing, and the flow would be
-   * back on the error page with every case still green.
+   * Keycloak's mail declines to send when either review-page note is set, so
+   * both come off the session for the length of its decision and go back
+   * afterwards. Removing nothing would leave the flow on the error page with
+   * every case still green, which is why a case drives the page itself
+   * ({@code ReviewPageNotes}).
    */
-  private static final List<String> CHANGED_ON_THE_REVIEW_PAGE =
-      List.of(
-          AbstractIdentityProvider.UPDATE_PROFILE_EMAIL_CHANGED,
-          AbstractIdentityProvider.UPDATE_PROFILE_USERNAME_CHANGED);
-
   @Override
   protected void authenticateImpl(
       AuthenticationFlowContext context,
       SerializedBrokeredIdentityContext serializedCtx,
       BrokeredIdentityContext brokerContext) {
     AuthenticationSessionModel authSession = context.getAuthenticationSession();
-    List<String> held = CHANGED_ON_THE_REVIEW_PAGE.stream().map(authSession::getAuthNote).toList();
-    CHANGED_ON_THE_REVIEW_PAGE.forEach(authSession::removeAuthNote);
+    Map<String, String> held = new LinkedHashMap<>();
+    for (String note : ReviewPageNotes.BOTH) {
+      String value = authSession.getAuthNote(note);
+      if (value != null) {
+        held.put(note, value);
+      }
+      authSession.removeAuthNote(note);
+    }
     try {
       super.authenticateImpl(context, serializedCtx, brokerContext);
     } finally {
-      for (int note = 0; note < CHANGED_ON_THE_REVIEW_PAGE.size(); note += 1) {
-        String value = held.get(note);
-        if (value != null) {
-          authSession.setAuthNote(CHANGED_ON_THE_REVIEW_PAGE.get(note), value);
-        }
-      }
+      held.forEach(authSession::setAuthNote);
     }
   }
 
@@ -103,7 +97,7 @@ public class ConfirmAddressByMail
   public String getHelpText() {
     return "Mails the address this Identity is arriving at and joins it to the"
         + " Person holding that address when the link is followed. Keycloak's"
-        + " own version of this skips the mail when the address was typed on"
+        + " own version of this skips the mail when the address was changed on"
         + " the review page, which leaves an arrival with nowhere to go.";
   }
 

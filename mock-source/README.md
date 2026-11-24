@@ -12,13 +12,14 @@ layer (`broker/realm/testing.json`).
 `mock.json` holds the Identity Sources this one server stands behind, the
 client it serves — the Broker — and its Identities.
 
-### Four sources, one server
+### Five sources, one server
 
 A Person holds **one Identity per source** — `federated_identity` says so with
 a primary key — and the join is about their *second* Identity. Two affirming
 sources to stage the silent join, one affirming nothing to stage the arrival
-that has to answer the Broker's mail first, and one that affirms and asks for
-`profile` as well (`broker/README.md` says why).
+that has to answer the Broker's mail first, one that affirms and asks for
+`profile` as well, and one the Broker asks for no address at all
+(`broker/README.md` says why).
 
 `sources` is the list of aliases and nothing more: `server.ts` registers one
 Broker callback per alias, and the realm repeats them because JSON imports
@@ -76,7 +77,7 @@ refuses a declaration whose prefixes overlap, and is where the tests read the
 address a newcomer will arrive at rather than deriving it a second way.
 
 Three shapes, because what the claims say about that address is the question
-such a case usually turns on: `unverified` for an address nobody affirmed, and
+such a case usually turns on. `unverified` is for an address nobody affirmed,
 `verified` for one its source did. The second is how a case stages a Person
 **and** a later arrival at their address in one run — the same username through
 an affirming source and then through `mock`, which is `untrusted-verified`
@@ -84,11 +85,14 @@ above with nothing left over from the last run.
 
 `affirmedButNoAddress` is the third, and its claims carry no `{username}`
 because its address is not an address: the source affirms the string `not an
-address`. It is the only way to reach `idp-review-profile` from the declaration
-alone — the page shows when a required field will not validate, and `email` is
-the one required field (`broker/realm/user-profile.json`). What such an arrival
-types there was affirmed by nobody while its source's `email_verified` still
-says `true`, which is the shape `issue #182` is about.
+address`. The page shows when a required field is missing or will not validate,
+and `email` is the one required field (`broker/realm/user-profile.json`), so
+there are two ways to `idp-review-profile` from the declaration alone and this
+shape is the one that will not validate. What such an arrival types there was
+affirmed by nobody while its source's `email_verified` still says `true`, which
+is the shape `issue #182` is about. The other way is a missing address, which no
+shape can stage on its own: it takes the source the Broker asks for no address
+(`mock-sending-no-address`), and it carries no verdict either.
 
 ## The advisory's Identities
 

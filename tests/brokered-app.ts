@@ -235,7 +235,7 @@ export interface Arrival {
   /** The address this Person types over what their source sent, on the page
    *  the Broker shows when something their profile needs is missing. A
    *  different question from the one above, and the one issue #182 is about:
-   *  nobody affirmed what is typed there. */
+   *  nobody affirmed what is typed over what arrived. */
   typesOnReview?: string;
 }
 

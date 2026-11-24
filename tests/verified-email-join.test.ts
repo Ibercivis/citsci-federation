@@ -15,11 +15,13 @@ import {
   AFFIRMING_SOURCE_A,
   AFFIRMING_SOURCE_B,
   AFFIRMING_SOURCE_ASKING_FOR_NAMES,
+  AFFIRMING_SOURCE_SENDING_NO_ADDRESS,
   SOURCE_AFFIRMING_NOTHING,
   type MockIdentity,
   aNewcomerArriving,
   aNewcomerWhoseAddressIsAffirmed,
   aNewcomerWhoseAffirmedAddressIsUnusable,
+  aNewcomerWhoseSourceSendsNoAddress,
   addressOf,
   arriving,
 } from "./mock-source.ts";
@@ -278,10 +280,45 @@ describe("an unverified address joins no existing Person until its mail is answe
     expect(await mailCountTo(holder.address)).toBe(1);
   });
 
+  /**
+   * The same page reached the other way, and the one the body of `issue #182`
+   * reports: the source sends no address, so `email` is required and empty,
+   * and the arrival types one a Person holds. No verdict is involved here —
+   * nothing arrived to carry one — so what this case holds up is only the
+   * mail. Keycloak's own authenticator declines to send for an address changed
+   * on that page, the one authenticator behind the condition was then
+   * ATTEMPTED, and the Person read "Invalid username or password".
+   */
+  it("mails an address typed by an arrival whose source sent none", async () => {
+    const holder = aNewcomerWhoseAddressIsAffirmed();
+    const person = await personFrom(holder.through(AFFIRMING_SOURCE_A));
+    const arrival = aNewcomerWhoseSourceSendsNoAddress();
+
+    const typed = await attempt(
+      CONFIDENTIAL_CLIENT,
+      arrival({
+        through: AFFIRMING_SOURCE_SENDING_NO_ADDRESS,
+        typesOnReview: holder.address,
+      }),
+    );
+
+    expect(typed.outcome).toBe("refused-in-the-browser");
+    // The second half of what the issue asks for: told what happened, not
+    // blamed. This is the one case that asserts the wording, because the
+    // wording is the symptom the issue reports — a mail could arrive and the
+    // page still be the one about credentials.
+    expect(whatThePersonWasTold(typed)).toContain(
+      "You need to verify your email address",
+    );
+    expect(JSON.stringify(typed)).not.toContain(person);
+    await linkMailedTo(holder.address);
+    expect(await mailCountTo(holder.address)).toBe(1);
+  });
+
   it("joins it to that Person once the mail is answered", async () => {
     // What the mail is for, on this path. Without it the subflow holds an
     // arrival back and has nowhere to put it: Keycloak's own mail declines to
-    // send when the address was typed on the review page, the one
+    // send when the address was changed on the review page, the one
     // authenticator behind the condition is then ATTEMPTED, and a REQUIRED
     // subflow with no sibling fails. The Person read "Invalid username or
     // password", about an address that was somebody else's.

@@ -339,8 +339,8 @@ declares a flow of its own.
 Both rules in it answer one question — did the source this Identity came from
 affirm the address now in the flow? — and both read the answer from the same
 condition in `verified-email/`. **Now in** carries the review page: an address
-typed there was affirmed by nobody, whatever the source said about the one it
-sent (issue #182). The first holds the join back until the address
+typed over the one that arrived was affirmed by nobody, whatever the source
+said about the one it sent (issue #182). The first holds the join back until the address
 itself answers. The second withholds the **address**, on the path where there
 is nobody to join.
 
@@ -376,7 +376,7 @@ from `verified-email/`, and the mail behind it. Unverified address, no join
 until the mail the Broker sends to the address that Person holds is answered —
 and whoever answers it holds the address, which is all ADR-0004 asks of a join.
 
-Four things about that shape are decisions rather than taste:
+Five things about that shape are decisions rather than taste:
 
 - **The condition is ours because none of Keycloak's can do it.** The only one
   that could name such a flag reads a user's attributes, and at this point in
@@ -394,7 +394,7 @@ Four things about that shape are decisions rather than taste:
   away.
 - **The mail is `citsci-confirm-address-by-mail`, ours, and it is
   Keycloak's `idp-email-verification` with one branch taken out.** That one
-  declines to mail an address typed on the review page and reports
+  declines to mail an address **changed** on the review page and reports
   `attempted()`; the built-in flow has a re-authentication alternative to
   absorb that, and a subflow holding a condition and one authenticator has
   nothing. The sign-in died on "Invalid username or password" instead
@@ -469,11 +469,11 @@ later decides its own `trustEmail` (ADR-0004).
 
 A test Identity Source this repository runs itself (`mock-source/`), so
 that what a source says about an address can be decided by hand: per Identity,
-and separately for the ID token and for userinfo. All three registrations are
-in the testing layer. Each is declared with a display name that says it is not
-for launch, because that name is what a Person reads on the sign-in page.
+and separately for the ID token and for userinfo. Every registration is in the
+testing layer. Each is declared with a display name that says it is not for
+launch, because that name is what a Person reads on the sign-in page.
 
-**Three of them, over one server.** `federated_identity` holds one link per
+**Five of them, over one server.** `federated_identity` holds one link per
 source per Person, so a second Identity from the *same* source is refused by
 the schema — and ADR-0004 is entirely about what happens when a Person's
 second Identity arrives. One source cannot stage either half of it.
@@ -490,6 +490,12 @@ second Identity arrives. One source cannot stage either half of it.
   only one that does, so an Identity can carry a name in its ID token. A and B
   ask for `openid email`, which is all issue #28 asks Google for, so the
   cases built on them see what a launch source sends.
+- **`mock-sending-no-address` is asked for `openid` alone**: so it releases
+  neither the address nor a verdict about one, and an Identity arriving through
+  it reaches `idp-review-profile` with the one required field empty. That is
+  the page issue #182 reports, and nothing else in the declaration reaches it
+  with no address at all. `trustEmail` is on, so a case through it cannot pass
+  merely because the Broker distrusts the source.
 - **Userinfo is on**, because the reported advisory this source exists to
   stage is about the address being read from userinfo. On is enough: Keycloak
   calls it on every sign-in that returns an access token, names or not

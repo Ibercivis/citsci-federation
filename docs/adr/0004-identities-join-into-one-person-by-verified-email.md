@@ -72,14 +72,14 @@ Person — this source is trusted on addresses, and it said it verified this one
 cannot drift away from the create path. Whatever it cannot establish counts as unverified.
 
 **A verdict is about the address its source sent, and about no other.** Keycloak shows an arrival
-the profile its source sent whenever a required field will not validate, and the address can be
+the profile its source sent whenever a required field is missing or will not validate, and the address can be
 edited on that page. Nothing there edits `email_verified`. So an arrival that types a different
 address carries a trusted source's `true` about an address that has left the flow, and reading that
 `true` on its own affirms whatever was typed: somebody else's address, if somebody else's was typed.
 That was a join with nothing asked, and on the create path a Person made at an address nobody
 affirmed — both of them reachable without a claim being false anywhere (`issue #182`). So the
 condition reads a third fact, the note Keycloak leaves when the address in the flow is not the one
-it received, and an address typed there is affirmed by nobody.
+it received, and an address changed there is affirmed by nobody.
 
 An Identity it holds back is **mailed at the address it is arriving at**, the one that Person already
 holds, and joins them when the link is followed (`issue #149`). That is the top of this record

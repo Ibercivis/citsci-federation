@@ -3,7 +3,8 @@
     "mock",
     "mock-affirming-a",
     "mock-affirming-b",
-    "mock-affirming-named"
+    "mock-affirming-named",
+    "mock-sending-no-address"
   ],
   "client": {
     "id": "citsci-broker",
