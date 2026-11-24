@@ -19,12 +19,15 @@ import { configured } from "./broker.ts";
 
 /** The parts of the realm the readers below look at. */
 interface ImportedRealm {
-  identityProviders?: ReadonlyArray<{
-    alias: string;
-    displayName: string;
-    trustEmail: boolean;
-    config?: Record<string, string>;
-  }>;
+  identityProviders?: ReadonlyArray<RealmProvider>;
+}
+
+/** One `identityProviders` entry, as the realm holds it. */
+interface RealmProvider {
+  alias: string;
+  displayName: string;
+  trustEmail: boolean;
+  config?: Record<string, string>;
 }
 
 const MODE = configured("BROKER_MODE");
@@ -47,12 +50,16 @@ export interface DeclaredSource {
 }
 
 /**
- * What the realm says about one Identity Source, by its alias.
+ * The provider the realm declares under an alias. Every reader below starts
+ * here, so each of them refuses an undeclared alias in the same words.
  *
  * An alias with no provider behind it is a sign-in no Person can start, which
  * is why it is an error here rather than a case failing somewhere further on.
+ * It is also not a fact about whatever the caller went on to read: a reader
+ * that reached through this for a `config` entry would report a source that
+ * lost it, which is a different source and a different repair.
  */
-export function declaredSource(alias: string): DeclaredSource {
+function declaredProvider(alias: string): RealmProvider {
   const provider = realm.identityProviders?.find(
     (candidate) => candidate.alias === alias,
   );
@@ -62,6 +69,12 @@ export function declaredSource(alias: string): DeclaredSource {
         "alias moved, or the source was never added to the realm.",
     );
   }
+  return provider;
+}
+
+/** What the realm says about one Identity Source, by its alias. */
+export function declaredSource(alias: string): DeclaredSource {
+  const provider = declaredProvider(alias);
   const asksFor = provider.config?.defaultScope;
   if (!asksFor) {
     throw new Error(
@@ -87,10 +100,7 @@ export function declaredCredentials(alias: string): {
   clientId: string;
   clientSecret: string;
 } {
-  const config = realm.identityProviders?.find(
-    (candidate) => candidate.alias === alias,
-  )?.config;
-  const { clientId, clientSecret } = config ?? {};
+  const { clientId, clientSecret } = declaredProvider(alias).config ?? {};
   if (!clientId || !clientSecret) {
     throw new Error(
       `The realm gives ${alias} no clientId and clientSecret: either the ` +
