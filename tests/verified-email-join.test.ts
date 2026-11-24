@@ -8,6 +8,7 @@ import {
   attempt,
   authenticate,
   follow,
+  userinfo,
 } from "./brokered-app.ts";
 import { PERSON_IDENTIFIER } from "./broker.ts";
 import { linkMailedTo, mailCountTo } from "./mailbox.ts";
@@ -66,6 +67,28 @@ async function personFrom(arrival: AttemptOptions): Promise<string> {
   const { claims } = await authenticate(CONFIDENTIAL_CLIENT, arrival);
   expect(claims.sub).toMatch(PERSON_IDENTIFIER);
   return claims.sub as string;
+}
+
+/** What a Brokered App knows a Person by: what it keys their data and their
+ *  roles against (ADR-0003). */
+const thePersonIn = ({
+  sub,
+  email,
+  email_verified,
+}: Record<string, unknown>) => ({
+  sub,
+  email,
+  email_verified,
+});
+
+/** That, in the ID token and in userinfo. */
+async function whoTheAppSees(arrival: AttemptOptions) {
+  const { claims, accessToken } = await authenticate(
+    CONFIDENTIAL_CLIENT,
+    arrival,
+  );
+  const { body } = await userinfo(accessToken);
+  return { idToken: thePersonIn(claims), userinfo: thePersonIn(body) };
 }
 
 /** A Person whose address was verified by their own Identity Source — the only
@@ -369,6 +392,26 @@ describe("a Verified Email joins the Person that holds it", () => {
     );
 
     expect(second.claims.sub).toBe(person);
+  });
+
+  it("shows a Brokered App the same Person whichever Identity they arrive with", async () => {
+    // Roles stay in each Brokered App, keyed on what it is told here. So what
+    // the Person can do there is the same through either source only if this
+    // is.
+    const throughA = await whoTheAppSees(
+      arriving(AFFIRMING_SOURCE_A, "merge-verified"),
+    );
+    const throughB = await whoTheAppSees(
+      arriving(AFFIRMING_SOURCE_B, "merge-verified"),
+    );
+
+    expect(throughA.idToken).toMatchObject({
+      sub: expect.stringMatching(PERSON_IDENTIFIER),
+      email: addressOf("merge-verified"),
+      email_verified: true,
+    });
+    expect(throughA.userinfo).toEqual(throughA.idToken);
+    expect(throughB).toEqual(throughA);
   });
 
   it("asks the Person nothing in between", async () => {
