@@ -60,15 +60,27 @@ does.
 
 ## A script's name carries what a directory would
 
-`scripts/` is flat, and the prefix is what groups it. `check-*` is a gate: it
-reads some state, says what is wrong and exits non-zero. A gate is named that
-way wherever it is wired — `lefthook.yml`, `.github/workflows/pr.yaml`, or a
-person's shell — because what the name has to survive is being read in `ls`,
-not being read beside its caller.
+`scripts/` is flat but for the one directory below, and the prefix is what
+groups the rest. `check-*` is a gate: it reads some state, says what is wrong
+and exits non-zero. A gate is named that way wherever it is wired —
+`lefthook.yml`, `.github/workflows/pr.yaml`, or a person's shell — because
+what the name has to survive is being read in `ls`, not being read beside its
+caller.
 
 Issue [#102](https://github.com/Ibercivis/citsci-federation/issues/102) holds
-why the directory is flat: the split by environment that was refused and why it
-discriminated nothing, and the one grouping that would earn a directory of its
-own. The third reason it gives is spent: the `shellcheck` glob a nested
-directory would have emptied is gone, because CI asks git for every tracked
-script instead of globbing one directory.
+why it stays that way elsewhere: the split by environment that was refused and
+why it discriminated nothing. The third reason it gives is spent: the
+`shellcheck` glob a nested directory would have emptied is gone, because CI
+asks git for every tracked script instead of globbing one directory.
+
+`scripts/hooks/` is the one exception, and what earns it is not a count. A
+Claude Code hook obeys a contract a new script can get wrong **silently** —
+written like a gate, it refuses nothing and the tool call goes through
+unremarked. A name in `ls` cannot carry that, so the directory does, and
+`scripts/hooks/README.md` is where the contract itself is written down.
+Nothing else in `scripts/` earns a directory until it too has a way of failing
+that nobody sees.
+
+A hook's own cases stay out of `hooks/` and reach into it:
+`check-require-issue-link.sh` is a gate in `pnpm check`, and inside that
+directory it would be the one file there disobeying the contract.

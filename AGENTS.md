@@ -166,11 +166,11 @@ in its own organisation so that access to it is the three people who need it, no
 
     git clone https://github.com/ibercivis-federation/citsci-federation-private.git docs/private
 
-Nobody runs git in there by hand afterwards. `scripts/private-sync.sh`, wired to the `SessionStart`
-and `Stop` hooks, pulls it when a session opens and commits and pushes it when a turn ends. Commit
-straight to `main` — there are no pull requests on it. A `pre-commit` job refuses any commit that
-stages `docs/private/` into *this* repository, and the nested repository makes its files unstageable
-here in the first place.
+Nobody runs git in there by hand afterwards. `scripts/hooks/private-sync.sh`, wired to the
+`SessionStart` and `Stop` hooks, pulls it when a session opens and commits and pushes it when a turn
+ends. Commit straight to `main` — there are no pull requests on it. A `pre-commit` job refuses any
+commit that stages `docs/private/` into *this* repository, and the nested repository makes its files
+unstageable here in the first place.
 
 ### Security findings
 

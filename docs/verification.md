@@ -14,7 +14,7 @@ with itself. `CODING_STANDARDS.md` holds the two rules no tool enforces.
 | Is it formatted? | oxfmt | `pnpm format:check` | `.oxfmtrc.json` |
 | Is it wrong? | oxlint, type-aware | `pnpm lint` | `.oxlintrc.json` |
 | Does it type-check? | `tsc --noEmit` | `pnpm typecheck` | `tsconfig.json` |
-| Does the `gh pr create` hook refuse what it is for, and nothing else? | its own cases | `pnpm require-issue-link:check` | `scripts/require-issue-link.sh` |
+| Does the `gh pr create` hook refuse what it is for, and nothing else? | its own cases | `pnpm require-issue-link:check` | `scripts/hooks/require-issue-link.sh` |
 | Is every file's licence declared? | `reuse lint`, from a container | `pnpm reuse:lint` | `REUSE.toml`, ADR-0013 |
 | Does a sign-in actually work? | Vitest against a real Broker | `pnpm broker:up && pnpm test` | `compose.yaml`, ADR-0010 |
 
