@@ -113,11 +113,16 @@ jobs:
       #
       # Twice, because the image build resolves from Maven Central, Central
       # rate limits by IP, and a runner's addresses are shared with everybody
-      # else's CI. What it covers is that build: a second `up --wait` waits on
-      # the containers the first one left, so it cannot turn the race above
-      # into a pass. Every failure of this step so far passed on a re-run
-      # minutes later, never on a second try in the same second, which is what
-      # the wait is for. Both attempts stay in the log — the second failure is
+      # else's CI. This is the coarser of the two instruments and the second
+      # one: Maven's own retry waits a refused request out first, inside the
+      # build, for as long as `broker/Dockerfile` configures. What is left for
+      # this loop is a throttle that outlasts even that.
+      #
+      # What it covers is that build: a second `up --wait` waits on the
+      # containers the first one left, so it cannot turn the race above into a
+      # pass. Every failure of this step so far passed on a re-run minutes
+      # later, never on a second try in the same second, which is what the
+      # wait is for. Both attempts stay in the log — the second failure is
       # the one worth reading, and reading it means having the first beside it
       # (`issue #116`).
       #
@@ -152,7 +157,11 @@ jobs:
   # only the repository, and the `tests` job already runs it.
   base:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    # Raised when Maven's own retry was widened, because the two attempts below
+    # can now each spend minutes waiting out a 429 inside the build. A job
+    # killed in the middle of that reports a timeout, which says nothing about
+    # what refused it.
+    timeout-minutes: 15
     env:
       # Overrides `.env`, for compose and for the suite alike.
       BROKER_MODE: production

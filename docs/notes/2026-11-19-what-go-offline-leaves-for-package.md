@@ -2,13 +2,19 @@
 
 # `go-offline` does not leave `package` offline
 
-**Verdict.** `dependency:go-offline` does not fill the local repository. On
-`broker/person-identifier`, `package` fetches 217 artifacts after `go-offline` has fetched 1088, and
-`mvn --offline package` fails outright. So both Maven commands in each stage of `broker/Dockerfile`
-reach Central, and `--quiet` is on the second of them.
+**Superseded on 24 November 2026, and kept for the counts.** Neither Maven command measured here is
+in `broker/Dockerfile` any more: `issue #183` dropped `go-offline` for a `package` on a pom with no
+sources, which does leave the repository complete.
+`docs/notes/2026-11-24-maven-retry-and-the-warm-layer.md` has the rows that replaced these, and
+everything below is what was true until then.
 
-**Read on only if** you are deciding whether `mvn package` should lose `--quiet` too, or costing
-anything that assumes a Maven stage resolves once.
+**Verdict.** `dependency:go-offline` did not fill the local repository. On
+`broker/person-identifier`, `package` fetched 217 artifacts after `go-offline` had fetched 1088, and
+`mvn --offline package` failed outright. So both Maven commands in each stage of `broker/Dockerfile`
+reached Central, and `--quiet` was on the second of them.
+
+**Read on only if** you are costing something that assumes a Maven stage resolves once, or want
+what `go-offline` did while it was here.
 
 ## The measurement
 
@@ -19,6 +25,13 @@ the same two commands the `mapper` stage runs, in the same order:
 |---|---|
 | `org.apache.maven.plugins:maven-dependency-plugin:3.7.0:go-offline` | 1088 |
 | `package`, after it | 217 |
+| `package` alone, nothing before it | 768, and BUILD SUCCESS |
+
+The third row is `issue #183`'s, measured 23 November 2026 and again on the 24th, and it is the one
+that ended this sequence: it says the 1088 above bought a reduction to 217 rather than to nothing.
+It was counted on a later base, and over every repository rather than Central alone, so it agrees
+with the two rows above it only to within a handful of artifacts.
+`docs/notes/2026-11-24-maven-retry-and-the-warm-layer.md` counts all three the one way.
 
 Substituting `mvn --offline package` for the second command fails instead, on four provided-scope
 jars that `go-offline` had not fetched — `jackson-dataformat-cbor`, `slf4j-api`,
