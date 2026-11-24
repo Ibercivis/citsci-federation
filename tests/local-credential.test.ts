@@ -18,6 +18,7 @@ import {
   follow,
   formsOn,
   linksOn,
+  readableTextOf,
   redeemCode,
   requestAuthorization,
   verifyIdToken,
@@ -412,11 +413,30 @@ async function signedInToTheConsole(address: string): Promise<InTheConsole> {
 }
 
 /**
+ * The Broker withholding a confirmation mail, in its own words, with the
+ * seconds it will keep withholding for
+ * (`docs/notes/2026-11-24-keycloak-withholds-a-second-confirmation-mail.md`).
+ *
+ * The rendered sentence, because the Broker offers nothing else: the message
+ * key stays in Keycloak's bundle and the limit is never logged. A reworded
+ * theme falls through to the refusal below, which quotes whatever the page did
+ * say — the cost of this going stale is a vaguer failure, never a silent one.
+ */
+const WITHHOLDING_SENTENCE =
+  /(\d+) seconds? before resending the verification email/i;
+
+/**
  * Starts one of the console's actions the way its own buttons do: by sending
  * the Person to the Broker's page for it, with `kc_action`. Fills in the form
  * that page shows, found by the field it carries, and sends it. The console
  * has no other way to change a password or an address: the account API takes
  * neither (`docs/notes/2026-11-18-account-rest-api-credential-operations.md`).
+ *
+ * The page the Broker answers with is read rather than dropped. An action it
+ * carried out answers with something else; one it refused asks the same
+ * question again, and the refusal is only ever written on that page. Dropped,
+ * a withheld confirmation mail surfaced 10 seconds later as "No mail reached",
+ * which reads like a broken Broker and sent issue #143 looking for one.
  */
 async function consoleAction(
   { browser }: InTheConsole,
@@ -432,7 +452,32 @@ async function consoleAction(
       ? formsOn(asked.page).find((each) => field in each.fields)
       : undefined;
   if (!form) throw new Error(`The console's ${action} asked for no ${field}.`);
-  await browser.postForm(form.action, { ...form.fields, ...answer });
+  const response = await browser.postForm(form.action, {
+    ...form.fields,
+    ...answer,
+  });
+  const page: Page = { url: response.url, html: await response.text() };
+  // Asked for the same thing twice is the Broker refusing, whatever it then
+  // says about why: the field it wanted is still on the page it sent back.
+  if (!formsOn(page).some((each) => field in each.fields)) return;
+  const said = readableTextOf(page.html);
+  const withheld = WITHHOLDING_SENTENCE.exec(said);
+  if (withheld) {
+    throw new Error(
+      [
+        `The Broker sent no confirmation mail for ${action}, and gives`,
+        `${withheld[1]} seconds to wait before it will send one.`,
+        "Nothing here is broken, and no mail is on its way: a Person who was",
+        "mailed recently is mailed again only once that has run down. Wait,",
+        "or `pnpm broker:reset`.",
+        "docs/notes/2026-11-24-keycloak-withholds-a-second-confirmation-mail.md",
+      ].join("\n"),
+    );
+  }
+  throw new Error(
+    `The console's ${action} was refused and asked for a ${field} again.\n` +
+      `Says: ${said}`,
+  );
 }
 
 /** Asks for a new address. The Broker takes it and mails it, which is not yet
@@ -524,12 +569,9 @@ describe("changing the address in the Account Console", () => {
     // a Broker that has run this before, both come back by their link instead,
     // to the same Person, whatever address they hold by now.
     //
-    // Being the same Person every run has a cost. Keycloak mails one Person a
-    // confirmation at most every 30 seconds, and the suite runs in less, so a
-    // second run straight after the first fails here with "No mail reached".
-    // The merge is not what broke. Wait half a minute, or `pnpm broker:reset`.
-    // The limit is base configuration, so lowering it here would lower it in
-    // production too.
+    // Being the same Person every run has a cost: the Broker will not mail
+    // one twice in quick succession, so a run starting soon after the last is
+    // refused at `askToChangeAddress`, which says so and says how long.
     const first = await authenticate(
       CONFIDENTIAL_CLIENT,
       arriving(AFFIRMING_SOURCE_A, "renamed-verified"),
