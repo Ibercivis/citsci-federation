@@ -18,12 +18,12 @@ import testing from "../broker/realm/testing.json" with { type: "json" };
  * Seam 2: the running Broker is the declaration this stack claims to be.
  *
  * The claim is BROKER_MODE: `testing` is the base plus the testing layer, and
- * `production` and `demo` are the base alone. Each entry the two layers declare is looked
- * for the way a Brokered App or a Person would meet it, and expected exactly
- * when its layer is claimed. So a testing layer present where it should be
- * absent fails here, and so does one missing where it should be present —
- * including a realm left in the database by a stack built in the other mode,
- * which `--import-realm` does not replace.
+ * `production` and `demo` are the base alone. Each entry the two layers
+ * declare is looked for the way a Brokered App or a Person would meet it, and
+ * expected exactly when its layer is claimed. So a testing layer present where
+ * it should be absent fails here, and so does one missing where it should be
+ * present — including a realm left in the database by a stack built in the
+ * other mode, which `--import-realm` does not replace.
  *
  * The entries are read from the layer files, so an entry added to either is
  * covered without touching this file — for the kinds in LOOKED_FOR. The

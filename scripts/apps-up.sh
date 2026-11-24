@@ -53,9 +53,9 @@ set +a
 
 # The mode is left to `.env` and the shell rather than chosen here, so the
 # applications come up in `testing` or `demo`, whichever they say. In
-# `production` they cannot: each sends its mail to the catcher, which that mode does not run,
-# and compose would refuse with an error that names a dependency, not the
-# mode.
+# `production` they cannot: each sends its mail to the catcher, which that mode
+# does not run, and compose would refuse with an error that names a dependency,
+# not the mode.
 if [ "$BROKER_MODE" = production ]; then
   echo "BROKER_MODE is production, which runs no mail catcher, and every" >&2
   echo "application of the composition sends its mail there." >&2
