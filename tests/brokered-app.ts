@@ -519,14 +519,29 @@ export interface TokenResponse {
   body: Record<string, string>;
 }
 
-/** Posts a form to the token endpoint. The one way tokens are asked for. */
+/** Posts a form to the token endpoint. The one way tokens are asked for.
+ *
+ *  `basicAuth` authenticates the client in the Authorization header instead of
+ *  the form, which is the other method OpenID Connect defines for a secret and
+ *  the one some libraries pick from discovery. The body is otherwise identical. */
 export async function postToken(
   form: Record<string, string>,
+  basicAuth?: { id: string; secret: string },
 ): Promise<TokenResponse> {
   const { token_endpoint } = await fetchDiscovery();
+  const credentials = basicAuth
+    ? {
+        authorization: `Basic ${Buffer.from(
+          `${encodeURIComponent(basicAuth.id)}:${encodeURIComponent(basicAuth.secret)}`,
+        ).toString("base64")}`,
+      }
+    : {};
   const response = await fetch(token_endpoint, {
     method: "POST",
-    headers: { "content-type": "application/x-www-form-urlencoded" },
+    headers: {
+      "content-type": "application/x-www-form-urlencoded",
+      ...credentials,
+    },
     body: new URLSearchParams(form).toString(),
   });
   return {
@@ -535,18 +550,30 @@ export async function postToken(
   };
 }
 
+/** How a confidential client proves it holds its secret: in the form, or in
+ *  the Authorization header. Both are OpenID Connect's, and which one a
+ *  Brokered App sends is its library's choice rather than ours. */
+export type ClientAuth = "in the form" | "in the header";
+
 /** Redeems an authorization code, authenticating the client if it has a secret. */
 export async function redeemCode(
   client: Client,
   form: Record<string, string>,
+  clientAuth: ClientAuth = "in the form",
 ): Promise<TokenResponse> {
-  return postToken({
-    grant_type: "authorization_code",
-    client_id: client.id,
-    redirect_uri: client.redirectUri,
-    ...(client.secret ? { client_secret: client.secret } : {}),
-    ...form,
-  });
+  const inTheHeader = Boolean(client.secret) && clientAuth === "in the header";
+  return postToken(
+    {
+      grant_type: "authorization_code",
+      client_id: client.id,
+      redirect_uri: client.redirectUri,
+      ...(client.secret && !inTheHeader
+        ? { client_secret: client.secret }
+        : {}),
+      ...form,
+    },
+    inTheHeader ? { id: client.id, secret: client.secret! } : undefined,
+  );
 }
 
 let keys: ReturnType<typeof createRemoteJWKSet> | undefined;
@@ -675,6 +702,8 @@ export interface AttemptOptions {
   /** Redeem with this verifier instead of the pair's own, or null to redeem
    *  with none. */
   verifier?: string | null;
+  /** Where the client's secret goes when the code is redeemed. */
+  clientAuth?: ClientAuth;
   /** Authorization parameters to add or override. */
   params?: Record<string, string>;
   /** Who signs in, and through which Identity Source; the realm's demo
@@ -730,10 +759,11 @@ export async function attempt(
 
   const verifier =
     options.verifier === undefined ? options.pkce?.verifier : options.verifier;
-  const tokens = await redeemCode(client, {
-    code,
-    ...(verifier ? { code_verifier: verifier } : {}),
-  });
+  const tokens = await redeemCode(
+    client,
+    { code, ...(verifier ? { code_verifier: verifier } : {}) },
+    options.clientAuth,
+  );
   if (!tokens.body.id_token) {
     return {
       outcome: "refused-at-token",
