@@ -10,11 +10,11 @@
 # other. They cannot run at the same time either — one proxy, one port 8080 —
 # and that is right, because this one contains the other.
 #
-# **`pnpm test` wants the Broker-only stack, not this one.** The suite runs one
-# case from inside the compose network, through `docker compose run` with no
-# `-f` of its own, which lands in that project — and in this one it fails on a
-# name it cannot resolve rather than on anything it asserts. So `pnpm
-# apps:down`, then `pnpm broker:up`, before running the suite.
+# **`pnpm test` reaches into whichever of the two is up**, and asks docker
+# which one that is rather than assuming (`tests/stack.ts`), so this one does
+# not have to come down first. What it reaches with is `exec`, into a container
+# already running: `run` would start a stack that is down instead of saying so
+# (issue #106).
 #
 # **No application's code is declared or vendored here.** Each service below
 # builds from `apps/<repository>`, which scripts/checkout-apps.sh checks out at

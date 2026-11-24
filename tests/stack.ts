@@ -71,25 +71,67 @@ export function compose(stack: Stack, ...args: string[]): string {
 }
 
 /**
+ * `docker compose` against one stack with every profile on, which is what
+ * reading a stack this repository did not start requires: the composition is
+ * a valid project only in the modes that run the mail catcher its
+ * applications depend on, and outside them compose refuses to say anything
+ * about it, even that nothing is running.
+ */
+function composeInAnyMode(stack: Stack, ...args: string[]): string {
+  return compose(stack, "--profile", "*", ...args);
+}
+
+/** Whether one service of a stack has a container up now. */
+function isRunning(stack: Stack, service: string): boolean {
+  return (
+    composeInAnyMode(
+      stack,
+      "ps",
+      "--status",
+      "running",
+      "--quiet",
+      service,
+    ).trim() !== ""
+  );
+}
+
+/**
  * The stack that is actually up.
  *
  * The Broker-only stack is the default, because that is what CI runs and what
  * most of the suite needs nothing more than.
- *
- * Every profile on, because the composition is a valid project only in the
- * modes that run the mail catcher its applications depend on. Outside them
- * compose refuses to say anything about it, even that nothing is running.
  */
 export function runningStack(): Stack {
-  const keycloak = compose(
-    COMPOSITION,
-    "--profile",
-    "*",
-    "ps",
-    "--status",
-    "running",
-    "--quiet",
-    "keycloak",
-  ).trim();
-  return keycloak ? COMPOSITION : BROKER_ONLY;
+  return isRunning(COMPOSITION, "keycloak") ? COMPOSITION : BROKER_ONLY;
+}
+
+/**
+ * Runs a script in a service's own container and returns what it printed,
+ * which is how a case observes the compose network from a container on it.
+ *
+ * `exec`, never `run`. A throwaway container of a service that waits on
+ * another starts what it waits on, so a `run` against a stack that is down
+ * leaves the project behind it — a healthy database and a volume, no realm —
+ * under a name that belongs to this repository on the whole machine, where a
+ * second checkout cannot tell it from somebody else's (issue #106). An `exec`
+ * creates nothing: either the container is there or there is nothing to ask.
+ *
+ * Which is why the refusal below is worth its lines. A stack that is down is
+ * what a developer meets before bringing anything up, and what they need told
+ * is the stack and the command that starts it.
+ */
+export function inContainer(
+  stack: Stack,
+  service: string,
+  script: string,
+): string {
+  if (!isRunning(stack, service)) {
+    throw new Error(
+      [
+        `No container is running as ${service} in the stack ${stack.files.join(" and ")} declares, so there is nothing on the compose network to ask.`,
+        `Bring it up with:  ${stack.recreate}`,
+      ].join("\n"),
+    );
+  }
+  return composeInAnyMode(stack, "exec", "-T", service, "sh", "-c", script);
 }

@@ -1,7 +1,7 @@
 import { request } from "node:http";
 import { beforeAll, describe, expect, it } from "vitest";
 import { type Discovery, ISSUER, fetchDiscovery } from "./broker.ts";
-import { compose, runningStack } from "./stack.ts";
+import { inContainer, runningStack } from "./stack.ts";
 
 /** Asks the proxy for the discovery path while claiming to be a given host,
  *  and reports what came back without interpreting it: a hostname the
@@ -39,9 +39,11 @@ const STACK = runningStack();
  * the authority given — which is how a containerised Brokered App reaches the
  * Broker, and the only place some of these properties are observable at all.
  *
- * It asks compose for a throwaway container of a service this stack declares,
- * so no image tag and no network name is spelled out twice, and speaks HTTP
- * over the shell's own TCP redirection, because that image ships no curl.
+ * It asks compose for a shell in a container the stack already has up, so no
+ * image tag and no network name is spelled out twice, and speaks HTTP over
+ * the shell's own TCP redirection, because that image ships no curl. A
+ * throwaway container of the same service would read the same and used to:
+ * `tests/stack.ts` says what it left behind.
  *
  * It runs in the Keycloak container rather than the proxy's on purpose: that
  * image is glibc, like the Brokered Apps' images, and musl resolves anything
@@ -61,17 +63,7 @@ function fromInsideTheNetwork(hostname: string, port: string): string {
       `HTTP/1.1\r\nHost: ${hostname}:${port}\r\nConnection: close\r\n\r\n' >&3`,
     "cat <&3",
   ].join(" && ");
-  return compose(
-    STACK,
-    "run",
-    "--rm",
-    "-T",
-    "--entrypoint",
-    "sh",
-    "keycloak",
-    "-c",
-    probeScript,
-  );
+  return inContainer(STACK, "keycloak", probeScript);
 }
 
 describe("the Broker announces itself as one issuer", () => {
@@ -135,7 +127,7 @@ describe("the Broker announces itself as one issuer", () => {
 
     expect(asAContainerWouldAppear).toContain("HTTP/1.1 200");
     expect(asAContainerWouldAppear).toContain(`"issuer":"${ISSUER}"`);
-  }, 120_000);
+  });
 
   it("is not reachable through the proxy by a hostname it does not serve", async () => {
     // The composition's whole shape rests on a hostname being the only way
@@ -164,5 +156,12 @@ describe("the Broker announces itself as one issuer", () => {
 
     expect(probe).toContain("HTTP/1.1 200");
     expect(probe).toContain(`"issuer":"${ISSUER}"`);
-  }, 120_000);
+    // Through the proxy, and provably so. The probe runs in the Keycloak
+    // container, whose own 8080 announces the same issuer, so a resolver that
+    // sent `.localhost` to the loopback rather than to Docker's DNS would
+    // satisfy both assertions above without the alias existing at all. `Via`
+    // is what only the proxy adds (RFC 9110); glibc 2.34 asks Docker today,
+    // and this is what notices if a later one stops.
+    expect(probe).toContain("Via: 1.1 Caddy");
+  });
 });
