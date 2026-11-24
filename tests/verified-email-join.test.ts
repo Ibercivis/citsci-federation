@@ -22,6 +22,7 @@ import {
   aNewcomerWhoseAddressIsAffirmed,
   aNewcomerWhoseAffirmedAddressIsUnusable,
   aNewcomerWhoseSourceSendsNoAddress,
+  aRelocatingIdentity,
   addressOf,
   arriving,
 } from "./mock-source.ts";
@@ -422,6 +423,47 @@ describe("two Verified Emails are two Persons", () => {
         "sign-in",
       ]);
     }
+  });
+});
+
+/**
+ * The address joins an Identity to a Person once, when that Identity first
+ * arrives. After that the Identity is the link, and what its source says about
+ * the address later changes nothing: no Person changes, and no join happens
+ * late. The realm's `syncMode: IMPORT` is what this holds up.
+ */
+describe("an Identity's address is read once, when it first arrives", () => {
+  it("keeps the Person it first joined when its source later gives another Person's address", async () => {
+    const identity = aRelocatingIdentity();
+    const first = await authenticate(
+      CONFIDENTIAL_CLIENT,
+      identity.through(AFFIRMING_SOURCE_A, "first"),
+    );
+    // Somebody else at the address it is about to move to. Through another
+    // source, because the first one is already linked to the Person above.
+    const holder = await personFrom(
+      identity.through(AFFIRMING_SOURCE_B, "second"),
+    );
+
+    const moved = await authenticate(
+      CONFIDENTIAL_CLIENT,
+      identity.through(AFFIRMING_SOURCE_A, "second"),
+    );
+    const holderAgain = await personFrom(
+      identity.through(AFFIRMING_SOURCE_B, "second"),
+    );
+
+    expect(holder).not.toBe(first.claims.sub);
+    expect(moved.claims.sub).toBe(first.claims.sub);
+    expect(moved.claims.email).toBe(identity.address("first"));
+    expect(holderAgain).toBe(holder);
+    // And the address it first arrived with still joins its Person. Without
+    // this the case would pass with merging switched off.
+    const joined = await personFrom(
+      identity.through(AFFIRMING_SOURCE_ASKING_FOR_NAMES, "first"),
+    );
+
+    expect(joined).toBe(first.claims.sub);
   });
 });
 
