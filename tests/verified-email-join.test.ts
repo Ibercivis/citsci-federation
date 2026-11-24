@@ -52,6 +52,14 @@ const whatThePersonWasTold = (result: Attempt): string =>
     ? result.complaint
     : `no page: the flow ended as ${result.outcome}`;
 
+/**
+ * The wording of the Broker's own offer to attach an arrival to the Person who
+ * already holds the address: the page the built-in `first broker login` flow
+ * shows, and the one ADR-0004 gave up in order to ask nothing. No case here
+ * may be shown it.
+ */
+const OFFERS_A_JOIN = /already exists|add to existing account/i;
+
 /** Somebody taking an address at a source whose word on one the Broker does not
  *  take. Whatever the Broker gives them, it must not be the address. */
 const takeTheAddressFirst = (identity: MockIdentity) =>
@@ -446,8 +454,18 @@ describe("two Verified Emails are two Persons", () => {
   it("gives each address its own Person Identifier, and offers to join neither", async () => {
     const one = aNewcomerWhoseAddressIsAffirmed();
     const other = aNewcomerWhoseAddressIsAffirmed();
-    const personAtOne = await personFrom(one.through(AFFIRMING_SOURCE_A));
-    const personAtOther = await personFrom(other.through(AFFIRMING_SOURCE_A));
+    // Driven through `authenticate` rather than `personFrom` so that the two
+    // arrivals that make these Persons are read for an offer as well.
+    const atOne = await authenticate(
+      CONFIDENTIAL_CLIENT,
+      one.through(AFFIRMING_SOURCE_A),
+    );
+    const atOther = await authenticate(
+      CONFIDENTIAL_CLIENT,
+      other.through(AFFIRMING_SOURCE_A),
+    );
+    const personAtOne = atOne.claims.sub;
+    const personAtOther = atOther.claims.sub;
 
     const oneAgain = await authenticate(
       CONFIDENTIAL_CLIENT,
@@ -458,13 +476,32 @@ describe("two Verified Emails are two Persons", () => {
       other.through(AFFIRMING_SOURCE_B),
     );
 
+    expect(personAtOne).toMatch(PERSON_IDENTIFIER);
+    expect(personAtOther).toMatch(PERSON_IDENTIFIER);
     expect(personAtOther).not.toBe(personAtOne);
     // Each address joined its own Person through the second source. Without
     // this the case would pass with merging switched off, where every arrival
     // is a Person of its own.
     expect(oneAgain.claims.sub).toBe(personAtOne);
     expect(otherAgain.claims.sub).toBe(personAtOther);
-    // And nothing between: a page offering a join would be a third one.
+    // And none of the four was offered a join, the two that made these Persons
+    // included: an offer here would be the Broker reading one address as the
+    // other's.
+    //
+    // Read off the pages rather than counted, for two reasons. A count cannot
+    // run on all four: a first arrival is a Person this client has not seen,
+    // so the Broker asks them to consent, and a third page there is that and
+    // not an offer. And a count rests on this harness rather than on the
+    // Broker — a page it cannot name leaves the dialogue stuck and
+    // `authenticate` throws — so it catches an offer only while `question()`
+    // fails to recognise one.
+    for (const { asked } of [atOne, atOther, oneAgain, otherAgain]) {
+      expect(asked.map((page) => page.html).join("\n")).not.toMatch(
+        OFFERS_A_JOIN,
+      );
+    }
+    // And nothing in between on the two arrivals that had a Person to be
+    // offered: a page offering a join would be a third one.
     for (const { asked } of [oneAgain, otherAgain]) {
       expect(asked.map((page) => page.kind)).toEqual([
         "choose-source",
@@ -489,9 +526,11 @@ describe("an Identity's address is read once, when it first arrives", () => {
     );
     // Somebody else at the address it is about to move to. Through another
     // source, because the first one is already linked to the Person above.
-    const holder = await personFrom(
+    const holding = await authenticate(
+      CONFIDENTIAL_CLIENT,
       identity.through(AFFIRMING_SOURCE_B, "second"),
     );
+    const holder = holding.claims.sub;
 
     const moved = await authenticate(
       CONFIDENTIAL_CLIENT,
@@ -501,7 +540,13 @@ describe("an Identity's address is read once, when it first arrives", () => {
       identity.through(AFFIRMING_SOURCE_B, "second"),
     );
 
+    expect(holder).toMatch(PERSON_IDENTIFIER);
     expect(holder).not.toBe(first.claims.sub);
+    // And that Person really holds the address the Identity is about to give.
+    // Without this the case passes on there being nothing to move onto: a
+    // Broker that stored no address here would leave every line below standing
+    // while proving none of them.
+    expect(holding.claims.email).toBe(identity.address("second"));
     expect(moved.claims.sub).toBe(first.claims.sub);
     expect(moved.claims.email).toBe(identity.address("first"));
     expect(holderAgain).toBe(holder);
