@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { beforeAll, describe, expect, it } from "vitest";
 import { ROOT, type Stack, compose, docker, runningStack } from "./stack.ts";
@@ -25,6 +26,9 @@ interface Container {
   configFiles: string;
   workingDir: string;
   configHash: string;
+  /** The version the image says it carries. Compose adds no such label: it
+   *  comes down from the base image, which is the thing that was pinned. */
+  imageVersion: string;
 }
 
 /** The project the declared stack's files name. An override that borrows the
@@ -62,6 +66,7 @@ function containersOf(project: string): Container[] {
     configFiles: labels["com.docker.compose.project.config_files"] ?? "",
     workingDir: labels["com.docker.compose.project.working_dir"] ?? "",
     configHash: labels["com.docker.compose.config-hash"] ?? "",
+    imageVersion: labels["org.opencontainers.image.version"] ?? "",
   }));
 }
 
@@ -123,5 +128,32 @@ describe(`the running stack is the one declared by ${STACK.files.join(" and ")}`
       stale,
       `These services were started from a configuration that is no longer the declared one: compose.yaml or .env changed since. ${RECREATE}`,
     ).toEqual([]);
+  });
+});
+
+/** The Keycloak version `broker/Dockerfile` builds the Broker on. */
+function pinnedKeycloak(): string {
+  const dockerfile = readFileSync(join(ROOT, "broker", "Dockerfile"), "utf8");
+  const pin = /^FROM quay\.io\/keycloak\/keycloak:(\S+)$/m.exec(
+    dockerfile,
+  )?.[1];
+  if (!pin) {
+    throw new Error(
+      "broker/Dockerfile builds on no quay.io/keycloak/keycloak:<version>, so there is no pin to compare the running Broker with.",
+    );
+  }
+  return pin;
+}
+
+describe("the Keycloak running", () => {
+  it("is the version broker/Dockerfile pins", () => {
+    const keycloak = containersOf(projectName()).find(
+      (container) => container.service === "keycloak",
+    );
+
+    expect(
+      keycloak?.imageVersion,
+      `The Broker runs a Keycloak other than the one broker/Dockerfile pins: an image built before the pin moved. ${RECREATE}`,
+    ).toBe(pinnedKeycloak());
   });
 });
