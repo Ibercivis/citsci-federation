@@ -138,8 +138,9 @@ jobs:
   # The base alone, as a real deployment would run it. It is the only run that
   # shows the base starts without the testing layer, and the only one where
   # seam 2 can see a testing layer present where it should be absent. So it
-  # runs the one file that asserts that, and none of the suite that needs the
-  # testing layer to sign anyone in.
+  # runs seam 2's two files that read the running stack, and none of the suite
+  # that needs the testing layer to sign anyone in. The secrets file reads
+  # only the repository, and the `tests` job already runs it.
   base:
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -168,8 +169,8 @@ jobs:
           done
           exit 1
 
-      - run: pnpm exec vitest run tests/declaration.test.ts
+      - run: pnpm exec vitest run tests/declaration.test.ts tests/stack.test.ts
 
-      - name: The Broker's log, when the case failed
+      - name: The Broker's log, when a case failed
         if: failure()
         run: docker compose logs keycloak

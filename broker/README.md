@@ -88,7 +88,9 @@ declaration is the whole configuration, and the image built from this
 directory the whole of the code.
 
 An edit to the declaration does **not** reach a stack that is already up, and
-neither does a change of `BROKER_MODE`. A `reset` is how either lands. Seam 2 fails on a Broker left in another mode. A
+neither does a change of `BROKER_MODE`. A `reset` is how either lands. Seam 2
+fails on a Broker that has not had one: left in another mode, built from an
+earlier declaration, or holding a realm an earlier container imported. A
 Broker holding state worth keeping will need a migration path that this pilot
 does not have yet.
 
