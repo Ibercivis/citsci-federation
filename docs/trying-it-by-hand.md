@@ -230,8 +230,6 @@ Broker, and is the one-line fix. `PR #164` weighed the three.
   nobody has. The composition hands it a correctly shaped placeholder instead, because an empty one
   throws from Google's own script as `/login` mounts and takes email sign-in down with it. Sign in
   with an address and a password.
-- **`pnpm test` wants the Broker alone**, not the composition — one port 8080 between them:
-  `pnpm apps:down && pnpm broker:up && pnpm test`.
 
 ## While you are in there
 

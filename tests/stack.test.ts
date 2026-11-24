@@ -3,7 +3,16 @@ import { join } from "node:path";
 import { beforeAll, describe, expect, it } from "vitest";
 import { derive, readDeclaration } from "../broker/realm/derive.ts";
 import { configured } from "./broker.ts";
-import { ROOT, type Stack, compose, docker, runningStack } from "./stack.ts";
+import {
+  BROKER_ONLY,
+  COMPOSITION,
+  ROOT,
+  type Stack,
+  compose,
+  docker,
+  inContainer,
+  runningStack,
+} from "./stack.ts";
 
 /**
  * Seam 2: the stack being exercised is the one this repository declares.
@@ -14,9 +23,10 @@ import { ROOT, type Stack, compose, docker, runningStack } from "./stack.ts";
  * configured by a file in a directory that gets recycled. That one was
  * harmless; the next one decides whether a case passes.
  *
- * So nothing here asserts behaviour. It compares what compose says is running
- * with what compose reads from this repository now, and every failure says
- * how to bring the declared stack back.
+ * So nothing here asserts the Broker's behaviour. It compares what compose
+ * says is running with what compose reads from this repository now, and every
+ * failure says how to bring the declared stack back — which is what the last
+ * describe holds `tests/stack.ts` itself to.
  */
 
 const STACK: Stack = runningStack();
@@ -212,5 +222,24 @@ describe("the realm running", () => {
       verdicts,
       `The realm in the database was imported by an earlier container, from an image or a .env that may no longer be the declared one, and --import-realm does not replace it. ${RECREATE}`,
     ).toContain(`${realm} imported`);
+  });
+});
+
+/**
+ * What a case gets when it has to observe the compose network from a
+ * container on it. `tests/stack.ts` says why asking a stack that is down has
+ * to create nothing; this is what holds it to saying so instead (issue #106).
+ */
+describe("a shell inside a stack's container", () => {
+  /** The stack that is not up: one proxy, one port 8080 between them, so
+   *  whichever of the two `runningStack()` did not pick has nothing running.
+   *  With neither up it picks the Broker-only one anyway, which leaves this
+   *  case asking after the composition — down either way. */
+  const NOT_UP = STACK === COMPOSITION ? BROKER_ONLY : COMPOSITION;
+
+  it("refuses a stack that is down, naming the command that brings it back", () => {
+    expect(() => inContainer(NOT_UP, "keycloak", "echo reached")).toThrow(
+      NOT_UP.recreate,
+    );
   });
 });
