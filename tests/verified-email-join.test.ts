@@ -384,6 +384,11 @@ describe("a Verified Email joins the Person that holds it", () => {
     // What the pilot exists to demonstrate, and what the rule above must not
     // have cost. An enforcement that asked everyone for a mail, or turned them
     // away, would pass every case above (issue #25).
+    //
+    // The earlier harness asserted the opposite: that linking by email does
+    // not happen. The spec has this case replace that test, inverted, rather
+    // than delete it. Its repository is gone, so this is written from what
+    // the test named, not copied. Do not remove it: it is the case's name.
     const person = await personArrivingWithAVerifiedEmail("merge-verified");
 
     const second = await authenticate(
