@@ -78,6 +78,34 @@ const filledIn = <Claims extends { email: string }>(
   email: claims.email.replaceAll("{username}", username),
 });
 
+/**
+ * The `sub` a username signs in as, where its shape declares that the two
+ * differ, and nothing where it does not.
+ *
+ * A shape carrying `subjectEndsAt` is one whose every username carries it: the
+ * part before it is the `sub`, the part after picks the address. A username
+ * under such a shape that is missing it names no `sub`, and signing in under
+ * the whole username would arrive as a `sub` of its own, at a third address
+ * neither label asked for. So it stops here, the way the prefix check above
+ * does, rather than let a case assert the opposite of what it meant.
+ */
+function subjectOf(
+  shape: NewcomerShape,
+  username: string,
+): { subject?: string } {
+  if (!("subjectEndsAt" in shape)) return {};
+  const ending = username.indexOf(shape.subjectEndsAt);
+  if (ending === -1) {
+    throw new Error(
+      `The username ${username} falls under the newcomer prefix ` +
+        `${shape.usernamePrefix}, whose subject ends at ` +
+        `${shape.subjectEndsAt}, but the username does not carry it, so it ` +
+        "names no subject.",
+    );
+  }
+  return { subject: username.slice(0, ending) };
+}
+
 /** The Identity a username stands for, or nothing at all for one under none of
  *  the prefixes. */
 export function newcomerNamed(username: string): DeclaredIdentity | undefined {
@@ -85,10 +113,8 @@ export function newcomerNamed(username: string): DeclaredIdentity | undefined {
     username.startsWith(candidate.usernamePrefix),
   );
   if (!shape) return undefined;
-  const ending =
-    "subjectEndsAt" in shape ? username.indexOf(shape.subjectEndsAt) : -1;
   return {
-    ...(ending === -1 ? {} : { subject: username.slice(0, ending) }),
+    ...subjectOf(shape, username),
     password: shape.password,
     idToken: filledIn(shape.idToken, username),
     userinfo: filledIn(shape.userinfo, username),

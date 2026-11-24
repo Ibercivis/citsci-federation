@@ -32,8 +32,10 @@ const identityNamed = (username: string): DeclaredIdentity | undefined =>
  * override it, so an Identity whose address changes between sign-ins needs
  * this to know which address it is giving this time (`newcomers.ts`).
  *
- * The one thing this source remembers. Every sign-in writes it before any of
- * its claims are read, so a restart loses nothing a sign-in has not yet set.
+ * The one thing this source remembers, and a restart forgets it. Nothing
+ * reaches a forgotten `sub`: the provider keeps its sessions in memory too, so
+ * the same restart drops every dialogue that could ask for one. Were one to
+ * ask anyway, `newcomerNamed` stops rather than answer with a third address.
  */
 const lastSignedInAs = new Map<string, string>();
 
