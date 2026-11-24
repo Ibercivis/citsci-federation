@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 #
-# The cases `require-issue-link.sh` has to get right. `pnpm check` runs this.
+# The cases `hooks/require-issue-link.sh` has to get right. `pnpm check` runs
+# this.
 #
 # The seam is the hook's own process: a Claude Code hook payload on stdin, an
 # exit status out — 0 lets the command run, 2 refuses it and publishes the
@@ -24,7 +25,7 @@ set -euo pipefail
 unset GIT_DIR GIT_WORK_TREE GIT_INDEX_FILE GIT_PREFIX GIT_COMMON_DIR \
   GIT_OBJECT_DIRECTORY GIT_ALTERNATE_OBJECT_DIRECTORIES
 
-hook=$(cd "$(dirname "$0")" && pwd)/require-issue-link.sh
+hook=$(cd "$(dirname "$0")" && pwd)/hooks/require-issue-link.sh
 
 # `pwd -P` because a case's directory has to be the path git will report, and
 # on macOS `mktemp -d` hands back one that reaches it through a symlink.
