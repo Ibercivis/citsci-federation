@@ -1,6 +1,8 @@
-# Only the two Keycloak extensions and the realm's declaration are built from
-# this directory; the rest is not the image's.
+# Only the two Keycloak extensions, the Maven settings they build with and the
+# realm's declaration are built from this directory; the rest is not the
+# image's.
 *
+!maven-settings.xml
 !person-identifier/pom.xml
 !person-identifier/src/
 !verified-email/pom.xml
