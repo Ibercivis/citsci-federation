@@ -58,12 +58,15 @@ flag_value() {
   return 1
 }
 
-# The issue a branch name claims, by the convention that cuts `issue-52` for
-# issue #52. Empty for every other name.
+# The issue a branch name claims. `docs/agents/issue-tracker.md` holds the
+# form; the number ends at the first `-`, so `issue-52` and
+# `issue-52-rename-the-thing` both answer 52 and `issue-52abc` answers nothing.
+# Empty for every other name.
 issue_in_branch() {
   case "$1" in
     issue-*)
       candidate=${1#issue-}
+      candidate=${candidate%%-*}
       case "$candidate" in
         '' | *[!0-9]*) ;;
         *) printf '%s' "$candidate" ;;
