@@ -22,8 +22,8 @@ import testing from "../broker/realm/testing.json" with { type: "json" };
  * declare is looked for the way a Brokered App or a Person would meet it, and
  * expected exactly when its layer is claimed. So a testing layer present where
  * it should be absent fails here, and so does one missing where it should be
- * present — including a realm left in the database by a stack built in the
- * other mode, which `--import-realm` does not replace.
+ * present — including a realm left in the database by a stack built in another
+ * mode, which `--import-realm` does not replace.
  *
  * The entries are read from the layer files, so an entry added to either is
  * covered without touching this file — for the kinds in LOOKED_FOR. The
