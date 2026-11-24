@@ -40,6 +40,8 @@ written with exit statuses alone.
   not yours. A hook on Bash runs on every command.
 - Add it to `.claude/settings.json` and open a fresh session: the harness reads that file once, at
   the start. A hook whose path is not there does not announce itself — the call just goes through.
-- Its cases, if it earns some, drive this seam from outside: a payload in, a status or a JSON answer
-  out, nothing reaching inside the script. `check-require-issue-link.sh` is the one that does.
+- Its cases, if it earns some, drive this seam from outside: what the harness gives it in, a status
+  or a JSON answer out, nothing reaching inside the script. `check-require-issue-link.sh` and
+  `check-claim-issue.sh` are the two that do. A hook that reaches the network gets a stub on `PATH`
+  rather than a mock inside it, which is the same rule: the seam is the process.
   `CODING_STANDARDS.md` says why those cases live in `scripts/` rather than here.

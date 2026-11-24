@@ -42,7 +42,7 @@ export GIT_CEILING_DIRECTORIES="$work"
 #
 # `git branch --show-current` answers before the first commit, which makes an
 # empty repository enough.
-for branch in issue-52 issue-116 no-issue; do
+for branch in issue-52 issue-116 issue-102-hooks-directory issue-102abc no-issue; do
   mkdir -p "$work/checkout-$branch"
   git -C "$work/checkout-$branch" init -q -b "$branch"
 done
@@ -164,6 +164,34 @@ refused "an issue named by the branch, and no keyword anywhere" \
 refused "an issue named by a double-quoted title, and no keyword anywhere" "$unticketed" \
   'gh pr create --title "[#52] A thing" --body "It does a thing, at some length."' \
   "the title carries"
+
+# --- The slug every branch here actually carries -----------------------------
+#
+# The hook read `issue-<n>` and digits to the end of the name, and no branch in
+# this repository is spelled that way: `issue-30-openred-integration`,
+# `issue-28-github-verified`. So the branch answered nothing and the title was
+# the only guard left — PR #202 was caught by its title alone (issue #205).
+# These are the refusal the hook exists for, arriving by the path nobody
+# checked.
+
+refused "an issue named by a slugged --head, and no keyword anywhere" \
+  "$unticketed" \
+  'gh pr create --head issue-102-hooks-directory --title "A thing" --body "It does a thing, at some length."' \
+  "issue #102"
+
+# The other place a branch is read. A slugged name has to answer here too, and
+# the refusal has to quote the name as it is rather than the number alone.
+payload_cwd=$(checkout_on issue-102-hooks-directory)
+refused "a slugged branch, read from the directory the command came from" "$unticketed" \
+  'gh pr create --title "A thing" --body "It does a thing, at some length."' \
+  "is on \`issue-102-hooks-directory\`"
+
+# The one direction the widening could have gone too far: a rule that merely
+# looked for digits anywhere would read 102 out of this and refuse a pull
+# request over an issue the branch never named.
+allowed "a branch whose number runs into the slug without a boundary" \
+  "$(checkout_on issue-102abc)" \
+  'gh pr create --title "A thing" --body "It does a thing, at some length."'
 
 # --- The spellings the narrowing could have gone blind to --------------------
 #

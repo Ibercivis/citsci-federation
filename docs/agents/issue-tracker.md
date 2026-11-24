@@ -13,7 +13,7 @@ Issues and specs for this repo live as GitHub issues. Use the `gh` CLI for all o
 - **Comment on an issue**: `gh issue comment <number> --body "..."`
 - **Apply / remove labels**: `gh issue edit <number> --add-label "..."` / `--remove-label "..."`
 - **Close**: post the explanation with `gh issue comment <number> --body "..."`, then `gh issue close <number>`. On an already-closed issue, `gh issue close --comment` drops the comment and still exits 0.
-- **Claim**: `gh issue edit <n> --add-assignee @me`. An unassigned open issue reads as free, so a claim is what stops two sessions picking up the same one. On an `issue-<n>` branch a hook does this for you; see **Hooks** below.
+- **Claim**: `gh issue edit <n> --add-assignee @me`. An unassigned open issue reads as free, so a claim is what stops two sessions picking up the same one. On a branch whose name begins `issue-<n>` a hook does this for you; see **Hooks** below.
 - **Link a pull request to its issue**: put `Closes #<n>` in the PR **body** when the PR finishes the issue, or `Part of #<n>` when it only advances one. The `[#<n>]` our commits carry in the subject is traceability and closes nothing: GitHub acts on the keyword in the body, and only for a pull request merged into the default branch.
 
 Infer the repo from `git remote -v`; `gh` does this automatically when run inside a clone.
@@ -29,11 +29,18 @@ browser — they bind this harness, not GitHub.
 | Script | When | What it does |
 | --- | --- | --- |
 | `scripts/hooks/require-issue-link.sh` | `PreToolUse` on Bash | Refuses to open a pull request that serves an issue unless the body says `Closes #<n>` or `Part of #<n>`. Which issue, in order: the `--head` branch, the `[#<n>]` in the title, this checkout's branch. `pnpm require-issue-link:check` holds the cases. |
-| `scripts/hooks/claim-issue.sh` | `PostToolUse` on Bash, and `SessionStart` | On an `issue-<n>` branch, assigns that issue if it is open and unassigned. |
+| `scripts/hooks/claim-issue.sh` | `PostToolUse` on Bash, and `SessionStart` | On a branch whose name begins `issue-<n>`, assigns that issue if it is open and unassigned. `pnpm claim-issue:check` holds the cases. |
 
-The claim is attempted **once per branch per clone**, recorded in the git directory, which is never
-committed. One attempt rather than one success: a hook that retries a failing network call on every
-command is a hook somebody switches off. A failed attempt says so rather than passing in silence.
+**Which branch names count.** Both hooks read the number between `issue-` and the first `-` after
+it: `issue-205` and `issue-205-hooks-read-the-slug` both name issue #205, and `issue-205abc` names
+none. The slug is for whoever reads `git branch` — neither hook looks at it, and a branch names one
+issue, so `issue-205-and-206` claims only #205.
+
+The claim is attempted **once per issue per clone**, recorded in the git directory, which is never
+committed. The marker is the number, not the branch name, so a second branch cut for the same ticket
+finds the attempt already spent. One attempt rather than one success: a hook that retries a failing
+network call on every command is a hook somebody switches off. A failed attempt says so rather than
+passing in silence.
 
 `Part of #<n>` is an answer, not a way round the refusal. A pull request that finishes a ticket and
 claims otherwise leaves the ticket open, which is the thing being fixed.
@@ -66,5 +73,5 @@ Used by `/wayfinder`. The **map** is a single issue with **child** issues as tic
 - **Child ticket**: an issue linked to the map as a GitHub sub-issue (see **Make an issue a sub-issue of a parent**). Where sub-issues aren't enabled, add the child to a task list in the map body and put `Part of #<map>` at the top of the child body. Labels: `research`, `prototype`, `grilling` or `task` (this repo's existing labels, unprefixed). Once claimed, the ticket is assigned to the driving dev.
 - **Blocking**: see **Blocking** under Conventions.
 - **Frontier query**: list the map's open children (`gh issue list --state open`, scoped to the map's sub-issues / task list), drop any with an open blocker (see **Count open blockers**, or an open issue in the `Blocked by` line) or an assignee; first in map order wins.
-- **Claim**: see **Claim** under Conventions. On an `issue-<n>` branch the hook has already made it.
+- **Claim**: see **Claim** under Conventions. On a branch whose name begins `issue-<n>` the hook has already made it.
 - **Resolve**: `gh issue comment <n> --body "<answer>"`, then `gh issue close <n>`, then append a context pointer (gist + link) to the map's Decisions-so-far.

@@ -8,11 +8,14 @@
 # sessions pick up the same one, and the frontier query has nothing to filter
 # on. The branch is the earliest moment the intention is unambiguous.
 #
-# It attempts the claim exactly once per branch per clone, recorded in the git
-# directory, which is private to this checkout and never committed. One attempt
-# rather than one success, on purpose: a hook that retries a failing network
-# call on every Bash command is a hook somebody switches off. When the attempt
-# fails it says so rather than passing in silence.
+# It attempts the claim exactly once per issue per clone, recorded in the git
+# directory, which is private to this checkout and never committed. Per issue
+# rather than per branch: the marker is the number, so a second branch cut for
+# the same ticket finds the attempt already spent, which is what one ticket and
+# one attempt means. One attempt rather than one success, on purpose: a hook
+# that retries a failing network call on every Bash command is a hook somebody
+# switches off. When the attempt fails it says so rather than passing in
+# silence.
 #
 # It never fails the hook that calls it.
 
@@ -25,7 +28,11 @@ case "$branch" in
   *) exit 0 ;;
 esac
 
+# The number ends at the first `-`, so the slug every branch here carries goes
+# unread and a branch names one issue. `docs/agents/issue-tracker.md` holds the
+# form and its examples.
 issue=${branch#issue-}
+issue=${issue%%-*}
 case "$issue" in
   '' | *[!0-9]*) exit 0 ;;
 esac

@@ -15,11 +15,11 @@ What is left here is what no tool checks and a reviewer would not notice.
 
 ## `pnpm check` is the definition of a check
 
-Five things run against this repository: the formatter, the linter, the type
-checker, the cases the `gh pr create` hook has to get right, and `reuse lint`,
-which fails when a file's licence cannot be established from `REUSE.toml` or
-its text is missing from `LICENSES/` (ADR-0013). `pnpm check` runs all five,
-the `pre-push` hook runs `pnpm check`, and CI runs `pnpm check`. There is one
+The formatter, the linter, the type checker, the cases each Claude Code hook
+has to get right, and `reuse lint` — which fails when a file's licence cannot
+be established from `REUSE.toml` or its text is missing from `LICENSES/`
+(ADR-0013) — all run against this repository. `pnpm check` runs them, the
+`pre-push` hook runs `pnpm check`, and CI runs `pnpm check`. There is one
 definition and three callers.
 
 So a new check is added to `pnpm check`, never to the hook or the workflow
@@ -82,5 +82,6 @@ Nothing else in `scripts/` earns a directory until it too has a way of failing
 that nobody sees.
 
 A hook's own cases stay out of `hooks/` and reach into it:
-`check-require-issue-link.sh` is a gate in `pnpm check`, and inside that
-directory it would be the one file there disobeying the contract.
+`check-require-issue-link.sh` and `check-claim-issue.sh` are gates in
+`pnpm check`, and inside that directory they would be the files there
+disobeying the contract.
