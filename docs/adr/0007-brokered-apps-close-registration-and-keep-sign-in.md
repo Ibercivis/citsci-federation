@@ -56,6 +56,16 @@ break password reset and mail, and both are hand-written code in the application
 The cost: someone with an existing account cannot use the Broker at that application until migration
 links the two. ADR-0018 holds what that linking is, and no application has enabled it.
 
+## Amended on 2026-11-24
+
+OpenRed's integration (issue #30) turned up a population the ADR had not named: an account
+**registered and never confirmed**. It holds its address, so the refusal above applies to it, and
+the closure above removes the only way it could have been registered again. Nobody in that state has
+a self-service way forward — the confirmation mail they were already sent still works, and otherwise
+it is an administrator. The closure is still right; it is the combination that strands them, and an
+application with such accounts should know the number before it closes anything
+(`docs/migration/openred.md`, section 7).
+
 ## Amended on 2026-11-20
 
 Geonity's integration (issue #31) rewrote two paragraphs above. The mobile paragraph assumed a public
