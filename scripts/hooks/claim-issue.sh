@@ -25,7 +25,12 @@ case "$branch" in
   *) exit 0 ;;
 esac
 
+# `docs/agents/issue-tracker.md` holds the form. The number ends at the first
+# `-`, so `issue-52` and `issue-52-rename-the-thing` both name issue #52, and
+# `issue-52abc` names nothing. The slug after it is for whoever reads
+# `git branch`, and this never looks at it: a branch names one issue.
 issue=${branch#issue-}
+issue=${issue%%-*}
 case "$issue" in
   '' | *[!0-9]*) exit 0 ;;
 esac
