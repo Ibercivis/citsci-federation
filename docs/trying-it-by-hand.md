@@ -155,10 +155,18 @@ there.
 OpenRed, from http://openred.localhost:8080/login (`issue #30`), is Geonity's shape again: the same
 callback page, the same refusal of an address it already holds, the same registration endpoint left
 open for a mobile client. **My Profile** names the identifier, `/register` leads to `/login`, and
-the navbar, the landing page and the confirmation screens no longer offer a sign-up either. Two things there are its own — its
-API checks the ID token's signature itself, because the allauth it pins would otherwise read the
-identity from an unsigned `userinfo` response, and the account it creates is named `user`, because
-the service sends no first name and that application's username generator reads nothing else.
+the navbar, the landing page and the confirmation screens no longer offer a sign-up either. Two
+things there are its own — its API checks the ID token's signature itself, because the allauth it
+pins would otherwise read the identity from an unsigned `userinfo` response, and the account it
+creates is named `user`, because the service sends no first name and that application's username
+generator reads nothing else.
+
+**The registration closure is `agualis`'s to walk, in all three**, and it is a name rather than a
+test on purpose: the Broker cannot see whether an application still has a sign-up form, and no test
+in this repository runs the JavaScript that would render one. What that means in practice is the
+three paragraphs above — the closed path on each application, read in a browser — and the pilot's
+claim to reduce exposure rests on somebody having read them. `issue #34` is what turns it into an
+assertion; until then it is this walk.
 
 ### 6. An account that existed before the Broker
 
