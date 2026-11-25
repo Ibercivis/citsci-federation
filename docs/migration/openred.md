@@ -63,16 +63,17 @@ Described by what each kind of account **has**, because that is what decides its
 
 One line each, each one testable.
 
-- **R1** — Every account that is to move has an address the Broker holds as a confirmed Identity.
-- **R2** — No account moves while it has no local password and no linked Identity: it would have no
-  way in at all.
+- **R1** — Every account that is to move has an address the Broker holds as a Verified Email.
+- **R2** — No account moves while it has neither a usable password nor a `SocialAccount` of this
+  application's own: it would have no way in at all.
 - **R3** — No two `auth_user` rows share an address. allauth enforces uniqueness on its own
   `EmailAddress` table, not on `auth_user.email`, so rows created outside allauth can collide — and
   this application's `CustomRegisterSerializer` checks `User.objects.filter(email=...)` rather than
   `EmailAddress`, so the two tables can disagree.
 - **R4** — Linking is an act of whoever owns both accounts, never a match on address alone. The
   integration already refuses the address match; migration must not quietly reintroduce it.
-- **R5** — `/admin/` keeps a way in for at least one account before any local credential is removed.
+- **R5** — `/admin/` keeps a way in for at least one account before any of this application's own
+  passwords is removed.
 - **R6** — The Flutter client signs in through the Broker before `POST /dj-rest-auth/registration/`
   closes. Until then the closure is the web's only.
 - **R7** — A device's ingest token survives the move, or every device in the field is reflashed.
