@@ -163,9 +163,7 @@ generator reads nothing else.
 
 **The registration closure is `agualis`'s to walk, in all three**, and it is a name rather than a
 test on purpose: the Broker cannot see whether an application still has a sign-up form, and no test
-in this repository runs the JavaScript that would render one. What that means in practice is the
-three paragraphs above — the closed path on each application, read in a browser — and the pilot's
-claim to reduce exposure rests on somebody having read them. `issue #34` is what turns it into an
+in this repository runs the JavaScript that would render one. `issue #34` is what turns it into an
 assertion; until then it is this walk.
 
 ### 6. An account that existed before the Broker
