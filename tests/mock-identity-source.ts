@@ -40,7 +40,10 @@ import { declaredSource } from "./realm.ts";
  * `federated_identity` keeps one link per source per Person — and the join is
  * about their second one.
  */
-export const MOCK_IDENTITY_SOURCES = declaration.sources.map((alias) => ({
+export const MOCK_IDENTITY_SOURCES = [
+  ...declaration.sources,
+  declaration.github.source,
+].map((alias) => ({
   alias,
   ...declaredSource(alias),
 }));
@@ -142,6 +145,38 @@ export const SOURCE_AFFIRMING_NOTHING = sourceNamed(
   "mock-identity-source",
   false,
 );
+
+/** The source imitating GitHub, whose word on an address the Broker trusts as
+ *  it trusts GitHub's. What GitHub says about an address is a field of its
+ *  email list rather than a claim, so its Identities are declared apart. */
+export const GITHUB_SOURCE = sourceNamed(declaration.github.source, true);
+
+export type GitHubIdentity = keyof typeof declaration.github.identities;
+
+/** An arrival through the GitHub imitation, as one of its Identities, giving
+ *  `address` if the Broker asks for one of its own. */
+export const arrivingThroughGitHub = (
+  identity: GitHubIdentity,
+  address?: string,
+) => ({
+  as: {
+    through: GITHUB_SOURCE,
+    username: identity,
+    password: declaration.github.identities[identity].password,
+    ...(address === undefined ? {} : { address }),
+  },
+  pkce: createPkce("S256"),
+});
+
+/** The primary address GitHub hands over for one of the imitation's
+ *  Identities, which is where the Broker's mail goes. */
+export const primaryAddressOf = (identity: GitHubIdentity): string => {
+  const primary = declaration.github.identities[identity].emails.find(
+    (entry) => entry.primary,
+  );
+  if (!primary) throw new Error(`${identity} declares no primary address.`);
+  return primary.email;
+};
 
 export const MOCK_IDENTITY_SOURCE = {
   /** The source that affirms nothing, which is what the older cases arrive

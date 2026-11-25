@@ -279,6 +279,26 @@
         "pkceMethod": "S256",
         "syncMode": "IMPORT"
       }
+    },
+    {
+      "alias": "mock-identity-source-github",
+      "displayName": "Mock GitHub (not for launch)",
+      "providerId": "github",
+      "enabled": true,
+      "trustEmail": true,
+      "storeToken": false,
+      "addReadTokenRoleOnCreate": false,
+      "linkOnly": false,
+      "hideOnLogin": false,
+      "config": {
+        "baseUrl": "${MOCK_IDENTITY_SOURCE_ISSUER}/github",
+        "apiUrl": "${MOCK_IDENTITY_SOURCE_ISSUER}/github/api",
+        "clientId": "citsci-broker",
+        "clientSecret": "mock-identity-source-development-secret",
+        "clientAuthMethod": "client_secret_post",
+        "defaultScope": "user:email",
+        "syncMode": "IMPORT"
+      }
     }
   ],
   "users": [

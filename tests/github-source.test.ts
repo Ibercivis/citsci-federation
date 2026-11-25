@@ -1,0 +1,69 @@
+import { randomUUID } from "node:crypto";
+import { describe, expect, it } from "vitest";
+import { CONFIDENTIAL_CLIENT } from "./clients.ts";
+import { attempt, authenticate } from "./brokered-app.ts";
+import { linkMailedTo, mailCountTo } from "./mailbox.ts";
+import {
+  AFFIRMING_SOURCE_A,
+  arriving,
+  arrivingThroughGitHub,
+  primaryAddressOf,
+} from "./mock-identity-source.ts";
+
+/**
+ * GitHub vouches for an address only when its own email list marks it
+ * verified, and the Broker takes its word on that and on nothing less.
+ *
+ * GitHub is not an OpenID provider, so it sends no `email_verified`. Keycloak's
+ * own GitHub provider takes the primary address and never reads the `verified`
+ * beside it. These cases arrive through the Mock Identity Source's GitHub
+ * imitation, which serves that list the way GitHub does.
+ *
+ * Each case uses an address of its own: the suite shares one Broker, and a
+ * Person outlives the case that created them. Following the mailed link is
+ * not repeated here: the fixed Identities below could stage it once per
+ * Broker, and `tests/verified-email-join.test.ts` holds that path for every
+ * source.
+ */
+
+describe("a GitHub Identity whose primary address GitHub did not verify", () => {
+  it("joins nobody who holds that address, and mails it instead", async () => {
+    const holder = await authenticate(
+      CONFIDENTIAL_CLIENT,
+      arriving(AFFIRMING_SOURCE_A, "spoofed-verified"),
+    );
+    const address = primaryAddressOf("github-spoofer");
+    const sent = await mailCountTo(address);
+
+    const spoofer = await attempt(
+      CONFIDENTIAL_CLIENT,
+      arrivingThroughGitHub("github-spoofer"),
+    );
+
+    // Held on a page of the Broker's, with the link on its way to the address
+    // itself: whoever answers it is the Person who holds it (ADR-0004).
+    // Waited for, because the Broker sends it inside the request that ended
+    // there.
+    expect(spoofer.outcome).toBe("refused-in-the-browser");
+    await linkMailedTo(address, sent);
+    expect(JSON.stringify(spoofer)).not.toContain(holder.claims.sub);
+  });
+
+  it("is not a Person until an address is confirmed by mail", async () => {
+    // Nobody holds this address. The Broker keeps none it was not sure of,
+    // asks for one, and mails it. A fresh one per run, so the count is this
+    // run's.
+    const address = `${randomUUID()}@newcomer.test`;
+
+    const unconfirmed = await attempt(
+      CONFIDENTIAL_CLIENT,
+      arrivingThroughGitHub("github-unconfirmed", address),
+    );
+
+    // Signed straight in is what an address GitHub had verified would get,
+    // through a source the Broker trusts. GitHub said it had not.
+    expect(unconfirmed.outcome).toBe("refused-in-the-browser");
+    await linkMailedTo(address);
+    expect(await mailCountTo(address)).toBe(1);
+  });
+});
