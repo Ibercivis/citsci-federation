@@ -170,12 +170,13 @@ export const arrivingThroughGitHub = (identity: GitHubIdentity) => ({
 /**
  * An arrival through the GitHub imitation from an Identity the Broker has
  * never met, whose primary address GitHub did or did not verify, and that
- * address. `gives` is what it answers if the Broker asks for an address of
- * its own.
+ * address: `at`, or one of its own. `gives` is what it answers if the Broker
+ * asks for an address of its own.
  */
-export function aGitHubNewcomer(verified: boolean) {
+export function aGitHubNewcomer(verified: boolean, at?: string) {
   const { address, ...credentials } = aGitHubNewcomerUnder(
     verified ? GITHUB_NEWCOMERS.verified : GITHUB_NEWCOMERS.unverified,
+    at,
   );
   return {
     address,

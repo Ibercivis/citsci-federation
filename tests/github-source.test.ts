@@ -2,11 +2,13 @@ import { randomUUID } from "node:crypto";
 import { describe, expect, it } from "vitest";
 import { CONFIDENTIAL_CLIENT } from "./clients.ts";
 import { PERSON_IDENTIFIER } from "./broker.ts";
-import { attempt, authenticate } from "./brokered-app.ts";
+import { Browser, attempt, authenticate, follow } from "./brokered-app.ts";
 import { linkMailedTo, mailCountTo } from "./mailbox.ts";
 import {
   AFFIRMING_SOURCE_A,
+  AFFIRMING_SOURCE_B,
   aGitHubNewcomer,
+  aNewcomerWhoseAddressIsAffirmed,
   arriving,
   arrivingThroughGitHub,
   primaryAddressOf,
@@ -22,10 +24,9 @@ import {
  * imitation, which serves that list the way GitHub does.
  *
  * Each case uses an address of its own: the suite shares one Broker, and a
- * Person outlives the case that created them. Following the mailed link is
- * not repeated here: the fixed Identities below could stage it once per
- * Broker, and `tests/verified-email-join.test.ts` holds that path for every
- * source.
+ * Person outlives the case that created them. A case that finishes a sign-in
+ * it had to wait for uses a newcomer minted for the run, because a fixed
+ * Identity would arrive the second time as the Person the first run made.
  */
 
 describe("a GitHub Identity whose primary address GitHub verified", () => {
@@ -77,11 +78,58 @@ describe("a GitHub Identity whose primary address GitHub did not verify", () => 
     expect(JSON.stringify(spoofer)).not.toContain(holder.claims.sub);
   });
 
+  it("joins whoever answers that mail to the Person holding the address", async () => {
+    // What the mail is for. The holder is made through a source that affirms
+    // the address, and a GitHub Identity minted at the same address arrives
+    // with GitHub saying it did not verify it.
+    const holder = aNewcomerWhoseAddressIsAffirmed();
+    const person = await authenticate(
+      CONFIDENTIAL_CLIENT,
+      holder.through(AFFIRMING_SOURCE_A),
+    );
+    const gitHub = aGitHubNewcomer(false, holder.address);
+    const sent = await mailCountTo(holder.address);
+
+    const browser = new Browser();
+    const waiting = await attempt(CONFIDENTIAL_CLIENT, {
+      browser,
+      ...gitHub.arriving(),
+    });
+
+    expect(waiting.outcome).toBe("refused-in-the-browser");
+
+    // Answered, in the browser the Broker asked from.
+    await follow(
+      browser,
+      await browser.get(await linkMailedTo(holder.address, sent)),
+      CONFIDENTIAL_CLIENT,
+    );
+
+    // And now that GitHub Identity is one of this Person's.
+    const joined = await authenticate(CONFIDENTIAL_CLIENT, gitHub.arriving());
+
+    expect(joined.claims.sub).toBe(person.claims.sub);
+
+    // And the Person kept the address: a third source affirming it reaches
+    // them. The line above would pass either way, because the link is by
+    // Identity and not by address.
+    const byAddress = await authenticate(
+      CONFIDENTIAL_CLIENT,
+      holder.through(AFFIRMING_SOURCE_B),
+    );
+
+    expect(byAddress.claims.sub).toBe(person.claims.sub);
+  });
+
   it("is not a Person until an address is confirmed by mail", async () => {
     // Nobody holds this address. The Broker keeps none it was not sure of,
-    // asks for one, and mails it. A newcomer and an address per run: an
-    // Identity held once is not asked again, so a second run would see no
-    // mail.
+    // asks for one on "Update email", and mails what is typed there. A
+    // newcomer and an address per run: an Identity held once is not asked
+    // again, so a second run would see no mail.
+    //
+    // This case passes on Keycloak's own GitHub provider too, which leaves
+    // every GitHub arrival unaffirmed. The two verified cases above are what
+    // tell that provider and ours apart.
     const address = `${randomUUID()}@newcomer.test`;
 
     const unconfirmed = await attempt(

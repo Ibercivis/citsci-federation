@@ -31,9 +31,13 @@ export const GITHUB_NEWCOMERS = declaration.github.newcomers;
 
 /**
  * A GitHub Identity the Broker has never met: any login under one of the
- * prefixes `mock.json` declares, at `<login>@mock.test`, verified or not as the
- * prefix says. The OpenID sources mint theirs in `newcomers.ts`, and for the
- * same reason: a case about a first arrival runs once per Broker otherwise.
+ * prefixes `mock.json` declares, verified or not as the prefix says. The OpenID
+ * sources mint theirs in `newcomers.ts`, and for the same reason: a case about
+ * a first arrival runs once per Broker otherwise.
+ *
+ * Its address is what follows the prefix, at `mock.test`. So a case can mint a
+ * GitHub Identity at an address a Person already holds, which is what a join
+ * through GitHub needs.
  *
  * GitHub's numeric `id` is derived from the login, so the same login is the
  * same Identity on every sign-in and two logins never share one.
@@ -51,7 +55,11 @@ function newcomerNamed(login: string): GitHubIdentity | undefined {
     ),
     email: null,
     emails: [
-      { email: `${login}@mock.test`, primary: true, verified: shape.verified },
+      {
+        email: `${login.slice(shape.usernamePrefix.length)}@mock.test`,
+        primary: true,
+        verified: shape.verified,
+      },
     ],
   };
 }
@@ -60,13 +68,24 @@ const identityNamed = (login: string): GitHubIdentity | undefined =>
   IDENTITIES[login] ?? newcomerNamed(login);
 
 /** One newcomer of that shape, fresh per run, and the address GitHub will
- *  hand over for it. */
-export function aGitHubNewcomerUnder(shape: GitHubNewcomerShape): {
+ *  hand over for it: `at`, which has to be at `mock.test`, or one of its
+ *  own. */
+export function aGitHubNewcomerUnder(
+  shape: GitHubNewcomerShape,
+  at?: string,
+): {
   username: string;
   password: string;
   address: string;
 } {
-  const username = `${shape.usernamePrefix}${randomUUID()}`;
+  const local =
+    at === undefined ? randomUUID() : at.replace(/@mock\.test$/, "");
+  if (at !== undefined && `${local}@mock.test` !== at) {
+    throw new Error(
+      `A GitHub newcomer can only be minted at mock.test, not ${at}.`,
+    );
+  }
+  const username = `${shape.usernamePrefix}${local}`;
   const primary = newcomerNamed(username)?.emails[0];
   if (!primary) throw new Error(`${username} falls under no newcomer prefix.`);
   return { username, password: shape.password, address: primary.email };
