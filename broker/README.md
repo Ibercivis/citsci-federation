@@ -441,15 +441,13 @@ measurements.
 Both are in the base, because a real deployment ships them. A source added
 later decides its own `trustEmail` (ADR-0004).
 
-- **Google has `trustEmail` on; GitHub has it off.** Google sends
-  `email_verified`. GitHub sends no such claim, and Keycloak's GitHub provider
-  ignores the `verified` flag in GitHub's `/user/emails` list. With
-  `trustEmail` on, an address the GitHub account never confirmed would be
-  marked confirmed, and its real owner would later arrive into that Person.
-  Off, nothing through GitHub joins silently: a new GitHub Person confirms the
-  address by mail first, and a GitHub arrival at an address somebody holds is
-  mailed at that address and joins them once the link is followed.
-  Reading GitHub's flag ourselves is issue #145.
+- **Both have `trustEmail` on.** Google sends `email_verified`. GitHub sends
+  no such claim: what it says about an address is the `verified` field of its
+  `/user/emails` list, which Keycloak's GitHub provider never reads. So GitHub
+  is declared as `citsci-github`, ours (below), and on our condition an address
+  GitHub did not verify is mailed before it joins anybody or becomes a Person.
+  The cost is the button: the login theme draws GitHub's mark only for
+  `providerId` `github`, so ours shows the generic one.
 - **Their credentials are `${NAME:not-configured}`.** The value comes from
   outside the repository (`.env.example` names them). A name nobody valued
   would otherwise be imported as the literal `${NAME}`. The default makes the
@@ -467,6 +465,23 @@ later decides its own `trustEmail` (ADR-0004).
   names are optional here.
 - **PKCE on Google, not on GitHub.** Nothing here has shown GitHub accepting it.
   A real sign-in that does is the reason to turn it on.
+
+### GitHub through a provider of ours
+
+The condition reads `email_verified` from what the source sent, and GitHub
+sends none. Keycloak's GitHub provider takes the primary address from GitHub's
+`/user/emails` list and never reads the `verified` field beside it. With
+`trustEmail` on, that leaves the condition finding no verdict, so every GitHub
+arrival counts as unaffirmed. And Keycloak would store whatever Person it
+creates as verified, whatever GitHub had said.
+
+`citsci-github`, from `verified-email/`, is the stock provider with GitHub's
+`verified` put into the brokered context as `email_verified`, and read back on
+the create path as the OpenID provider reads the claim. Both paths then rest on
+what GitHub said, and whatever cannot be established counts as unverified.
+Registered under an id of its own, because two factories under one id leave
+Keycloak to pick one. The verified cases in `tests/github-source.test.ts` fail
+against the stock provider.
 
 ### The Mock Identity Source
 
