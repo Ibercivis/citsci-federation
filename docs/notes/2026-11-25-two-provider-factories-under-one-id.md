@@ -10,8 +10,8 @@ package is not `org.keycloak`. Measured both ways. Registering
 `issue #225`'s worry — that a rebuild could silently put the stock provider back — is not available
 as an argument against it.
 
-**Read on only if** you are deciding `issue #225`, registering another factory under an id Keycloak
-already uses, or writing the test that holds such an override in place.
+**Read on only if** a factory of ours is claiming an id Keycloak ships, you are touching `order()`
+on the GitHub provider, or you are writing the test that holds such an override in place.
 
 ## Where the collision is settled
 

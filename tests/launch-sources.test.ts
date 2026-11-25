@@ -6,6 +6,7 @@ import {
   createPkce,
   follow,
   linksOn,
+  type Page,
   requestAuthorization,
 } from "./brokered-app.ts";
 import { declaredSource } from "./realm.ts";
@@ -23,6 +24,13 @@ import { declaredSource } from "./realm.ts";
  * names nothing of ours. The request is where a dropped default would show.
  */
 
+/**
+ * `darkMark` is the login theme's own list, not a choice of ours:
+ * `keycloak.v2` ships a second mark for a dark page for GitHub, Instagram and
+ * Twitter, and a single file for every other source it knows. It chooses both
+ * by the provider id and never by the alias, which is why the cases below read
+ * the id from the realm.
+ */
 const LAUNCH_SOURCES = [
   {
     alias: "google",
@@ -33,19 +41,21 @@ const LAUNCH_SOURCES = [
      *  there is the parameter's absence: it is what would notice a challenge
      *  arriving at a source that cannot bind a code with it. */
     pkceMethod: "S256",
+    darkMark: false,
   },
   {
     alias: "github",
     authorize: "https://github.com/login/oauth/authorize",
     scope: "user:email",
     pkceMethod: null,
+    darkMark: true,
   },
 ];
 
-/** Where the Broker sends a Person who pressed this source's button, read off
- *  the redirect and never followed. From the Account Console, which every
- *  realm has, so these hold on a `production` Broker too. */
-async function requestSentTo(name: string): Promise<URL> {
+/** The Broker's sign-in page, and the browser that was shown it. From the
+ *  Account Console, which every realm has, so these hold on a `production`
+ *  Broker too. */
+async function signInPage(): Promise<{ browser: Browser; page: Page }> {
   const browser = new Browser();
   const { challenge } = createPkce("S256");
   const landing = await follow(
@@ -62,7 +72,26 @@ async function requestSentTo(name: string): Promise<URL> {
       "The Account Console was sent back without a sign-in page.",
     );
   }
-  const button = linksOn(landing.page).find((link) => link.text.includes(name));
+  return { browser, page: landing.page };
+}
+
+/** One source's button, sliced out of the page by the id the login theme
+ *  gives it. The mark it draws is in there, and nowhere else on the page. */
+function buttonFor(page: Page, alias: string): string {
+  const button = new RegExp(`<a[^>]*id="social-${alias}"[\\s\\S]*?</a>`).exec(
+    page.html,
+  );
+  if (!button) {
+    throw new Error(`The sign-in page offers no button for ${alias}.`);
+  }
+  return button[0];
+}
+
+/** Where the Broker sends a Person who pressed this source's button, read off
+ *  the redirect and never followed. */
+async function requestSentTo(name: string): Promise<URL> {
+  const { browser, page } = await signInPage();
+  const button = linksOn(page).find((link) => link.text.includes(name));
   if (!button) throw new Error(`The sign-in page offers no ${name}.`);
   const pressed = await browser.get(button.href);
   const location = pressed.headers.get("location");
@@ -76,8 +105,8 @@ async function requestSentTo(name: string): Promise<URL> {
 
 describe.each(LAUNCH_SOURCES)(
   "the $alias button",
-  ({ alias, authorize, scope, pkceMethod }) => {
-    const { name } = declaredSource(alias);
+  ({ alias, authorize, scope, pkceMethod, darkMark }) => {
+    const { name, provider } = declaredSource(alias);
 
     it("sends the Person to the source's own authorization page", async () => {
       const request = await requestSentTo(name);
@@ -105,6 +134,22 @@ describe.each(LAUNCH_SOURCES)(
       // A challenge is there exactly when a method is.
       expect(Boolean(request.searchParams.get("code_challenge"))).toBe(
         Boolean(pkceMethod),
+      );
+    });
+
+    it("draws the source's own mark, never the theme's generic one", async () => {
+      const { page } = await signInPage();
+      const button = buttonFor(page, alias);
+
+      expect(button).toContain(`img/social/${provider}.svg`);
+      expect(button).not.toContain("img/social/default");
+    });
+
+    it.runIf(darkMark)("draws a mark made for a dark page too", async () => {
+      const { page } = await signInPage();
+
+      expect(buttonFor(page, alias)).toContain(
+        `img/social/${provider}-light.svg`,
       );
     });
 

@@ -283,7 +283,7 @@
     {
       "alias": "mock-identity-source-github",
       "displayName": "Mock GitHub (not for launch)",
-      "providerId": "citsci-github",
+      "providerId": "github",
       "enabled": true,
       "trustEmail": true,
       "storeToken": false,

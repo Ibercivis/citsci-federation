@@ -4,6 +4,7 @@ import { CONFIDENTIAL_CLIENT } from "./clients.ts";
 import { PERSON_IDENTIFIER } from "./broker.ts";
 import { Browser, attempt, authenticate, follow } from "./brokered-app.ts";
 import { linkMailedTo, mailCountTo } from "./mailbox.ts";
+import { declaredSource } from "./realm.ts";
 import {
   AFFIRMING_SOURCE_A,
   AFFIRMING_SOURCE_B,
@@ -166,5 +167,22 @@ describe("a GitHub Identity whose verdict the Broker cannot read", () => {
     expect(arrival.outcome).toBe("refused-in-the-browser");
     await linkMailedTo(address);
     expect(await mailCountTo(address)).toBe(1);
+  });
+});
+
+/**
+ * What the cases above prove is proved through the Mock Identity Source's
+ * GitHub imitation. It reaches the launch GitHub source, which no test can
+ * sign in through, only because both name the same Keycloak provider — and
+ * that provider is the stock id, which `issue #225` is why.
+ *
+ * The mark that id draws on the button is held in
+ * `tests/launch-sources.test.ts`.
+ */
+describe("the provider these cases exercise", () => {
+  it("is the one the launch GitHub source goes through", () => {
+    expect(declaredSource("mock-identity-source-github").provider).toBe(
+      declaredSource("github").provider,
+    );
   });
 });
