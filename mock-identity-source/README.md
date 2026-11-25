@@ -52,6 +52,8 @@ agree, because making them disagree is what this source is for.
 | `squat-verified` | `squat@mock.test`, verified | the same |
 | `renamed-verified` | `renamed@mock.test`, verified | the same |
 | `either-verified` | `either@mock.test`, verified | the same |
+| `octocat-verified` | `octocat@mock.test`, verified | the same |
+| `spoofed-verified` | `spoofed@mock.test`, verified | the same |
 
 The `-untrusted` half of each pair is the same claim read through
 `mock-identity-source`, whose word on an address the Broker does not take, so
@@ -63,8 +65,9 @@ case that made them, so two cases at the same address decide each other's
 outcome — and no case can see which of them ran first. `takeover`, `merge`,
 `untrusted`, `lockout` and `squat` belong to
 `tests/verified-email-join.test.ts`, `renamed` to
-`tests/local-credential.test.ts`, and `either` to
-`tests/mock-identity-source.test.ts`.
+`tests/local-credential.test.ts`, `either` to
+`tests/mock-identity-source.test.ts`, and `octocat` and `spoofed` to
+`tests/github-source.test.ts`.
 
 A case that needs another combination adds an Identity here.
 
@@ -100,6 +103,31 @@ before `subjectEndsAt` is the `sub`, and the part after it picks the address:
 sign in under another label and the same `sub` arrives elsewhere. Claims are
 read by `sub`, so `server.ts` remembers which label each `sub` last signed in
 with. It is the one thing the source remembers.
+
+## The GitHub imitation
+
+GitHub is not an OpenID provider, and what it says about an address is not a
+claim: it is the `verified` field of each entry in its `/user/emails` list.
+Keycloak's own GitHub provider never reads that field, which is why the Broker
+runs one of ours (`broker/verified-email/`). No OpenID mock can stage it, so `github.ts` serves the four endpoints that provider calls, under
+`/github`: authorize, token, `/user` and `/user/emails`.
+
+It is declared under `github` in `mock.json`: the alias it answers for, and
+Identities shaped like GitHub's answers. `email` is the public profile address,
+`null` for all of them, so the provider reads the list. It shares the sign-in
+page and the client with the OpenID sources.
+
+| Identity | Primary address | GitHub says |
+|---|---|---|
+| `github-octocat` | `octocat@mock.test` | verified |
+| `github-spoofer` | `spoofed@mock.test` | **unverified** |
+
+It mints newcomers too, for the reason `newcomers.ts` does: any login under
+`github-verified-newcomer-` or `github-unverified-newcomer-` is an Identity at
+`<what follows the prefix>@mock.test`, verified or not as the prefix says, so a
+case can mint one at an address a Person already holds. `github.ts` mints them
+rather than `newcomers.ts`, because their shape is GitHub's list and not a pair
+of claims.
 
 ## The advisory's Identities
 

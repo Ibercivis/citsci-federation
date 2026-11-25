@@ -46,20 +46,30 @@ export type NewcomerShape = (typeof NEWCOMERS)[keyof typeof NEWCOMERS];
  * another would make which shape it is depend on the order they are read in.
  * Checked as this module loads: the source refuses to start and the suite
  * refuses to run, rather than one case deciding another's outcome.
+ *
+ * Exported for `github.ts`, whose newcomers are another set under the same
+ * rule.
  */
-for (const shape of Object.values(NEWCOMERS)) {
-  const inside = Object.values(NEWCOMERS).find(
-    (other) =>
-      other !== shape && shape.usernamePrefix.startsWith(other.usernamePrefix),
-  );
-  if (inside) {
-    throw new Error(
-      `The newcomer prefix ${shape.usernamePrefix} begins with ` +
-        `${inside.usernamePrefix}, so a username under the first is also ` +
-        "under the second.",
+export function refuseOverlappingPrefixes(
+  shapes: ReadonlyArray<{ usernamePrefix: string }>,
+): void {
+  for (const shape of shapes) {
+    const inside = shapes.find(
+      (other) =>
+        other !== shape &&
+        shape.usernamePrefix.startsWith(other.usernamePrefix),
     );
+    if (inside) {
+      throw new Error(
+        `The newcomer prefix ${shape.usernamePrefix} begins with ` +
+          `${inside.usernamePrefix}, so a username under the first is also ` +
+          "under the second.",
+      );
+    }
   }
 }
+
+refuseOverlappingPrefixes(Object.values(NEWCOMERS));
 
 /**
  * The declared claims with this username written into them, whichever

@@ -14,9 +14,11 @@ not work yet are in the walkthrough — read it once before running this.
    Person to a source that refuses them on its own page. The registration they were created in has
    `${BROKER_ISSUER}/broker/<alias>/endpoint` as the redirect URI; the values are not in this
    repository and never will be.
-2. **The GitHub account's primary address has to be the one Google signs in with.** Act 2 is the
-   whole point of the demo and it proves nothing otherwise: two addresses are two Persons, on
-   purpose (ADR-0004), and the pilot has no merge flow to show.
+2. **The GitHub account's primary address has to be the one Google signs in with, and verified at
+   GitHub.** Act 2 is the whole point of the demo and it proves nothing otherwise: two addresses are
+   two Persons, on purpose (ADR-0004), and the pilot has no merge flow to show. An address GitHub has
+   not verified still joins, but only through the mail: act 2 stops on **verify your email** and
+   the link is in the catcher.
 3. **Start from nothing.**
 
    ```sh
@@ -74,25 +76,17 @@ accounts that existed before it.
 
 ## Act 2 — a second Identity, and the same Person
 
-A fresh private window. This is the act the pilot exists for, and it is **not** silent — watch the
-database, not the browser, for the first half of it.
+A fresh private window. This is the act the pilot exists for, and it is silent: GitHub affirms the
+address, so the Person is asked nothing in between.
 
 1. http://lostatnight.localhost:8080/accounts/login/ → **Sign in with your Ibercivis account** →
    **GitHub** → authorise the OAuth app.
-2. You land on the Broker's **verify your email** page. You are not signed in. Why: GitHub sends no
-   verified flag that Keycloak's provider reads, so the Broker has been told to trust nothing GitHub
-   says about an address, and nothing joins a Person on an address nobody affirmed (ADR-0004).
-   Reading GitHub's own flag ourselves is `issue #145`.
-3. The view, at exactly this moment → **still one row, `identities = google`.** Nothing has been
-   written. An arrival that walks away here leaves no trace at all.
-4. http://mail.localhost:8080 → the message, addressed to you → follow the link, **in the same
-   window**. The link carries the sign-in it belongs to, and a different browser is a different
-   sign-in.
-5. The view → **one row, `identities = github + google`.** Same `person_identifier` as act 1. The
-   mailbox is what joined them, and answering it is the only proof ADR-0004 wanted.
-6. http://lostatnight.localhost:8080/user-profile/ → the same identifier as step 3 of act 1. Nothing
+2. You are signed in. GitHub marked that address verified, and the Broker takes its word on it
+   (ADR-0004).
+3. The view → **one row, `identities = github + google`.** Same `person_identifier` as act 1.
+4. http://lostatnight.localhost:8080/user-profile/ → the same identifier as step 3 of act 1. Nothing
    in the application changed, and nothing in it had to.
-7. Optional, and it is Keycloak's own screen rather than ours:
+5. Optional, and it is Keycloak's own screen rather than ours:
    http://broker.localhost:8080/realms/citsci/account → one Person with **both** accounts linked, and
    the sessions.
 

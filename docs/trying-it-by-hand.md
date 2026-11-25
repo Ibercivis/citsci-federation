@@ -204,12 +204,16 @@ registered with, and `pnpm broker:reset`. A line left empty breaks that button; 
   come back with a Person Identifier, as in step 2, and step 4 shows the Person with a Google
   Identity and a confirmed address.
 - **GitHub, at an address nobody holds**: choose **GitHub** with an account whose primary address
-  no Person has. The Broker holds you on "verify your email" and sends the link to the mail catcher
-  (step 7). You are signed in only after following it, whatever GitHub said about the address.
-- **GitHub, at the address Google used**: the Broker holds you on "verify your email" again and
-  mails the address that Person already holds. Following the link joins the two Identities into one
-  Person; nothing is written until it is followed (`issue #149`). It is the mailbox that joins them,
-  because the Broker does not read GitHub's own verified flag (`issue #145`).
+  no Person has. If GitHub verified it, you come back with a Person Identifier. If not, the Broker
+  asks for an address and sends the link to the mail catcher (step 7), and you are signed in only
+  after following it.
+- **GitHub, at the address Google used**: with that address verified at GitHub, you come back as
+  the Person Google made, asked nothing in between. Unverified, the Broker holds you on "verify your
+  email" and mails the address that Person already holds; following the link joins the two
+  Identities, and nothing is written until it is followed (`issue #149`).
+- **What the imitation stands in for**: these two bullets are what `tests/github-source.test.ts`
+  holds against an imitation of GitHub. Walking them with a real account is how to tell whether
+  GitHub still answers `/user/emails` the way the imitation does.
 
 **TODO — where this step goes in `testing` is not settled.** `pnpm broker:reset` takes the Broker's database and
 the mail catcher with it, so the step throws away the Persons, the Identities and the mail that

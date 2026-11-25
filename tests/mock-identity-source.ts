@@ -29,6 +29,10 @@ import {
   aNewcomerUnder,
   aRelocatingNewcomer,
 } from "../mock-identity-source/newcomers.ts";
+import {
+  GITHUB_NEWCOMERS,
+  aGitHubNewcomerUnder,
+} from "../mock-identity-source/github.ts";
 import { declaredSource } from "./realm.ts";
 
 /**
@@ -40,7 +44,10 @@ import { declaredSource } from "./realm.ts";
  * `federated_identity` keeps one link per source per Person — and the join is
  * about their second one.
  */
-export const MOCK_IDENTITY_SOURCES = declaration.sources.map((alias) => ({
+export const MOCK_IDENTITY_SOURCES = [
+  ...declaration.sources,
+  declaration.github.source,
+].map((alias) => ({
   alias,
   ...declaredSource(alias),
 }));
@@ -142,6 +149,60 @@ export const SOURCE_AFFIRMING_NOTHING = sourceNamed(
   "mock-identity-source",
   false,
 );
+
+/** The source imitating GitHub, whose word on an address the Broker trusts as
+ *  it trusts GitHub's. What GitHub says about an address is a field of its
+ *  email list rather than a claim, so its Identities are declared apart. */
+export const GITHUB_SOURCE = sourceNamed(declaration.github.source, true);
+
+export type GitHubIdentity = keyof typeof declaration.github.identities;
+
+/** An arrival through the GitHub imitation, as one of its Identities. */
+export const arrivingThroughGitHub = (identity: GitHubIdentity) => ({
+  as: {
+    through: GITHUB_SOURCE,
+    username: identity,
+    password: declaration.github.identities[identity].password,
+  },
+  pkce: createPkce("S256"),
+});
+
+/**
+ * An arrival through the GitHub imitation from an Identity the Broker has
+ * never met, of one of the shapes `mock-identity-source/github.ts` declares,
+ * and its address: `at`, or one of its own. `gives` is what it answers if the
+ * Broker asks for an address of its own.
+ */
+export function aGitHubNewcomer(
+  shape: keyof typeof GITHUB_NEWCOMERS,
+  at?: string,
+) {
+  const { address, ...credentials } = aGitHubNewcomerUnder(
+    GITHUB_NEWCOMERS[shape],
+    at,
+  );
+  return {
+    address,
+    arriving: (gives?: string) => ({
+      as: {
+        through: GITHUB_SOURCE,
+        ...credentials,
+        ...(gives === undefined ? {} : { address: gives }),
+      },
+      pkce: createPkce("S256"),
+    }),
+  };
+}
+
+/** The primary address GitHub hands over for one of the imitation's
+ *  Identities, which is where the Broker's mail goes. */
+export const primaryAddressOf = (identity: GitHubIdentity): string => {
+  const primary = declaration.github.identities[identity].emails.find(
+    (entry) => entry.primary,
+  );
+  if (!primary) throw new Error(`${identity} declares no primary address.`);
+  return primary.email;
+};
 
 export const MOCK_IDENTITY_SOURCE = {
   /** The source that affirms nothing, which is what the older cases arrive

@@ -98,7 +98,15 @@ public class UnverifiedEmailCondition
     if (!arrival.getIdpConfig().isTrustEmail()) {
       return false;
     }
-    Object claim = arrival.getContextData().get(EMAIL_VERIFIED);
+    return saysVerified(arrival.getContextData().get(EMAIL_VERIFIED));
+  }
+
+  /**
+   * Whether a verdict, as the brokered context holds it, says verified. Shared
+   * with {@link VerifiedGitHubIdentityProvider}, so the join and the create
+   * read it the same way.
+   */
+  static boolean saysVerified(Object claim) {
     if (claim instanceof Boolean affirmed) {
       return affirmed;
     }

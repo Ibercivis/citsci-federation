@@ -140,6 +140,67 @@
       "password": "mock",
       "idToken": { "email": "silent-squat@mock.test", "email_verified": true },
       "userinfo": { "email": "silent-squat@mock.test", "email_verified": true }
+    },
+    "octocat-verified": {
+      "password": "mock",
+      "idToken": { "email": "octocat@mock.test", "email_verified": true },
+      "userinfo": { "email": "octocat@mock.test", "email_verified": true }
+    },
+    "spoofed-verified": {
+      "password": "mock",
+      "idToken": { "email": "spoofed@mock.test", "email_verified": true },
+      "userinfo": { "email": "spoofed@mock.test", "email_verified": true }
+    }
+  },
+  "github": {
+    "source": "mock-identity-source-github",
+    "identities": {
+      "github-octocat": {
+        "password": "mock",
+        "id": 9001,
+        "email": null,
+        "emails": [
+          { "email": "octocat@mock.test", "primary": true, "verified": true }
+        ]
+      },
+      "github-spoofer": {
+        "password": "mock",
+        "id": 9003,
+        "email": null,
+        "emails": [
+          { "email": "spoofed@mock.test", "primary": true, "verified": false }
+        ]
+      }
+    },
+    "newcomers": {
+      "verified": {
+        "usernamePrefix": "github-verified-newcomer-",
+        "password": "mock",
+        "verified": true,
+        "publicEmail": false,
+        "list": "readable"
+      },
+      "unverified": {
+        "usernamePrefix": "github-unverified-newcomer-",
+        "password": "mock",
+        "verified": false,
+        "publicEmail": false,
+        "list": "readable"
+      },
+      "unreadableEmails": {
+        "usernamePrefix": "github-unreadable-emails-newcomer-",
+        "password": "mock",
+        "verified": true,
+        "publicEmail": true,
+        "list": "unreadable"
+      },
+      "addressNotListed": {
+        "usernamePrefix": "github-unlisted-newcomer-",
+        "password": "mock",
+        "verified": true,
+        "publicEmail": true,
+        "list": "without-the-address"
+      }
     }
   }
 }

@@ -441,15 +441,13 @@ measurements.
 Both are in the base, because a real deployment ships them. A source added
 later decides its own `trustEmail` (ADR-0004).
 
-- **Google has `trustEmail` on; GitHub has it off.** Google sends
-  `email_verified`. GitHub sends no such claim, and Keycloak's GitHub provider
-  ignores the `verified` flag in GitHub's `/user/emails` list. With
-  `trustEmail` on, an address the GitHub account never confirmed would be
-  marked confirmed, and its real owner would later arrive into that Person.
-  Off, nothing through GitHub joins silently: a new GitHub Person confirms the
-  address by mail first, and a GitHub arrival at an address somebody holds is
-  mailed at that address and joins them once the link is followed.
-  Reading GitHub's flag ourselves is issue #145.
+- **Both have `trustEmail` on.** Google sends `email_verified`. GitHub sends
+  no such claim: what it says about an address is the `verified` field of its
+  `/user/emails` list, which Keycloak's GitHub provider never reads. So GitHub
+  is declared as `citsci-github`, ours (below), and on our condition an address
+  GitHub did not verify is mailed before it joins anybody or becomes a Person.
+  The cost is the button: the login theme draws GitHub's mark only for
+  `providerId` `github`, so ours shows the generic one.
 - **Their credentials are `${NAME:not-configured}`.** The value comes from
   outside the repository (`.env.example` names them). A name nobody valued
   would otherwise be imported as the literal `${NAME}`. The default makes the
@@ -468,6 +466,23 @@ later decides its own `trustEmail` (ADR-0004).
 - **PKCE on Google, not on GitHub.** Nothing here has shown GitHub accepting it.
   A real sign-in that does is the reason to turn it on.
 
+### GitHub through a provider of ours
+
+The condition reads `email_verified` from what the source sent, and GitHub
+sends none. Keycloak's GitHub provider takes the primary address from GitHub's
+`/user/emails` list and never reads the `verified` field beside it. With
+`trustEmail` on, that leaves the condition finding no verdict, so every GitHub
+arrival counts as unaffirmed. And Keycloak would store whatever Person it
+creates as verified, whatever GitHub had said.
+
+`citsci-github`, from `verified-email/`, is the stock provider with GitHub's
+`verified` put into the brokered context as `email_verified`, and read back on
+the create path as the OpenID provider reads the claim. Both paths then rest on
+what GitHub said, and whatever cannot be established counts as unverified.
+Registered under an id of its own, because two factories under one id leave
+Keycloak to pick one. The verified cases in `tests/github-source.test.ts` fail
+against the stock provider.
+
 ### The Mock Identity Source
 
 A test Identity Source this repository runs itself (`mock-identity-source/`), so
@@ -476,7 +491,7 @@ and separately for the ID token and for userinfo. Every registration is in the
 testing layer. Each is declared with a display name that says it is not for
 launch, because that name is what a Person reads on the sign-in page.
 
-**Five of them, over one server.** `federated_identity` holds one link per
+**Six of them, over one server.** `federated_identity` holds one link per
 source per Person, so a second Identity from the *same* source is refused by
 the schema — and ADR-0004 is entirely about what happens when a Person's
 second Identity arrives. One source cannot stage either half of it.
@@ -499,6 +514,11 @@ second Identity arrives. One source cannot stage either half of it.
   empty. That is the page issue #182 reports, and nothing else in the
   declaration reaches it with no address at all. `trustEmail` is on, so a case
   through it cannot pass merely because the Broker distrusts the source.
+- **`mock-identity-source-github` imitates GitHub**, at
+  `${MOCK_IDENTITY_SOURCE_ISSUER}/github`, through `citsci-github` with
+  `trustEmail` on, as `github` is in the base. It is not an OpenID source:
+  what it says about an address is the `verified` field of its `/user/emails`
+  list (`mock-identity-source/README.md`).
 - **Userinfo is on**, because the reported advisory this source exists to
   stage is about the address being read from userinfo. On is enough: Keycloak
   calls it on every sign-in that returns an access token, names or not

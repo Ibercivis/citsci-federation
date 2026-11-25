@@ -113,7 +113,8 @@ RUN node derive.ts "$BROKER_MODE" "$MOCK_IDENTITY_SOURCE_ISSUER" > realm-citsci.
 #    leaves our rules finding nothing — "nobody verified this address", so the
 #    Broker refuses sign-ins it ought to allow, which breaks safe and quietly.
 #    The second breaks the other way: finding nothing there means no address is
-#    taken off anybody.
+#    taken off anybody. Its GitHub provider extends Keycloak's own and
+#    overrides two of its methods, so it compiles against that class.
 # 2. Whether an address counts as verified is decided by this version, and a
 #    security property of the design rests on that answer (ADR-0004).
 #

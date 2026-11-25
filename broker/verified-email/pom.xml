@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  The Verified Email condition, built into the Broker's image by
-  broker/Dockerfile. Nothing here is run on a laptop: the build happens inside
+  The Verified Email condition and the GitHub provider that feeds it, built
+  into the Broker's image by broker/Dockerfile. Nothing here is run on a laptop: the build happens inside
   a Maven container, so no Java toolchain is needed to work on this repository.
 
   Every version is exact, for the same reason package.json's are

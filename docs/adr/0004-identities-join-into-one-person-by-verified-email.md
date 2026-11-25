@@ -71,6 +71,11 @@ conditional subflow ahead of the join. It reads the two facts Keycloak itself re
 Person — this source is trusted on addresses, and it said it verified this one — so the join path
 cannot drift away from the create path. Whatever it cannot establish counts as unverified.
 
+On a source that sends no verdict of its own, that fact has to be put into the brokered context
+first, or the condition finds nothing and reads the arrival as unaffirmed. GitHub states it in its
+email list rather than in a token, so `citsci-github` in `broker/verified-email/` reads the list
+and puts the answer where the condition looks (`issue #145`).
+
 **A verdict is about the address its source sent, and about no other.** Keycloak shows an arrival
 the profile its source sent whenever a required field is missing or will not validate, and the address can be
 edited on that page. Nothing there edits `email_verified`. So an arrival that types a different

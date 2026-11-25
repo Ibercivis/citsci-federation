@@ -1,4 +1,4 @@
-# The build context is the repository root; the image needs four files of it.
+# The build context is the repository root; the image needs five files of it.
 # An allowlist, so nothing else — `docs/private/` least of all — is ever sent
 # to the builder.
 *
@@ -6,4 +6,5 @@
 !pnpm-lock.yaml
 !mock-identity-source/server.ts
 !mock-identity-source/newcomers.ts
+!mock-identity-source/github.ts
 !mock-identity-source/mock.json
