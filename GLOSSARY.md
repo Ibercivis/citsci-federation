@@ -92,6 +92,13 @@ different Identity Sources resolve to the same Person, and it is established aut
 arrival, when the Verified Email matches one already held.
 _Avoid_: account linking, merge, mapping, vínculo
 
+**Account Link**:
+The association a Brokered App records between an account it already held and a Person: the Person
+Identifier stored beside that account, with nothing re-keyed. It lives in the application, which is
+the only place that can see both sides, and it is not an Identity Link — that one is the Broker's,
+between a Person and one of their Identities.
+_Avoid_: migration, merge, claiming an account, vinculación de cuentas
+
 ## Attributes
 
 **Profile**:

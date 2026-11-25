@@ -41,9 +41,9 @@ Described by what each kind of account **has**, because that is what decides its
 
 ## 3. Requirements
 
-- **R1** — The Broker emits a Verified Email claim the app can trust, and the app links an arriving
-  Identity to an existing account only when **both** sides are verified: the Broker's claim **and**
-  the local `EmailAddress.verified` flag. allauth checks only the first; the second is ours to write.
+- **R1** — No account is linked unless both of ADR-0018's conditions hold for it, and here the
+  local one is `EmailAddress.verified`. Sign-in here is allauth's own browser flow, which is the
+  cheaper of the two application shapes ADR-0018 costs.
 - **R2** — Every local account whose address was never confirmed is confirmed or disabled **before**
   automatic linking is enabled. Unconfirmed means nobody ever demonstrated control of that mailbox,
   so linking to it would hand an arriving person an account somebody else holds the password to.
@@ -57,13 +57,13 @@ Described by what each kind of account **has**, because that is what decides its
 ## 4. Order
 
 1. **R2 first**: resolve the unconfirmed addresses.
-2. **Then enable linking** (R1), with both-sides verification.
+2. **Then enable linking** (R1).
 3. **Only then close the app's own Google button.**
 
 > **The consequence of getting 3 before 2 wrong**: everyone who signed in with the app's own Google
 > button and never set a password is **locked out of their own contributions**. They have no password
-> to fall back on. Done in the right order, the same people arrive through the Broker, match on their
-> verified Google address, and land in the same account without noticing anything happened.
+> to fall back on. Done in the right order, the same people arrive through the Broker at the address
+> Google already affirmed, are asked whether this is their account, and land in it.
 
 Closing registration (ADR-0007) is independent of this sequence and can happen at any point after
 step 2.
@@ -83,7 +83,7 @@ step 2.
 
 | Step | Owner |
 |---|---|
-| R1 — both-sides-verified linking | app maintainer, with the rule stated by the Broker operator |
+| R1 — the link (ADR-0018) | app maintainer |
 | R2 — resolve unconfirmed addresses | a human with database access, plus whoever can mail those people |
 | R3 — confirm no shared addresses | a human with database access (a read-only check) |
 | Close the app's own Google button | app maintainer |

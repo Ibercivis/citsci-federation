@@ -48,10 +48,9 @@ Described by what each kind of account **has**:
 
 ## 3. Requirements
 
-- **R1** — An arriving Identity is linked to an existing account only when **both** sides are
-  verified: the Broker's Verified Email claim **and** the local `EmailAddress.verified` flag.
-  dj-rest-auth refuses the link outright today; enabling it is a change to the `ibercivis` path in
-  the API, not configuration.
+- **R1** — No account is linked unless both of ADR-0018's conditions hold for it, and here the
+  local one is `EmailAddress.verified`. The check goes on the `ibercivis` path in the API, where
+  `dj-rest-auth` refuses the link outright today, so it is code rather than a setting.
 - **R2** — Every account whose address was never confirmed is confirmed or disabled **before** R1 is
   enabled.
 - **R3** — No two `auth_user` rows share an address. allauth enforces uniqueness on its own
@@ -89,7 +88,7 @@ Described by what each kind of account **has**:
 
 | Step | Owner |
 |---|---|
-| R1 — both-sides-verified linking on the `ibercivis` path | app maintainer, with the rule stated by the Broker operator |
+| R1 — the link on the `ibercivis` path (ADR-0018) | app maintainer |
 | R2 — resolve unconfirmed addresses | a human with database access, plus whoever can mail those people |
 | R3 — find shared addresses | a human with database access (a read-only check) |
 | Close the app's own Google route | app maintainer, in each client that has it |
