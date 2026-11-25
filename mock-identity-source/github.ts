@@ -18,8 +18,18 @@ import type { IncomingMessage, ServerResponse } from "node:http";
 import declaration from "./mock.json" with { type: "json" };
 import { refuseOverlappingPrefixes } from "./newcomers.ts";
 
-type GitHubIdentity =
-  (typeof declaration.github.identities)[keyof typeof declaration.github.identities];
+/** One GitHub account as the imitation serves it: what `/user` says, and
+ *  what `/user/emails` answers, or that it cannot be read. */
+interface GitHubIdentity {
+  password: string;
+  id: number;
+  /** The public profile address. `null` makes Keycloak's provider read the
+   *  list to find the primary. */
+  email: string | null;
+  emails:
+    | ReadonlyArray<{ email: string; primary: boolean; verified: boolean }>
+    | "unreadable";
+}
 
 const IDENTITIES: Record<string, GitHubIdentity> =
   declaration.github.identities;
@@ -27,7 +37,18 @@ const IDENTITIES: Record<string, GitHubIdentity> =
 export type GitHubNewcomerShape =
   (typeof declaration.github.newcomers)[keyof typeof declaration.github.newcomers];
 
-/** The GitHub newcomer shapes, by whether GitHub verified the address. */
+/**
+ * The GitHub newcomer shapes: whether GitHub verified the address, whether it
+ * is the public profile address too, and whether the list says anything about
+ * it.
+ *
+ * `unreadableEmails` and `addressNotListed` say `verified: true` and mean it:
+ * what GitHub would have said is moot when the Broker cannot read it. Both
+ * carry the address on `/user`, because without it Keycloak's provider reads
+ * the list itself to find the primary, and the sign-in fails there instead of
+ * reaching ours. `unreadable` is how GitHub answers a token granted without
+ * `user:email`.
+ */
 export const GITHUB_NEWCOMERS = declaration.github.newcomers;
 
 // Guarded on their own: these logins are served by this handler and never
@@ -40,7 +61,8 @@ refuseOverlappingPrefixes(Object.values(GITHUB_NEWCOMERS));
  * sources mint theirs in `newcomers.ts`, and for the same reason: a case about
  * a first arrival runs once per Broker otherwise.
  *
- * Its address is what follows the prefix, at `mock.test`. So a case can mint a
+ * Its address is what follows the prefix, at `mock.test`, and what else it
+ * says is the shape's: see `GITHUB_NEWCOMERS`. So a case can mint a
  * GitHub Identity at an address a Person already holds, which is what a join
  * through GitHub needs.
  *
@@ -52,20 +74,23 @@ function newcomerNamed(login: string): GitHubIdentity | undefined {
     login.startsWith(candidate.usernamePrefix),
   );
   if (!shape) return undefined;
+  const local = login.slice(shape.usernamePrefix.length);
+  const address = `${local}@mock.test`;
+  const listed =
+    shape.list === "without-the-address"
+      ? `elsewhere-${local}@mock.test`
+      : address;
   return {
     password: shape.password,
     id: Number.parseInt(
       createHash("sha256").update(login).digest("hex").slice(0, 12),
       16,
     ),
-    email: null,
-    emails: [
-      {
-        email: `${login.slice(shape.usernamePrefix.length)}@mock.test`,
-        primary: true,
-        verified: shape.verified,
-      },
-    ],
+    email: shape.publicEmail ? address : null,
+    emails:
+      shape.list === "unreadable"
+        ? "unreadable"
+        : [{ email: listed, primary: true, verified: shape.verified }],
   };
 }
 
@@ -90,10 +115,11 @@ export function aGitHubNewcomerUnder(
       `A GitHub newcomer can only be minted at mock.test, not ${at}.`,
     );
   }
-  const username = `${shape.usernamePrefix}${local}`;
-  const primary = newcomerNamed(username)?.emails[0];
-  if (!primary) throw new Error(`${username} falls under no newcomer prefix.`);
-  return { username, password: shape.password, address: primary.email };
+  return {
+    username: `${shape.usernamePrefix}${local}`,
+    password: shape.password,
+    address: `${local}@mock.test`,
+  };
 }
 
 export const GITHUB_PREFIX = "/github";
@@ -251,6 +277,10 @@ export function gitHubImitation({
       return;
     }
     if (path === `${GITHUB_PREFIX}/api/user/emails` && identity) {
+      if (identity.emails === "unreadable") {
+        send(res, 404, { message: "Not Found" });
+        return;
+      }
       send(res, 200, identity.emails);
       return;
     }

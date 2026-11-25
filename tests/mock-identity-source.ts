@@ -169,13 +169,16 @@ export const arrivingThroughGitHub = (identity: GitHubIdentity) => ({
 
 /**
  * An arrival through the GitHub imitation from an Identity the Broker has
- * never met, whose primary address GitHub did or did not verify, and that
- * address: `at`, or one of its own. `gives` is what it answers if the Broker
- * asks for an address of its own.
+ * never met, of one of the shapes `mock-identity-source/github.ts` declares,
+ * and its address: `at`, or one of its own. `gives` is what it answers if the
+ * Broker asks for an address of its own.
  */
-export function aGitHubNewcomer(verified: boolean, at?: string) {
+export function aGitHubNewcomer(
+  shape: keyof typeof GITHUB_NEWCOMERS,
+  at?: string,
+) {
   const { address, ...credentials } = aGitHubNewcomerUnder(
-    verified ? GITHUB_NEWCOMERS.verified : GITHUB_NEWCOMERS.unverified,
+    GITHUB_NEWCOMERS[shape],
     at,
   );
   return {

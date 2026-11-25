@@ -176,12 +176,30 @@
       "verified": {
         "usernamePrefix": "github-verified-newcomer-",
         "password": "mock",
-        "verified": true
+        "verified": true,
+        "publicEmail": false,
+        "list": "readable"
       },
       "unverified": {
         "usernamePrefix": "github-unverified-newcomer-",
         "password": "mock",
-        "verified": false
+        "verified": false,
+        "publicEmail": false,
+        "list": "readable"
+      },
+      "unreadableEmails": {
+        "usernamePrefix": "github-unreadable-emails-newcomer-",
+        "password": "mock",
+        "verified": true,
+        "publicEmail": true,
+        "list": "unreadable"
+      },
+      "addressNotListed": {
+        "usernamePrefix": "github-unlisted-newcomer-",
+        "password": "mock",
+        "verified": true,
+        "publicEmail": true,
+        "list": "without-the-address"
       }
     }
   }

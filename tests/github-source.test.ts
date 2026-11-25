@@ -48,7 +48,7 @@ describe("a GitHub Identity whose primary address GitHub verified", () => {
   it("is a Person straight away at an address nobody holds", async () => {
     const { claims } = await authenticate(
       CONFIDENTIAL_CLIENT,
-      aGitHubNewcomer(true).arriving(),
+      aGitHubNewcomer("verified").arriving(),
     );
 
     expect(claims.sub).toMatch(PERSON_IDENTIFIER);
@@ -87,7 +87,7 @@ describe("a GitHub Identity whose primary address GitHub did not verify", () => 
       CONFIDENTIAL_CLIENT,
       holder.through(AFFIRMING_SOURCE_A),
     );
-    const gitHub = aGitHubNewcomer(false, holder.address);
+    const gitHub = aGitHubNewcomer("unverified", holder.address);
     const sent = await mailCountTo(holder.address);
 
     const browser = new Browser();
@@ -134,12 +134,36 @@ describe("a GitHub Identity whose primary address GitHub did not verify", () => 
 
     const unconfirmed = await attempt(
       CONFIDENTIAL_CLIENT,
-      aGitHubNewcomer(false).arriving(address),
+      aGitHubNewcomer("unverified").arriving(address),
     );
 
     // Signed straight in is what an address GitHub had verified would get,
     // through a source the Broker trusts. GitHub said it had not.
     expect(unconfirmed.outcome).toBe("refused-in-the-browser");
+    await linkMailedTo(address);
+    expect(await mailCountTo(address)).toBe(1);
+  });
+});
+
+/**
+ * What the Broker cannot read counts as unverified, whatever GitHub would have
+ * said. Both Identities here are ones GitHub verified; the Broker just cannot
+ * see that it did. Held, as an unverified newcomer is, rather than let in on a
+ * verdict nobody read.
+ */
+describe("a GitHub Identity whose verdict the Broker cannot read", () => {
+  it.each([
+    ["an email list it cannot read", "unreadableEmails"],
+    ["an address the list does not carry", "addressNotListed"],
+  ] as const)("is held, with %s", async (_what, shape) => {
+    const address = `${randomUUID()}@newcomer.test`;
+
+    const arrival = await attempt(
+      CONFIDENTIAL_CLIENT,
+      aGitHubNewcomer(shape).arriving(address),
+    );
+
+    expect(arrival.outcome).toBe("refused-in-the-browser");
     await linkMailedTo(address);
     expect(await mailCountTo(address)).toBe(1);
   });
