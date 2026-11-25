@@ -26,7 +26,7 @@ if ! echo "$services" | grep -qx mailpit; then
   failed=1
 fi
 
-if echo "$services" | grep -qx mock-source; then
+if echo "$services" | grep -qx mock-identity-source; then
   echo "check-demo-services: demo starts the Mock Identity Source, which is" >&2
   echo "the one thing a demo must not show." >&2
   failed=1

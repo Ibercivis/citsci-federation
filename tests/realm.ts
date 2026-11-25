@@ -34,7 +34,7 @@ const MODE = configured("BROKER_MODE");
 const realm = derive(
   MODE,
   readDeclaration(),
-  MODE === "testing" ? configured("MOCK_ISSUER") : "",
+  MODE === "testing" ? configured("MOCK_IDENTITY_SOURCE_ISSUER") : "",
 ) as ImportedRealm;
 
 /** An Identity Source as the Broker was told about it. */

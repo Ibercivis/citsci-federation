@@ -26,7 +26,7 @@ import {
   aRelocatingIdentity,
   addressOf,
   arriving,
-} from "./mock-source.ts";
+} from "./mock-identity-source.ts";
 
 /**
  * Arrive at an address a Person already holds and you become that Person: with
@@ -162,8 +162,8 @@ describe("an unverified address joins no existing Person until its mail is answe
   it("joins whoever answers that mail to the Person holding the address", async () => {
     // What the mail is for, and the only case here that finishes the join. A
     // fresh Identity per run, because an Identity that joined a Person once
-    // never meets this flow again: `mock-source/README.md` says why that is
-    // the one thing the fixed Identities above cannot stage.
+    // never meets this flow again: `mock-identity-source/README.md` says why
+    // that is the one thing the fixed Identities above cannot stage.
     //
     // Unaffirmed here by the source not being trusted rather than by the
     // claim, because one username cannot carry both: the Person has to be made

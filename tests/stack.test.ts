@@ -187,7 +187,7 @@ describe("the realm running", () => {
   const declared = derive(
     MODE,
     readDeclaration(),
-    MODE === "testing" ? configured("MOCK_ISSUER") : "",
+    MODE === "testing" ? configured("MOCK_IDENTITY_SOURCE_ISSUER") : "",
   );
 
   it("is what the image carries, derived from broker/realm/ as it stands", () => {

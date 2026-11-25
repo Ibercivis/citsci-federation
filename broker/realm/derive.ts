@@ -4,7 +4,8 @@
  * Keycloak imports one complete realm per file and cannot layer two, so the
  * layering happens here, inside the image build (`broker/Dockerfile`):
  *
- *   node derive.ts <testing|production|demo> <MOCK_ISSUER> > realm-citsci.json
+ *   node derive.ts <testing|production|demo> \
+ *     <MOCK_IDENTITY_SOURCE_ISSUER> > realm-citsci.json
  *
  * `base.json` is the whole Broker anywhere it runs. `testing.json` only adds
  * to it, and only in `testing`: `production` and `demo` import the base alone,
@@ -39,7 +40,7 @@ const MODES = ["testing", "production", "demo"];
 export function derive(
   mode: string,
   declaration: Declaration,
-  mockIssuer = "",
+  mockIdentitySourceIssuer = "",
 ): Realm {
   if (!MODES.includes(mode)) {
     throw new Error(
@@ -53,12 +54,15 @@ export function derive(
   }
   const realm: Realm = { ...declaration.base };
   if (mode === "testing") {
-    if (mockIssuer === "") {
+    if (mockIdentitySourceIssuer === "") {
       throw new Error(
-        "No MOCK_ISSUER: the testing layer's Mock Identity Sources are reached at it. Declare it in .env.",
+        "No MOCK_IDENTITY_SOURCE_ISSUER: the testing layer's Mock Identity Sources are reached at it. Declare it in .env.",
       );
     }
-    const layer = withIssuer(declaration.testing, mockIssuer) as Realm;
+    const layer = withIssuer(
+      declaration.testing,
+      mockIdentitySourceIssuer,
+    ) as Realm;
     for (const [field, entries] of Object.entries(layer)) {
       realm[field] = appendLayer(field, realm[field] ?? [], entries);
     }
@@ -100,10 +104,11 @@ function keyOf(entry: unknown): string | undefined {
   return typeof key === "string" ? key : undefined;
 }
 
-/** Every `${MOCK_ISSUER}` in the layer's strings, replaced by the issuer. */
+/** Every `${MOCK_IDENTITY_SOURCE_ISSUER}` in the layer's strings, replaced
+ *  by the issuer. */
 function withIssuer(value: unknown, issuer: string): unknown {
   if (typeof value === "string") {
-    return value.replaceAll("${MOCK_ISSUER}", issuer);
+    return value.replaceAll("${MOCK_IDENTITY_SOURCE_ISSUER}", issuer);
   }
   if (Array.isArray(value)) {
     return value.map((item) => withIssuer(item, issuer));

@@ -130,7 +130,7 @@ refuse the flow for a Person carrying it. What it costs:
 - Whether the attribute survives at all is **unmeasured**. `broker/realm/base.json` declares no
   `unmanagedAttributePolicy`, and the create path builds the Person through the user profile. The
   mapper's own writes go straight to `UserModel`, which may or may not be filtered. One sign-in
-  through the mock source and one `GET /admin/realms/citsci/users/<id>` settles it.
+  through the Mock Identity Source and one `GET /admin/realms/citsci/users/<id>` settles it.
 
 ## `resetPasswordAllowed: false` is realm-wide, and ADR-0005 is against it
 

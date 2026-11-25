@@ -4,6 +4,6 @@
 *
 !package.json
 !pnpm-lock.yaml
-!mock-source/server.ts
-!mock-source/newcomers.ts
-!mock-source/mock.json
+!mock-identity-source/server.ts
+!mock-identity-source/newcomers.ts
+!mock-identity-source/mock.json

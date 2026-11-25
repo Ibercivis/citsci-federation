@@ -53,17 +53,18 @@ agree, because making them disagree is what this source is for.
 | `renamed-verified` | `renamed@mock.test`, verified | the same |
 | `either-verified` | `either@mock.test`, verified | the same |
 
-The `-untrusted` half of each pair is the same claim read through `mock`, whose
-word on an address the Broker does not take, so it arrives affirmed by nobody.
-`untrusted-verified` is that idea for the join; these two pairs are for arriving
-*first* (`issue #88`).
+The `-untrusted` half of each pair is the same claim read through
+`mock-identity-source`, whose word on an address the Broker does not take, so
+it arrives affirmed by nobody. `untrusted-verified` is that idea for the join;
+these two pairs are for arriving *first* (`issue #88`).
 
 **An address per case.** The suite drives one Broker and a Person outlives the
 case that made them, so two cases at the same address decide each other's
 outcome — and no case can see which of them ran first. `takeover`, `merge`,
 `untrusted`, `lockout` and `squat` belong to
 `tests/verified-email-join.test.ts`, `renamed` to
-`tests/local-credential.test.ts`, and `either` to `tests/mock-source.test.ts`.
+`tests/local-credential.test.ts`, and `either` to
+`tests/mock-identity-source.test.ts`.
 
 A case that needs another combination adds an Identity here.
 
@@ -79,7 +80,7 @@ Four shapes. Three because what the claims say about that address is the
 question such a case usually turns on. `unverified` is for an address nobody
 affirmed, `verified` for one its source did. The second is how a case stages a
 Person **and** a later arrival at their address in one run — the same username
-through an affirming source and then through `mock`, which is
+through an affirming source and then through `mock-identity-source`, which is
 `untrusted-verified` above with nothing left over from the last run.
 
 `affirmedButNoAddress` is the third, and its claims carry no `{username}`
@@ -91,7 +92,7 @@ shape is the one that will not validate. What such an arrival types there was
 affirmed by nobody while its source's `email_verified` still says `true`, which
 is the shape `issue #182` is about. The other way is a missing address, which no
 shape can stage on its own: it takes the source the Broker asks for no address
-(`mock-sending-no-address`), and it carries no verdict either.
+(`mock-identity-source-sending-no-address`), and it carries no verdict either.
 
 The fourth, `relocating`, is one Identity whose address changes between two
 sign-ins, the way a Person changes it at their source. The username's part
@@ -119,11 +120,11 @@ already at `advisory@mock.test`:
 The `silent-squat` pair is the silent shape arriving *first*, at an address
 nobody holds yet.
 
-A name reaches the ID token only through `mock-affirming-named`, the one
-source that asks for `profile`. Through any other, `advisory-split-named` is
-`advisory-split`.
+A name reaches the ID token only through `mock-identity-source-affirming-named`,
+the one source that asks for `profile`. Through any other,
+`advisory-split-named` is `advisory-split`.
 
 Why the source is built the way it is lives next to what it explains:
 `server.ts` for the source itself, `compose.yaml` and `.env` for where it runs.
-`tests/mock-source.test.ts` holds it to its declaration, at its own seam
-as well as through the Broker.
+`tests/mock-identity-source.test.ts` holds it to its declaration, at its own
+seam as well as through the Broker.

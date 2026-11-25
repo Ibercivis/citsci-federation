@@ -44,7 +44,8 @@ const example = Object.fromEntries(
 );
 
 /** The names the realm references and the tracked `.env` does not value. The
- *  testing layer's `${MOCK_ISSUER}` is written in by `derive.ts`, from `.env`. */
+ *  testing layer's `${MOCK_IDENTITY_SOURCE_ISSUER}` is written in by
+ *  `derive.ts`, from `.env`. */
 const secrets = [...referenced].filter((name) => !constants.has(name));
 
 describe("the secrets the realm references", () => {

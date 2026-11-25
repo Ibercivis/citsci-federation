@@ -10,7 +10,7 @@ import { renderFlowTree } from "../broker/realm/flows.ts";
  * it is exercised without building one.
  */
 
-const ISSUER = "http://mock.localhost:8090";
+const ISSUER = "http://mock-identity-source.localhost:8090";
 
 const PROFILE = { attributes: [{ name: "email" }] };
 
@@ -107,10 +107,10 @@ describe("deriving the realm Keycloak imports", () => {
     const withMock = {
       identityProviders: [
         {
-          alias: "mock",
+          alias: "mock-identity-source",
           config: {
-            issuer: "${MOCK_ISSUER}",
-            tokenUrl: "${MOCK_ISSUER}/token",
+            issuer: "${MOCK_IDENTITY_SOURCE_ISSUER}",
+            tokenUrl: "${MOCK_IDENTITY_SOURCE_ISSUER}/token",
           },
         },
       ],
@@ -120,7 +120,7 @@ describe("deriving the realm Keycloak imports", () => {
       derive("testing", declaration(withMock), ISSUER)["identityProviders"],
     ).toEqual([
       {
-        alias: "mock",
+        alias: "mock-identity-source",
         config: { issuer: ISSUER, tokenUrl: `${ISSUER}/token` },
       },
     ]);
@@ -128,7 +128,7 @@ describe("deriving the realm Keycloak imports", () => {
 
   it("refuses a testing build without the Mock Identity Source's issuer", () => {
     expect(() => derive("testing", declaration(), "")).toThrow(
-      "No MOCK_ISSUER: the testing layer's Mock Identity Sources are reached at it. Declare it in .env.",
+      "No MOCK_IDENTITY_SOURCE_ISSUER: the testing layer's Mock Identity Sources are reached at it. Declare it in .env.",
     );
   });
 

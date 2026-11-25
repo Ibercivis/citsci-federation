@@ -2,15 +2,17 @@
  * The Mock Identity Source as the tests know it: where it answers, the
  * Identities it declares, and what the Broker was told about it.
  *
- * Split by who decides what. `mock-source/mock.json` is the file the source
- * itself serves, so it owns the aliases it stands behind and the Identities
- * that exist. What each source is *called* and whether its word on an address
- * is trusted are the Broker's configuration, so those are read from the realm
- * (`./realm.ts`). Neither fact is written twice, so neither can drift.
+ * Split by who decides what. `mock-identity-source/mock.json` is the file the
+ * source itself serves, so it owns the aliases it stands behind and the
+ * Identities that exist. What each source is *called* and whether its word on
+ * an address is trusted are the Broker's configuration, so those are read from
+ * the realm (`./realm.ts`). Neither fact is written twice, so neither can
+ * drift.
  *
  * An Identity the source has never served is minted by the source's own
  * module for the same reason: the address such a username will arrive at is
- * that module's to derive (`mock-source/newcomers.ts`), never this one's.
+ * that module's to derive (`mock-identity-source/newcomers.ts`), never this
+ * one's.
  */
 
 import { createRemoteJWKSet, jwtVerify } from "jose";
@@ -21,12 +23,12 @@ import {
 } from "./broker.ts";
 import type { Client } from "./clients.ts";
 import { Browser, createPkce, follow, formsOn } from "./brokered-app.ts";
-import declaration from "../mock-source/mock.json" with { type: "json" };
+import declaration from "../mock-identity-source/mock.json" with { type: "json" };
 import {
   NEWCOMERS,
   aNewcomerUnder,
   aRelocatingNewcomer,
-} from "../mock-source/newcomers.ts";
+} from "../mock-identity-source/newcomers.ts";
 import { declaredSource } from "./realm.ts";
 
 /**
@@ -38,7 +40,7 @@ import { declaredSource } from "./realm.ts";
  * `federated_identity` keeps one link per source per Person — and the join is
  * about their second one.
  */
-export const MOCK_SOURCES = declaration.sources.map((alias) => ({
+export const MOCK_IDENTITY_SOURCES = declaration.sources.map((alias) => ({
   alias,
   ...declaredSource(alias),
 }));
@@ -67,8 +69,14 @@ function sourceNamed(alias: string, affirming: boolean): string {
 
 /** The two sources that affirm addresses, named A and B because what the
  *  cases need of them is only that they are two. */
-export const AFFIRMING_SOURCE_A = sourceNamed("mock-affirming-a", true);
-export const AFFIRMING_SOURCE_B = sourceNamed("mock-affirming-b", true);
+export const AFFIRMING_SOURCE_A = sourceNamed(
+  "mock-identity-source-affirming-a",
+  true,
+);
+export const AFFIRMING_SOURCE_B = sourceNamed(
+  "mock-identity-source-affirming-b",
+  true,
+);
 
 /**
  * The one source the Broker also asks for `profile`. `broker/README.md` says
@@ -93,7 +101,7 @@ function sourceAskingForNames(alias: string): string {
 }
 
 export const AFFIRMING_SOURCE_ASKING_FOR_NAMES = sourceAskingForNames(
-  "mock-affirming-named",
+  "mock-identity-source-affirming-named",
 );
 
 /**
@@ -119,24 +127,27 @@ function sourceAskedForNoAddress(alias: string): string {
 }
 
 export const AFFIRMING_SOURCE_SENDING_NO_ADDRESS = sourceAskedForNoAddress(
-  "mock-sending-no-address",
+  "mock-identity-source-sending-no-address",
 );
 
 /** What the Broker asks that source for. A case at the source's own seam
  *  sends this instead of spelling a scope, so the two cannot drift apart. */
 export const SCOPE_ASKING_FOR_NAMES = declaredSource(
-  "mock-affirming-named",
+  "mock-identity-source-affirming-named",
 ).asksFor;
 
 /** The source that affirms nothing: every address arriving through it is
  *  unverified, whatever its claims say. */
-export const SOURCE_AFFIRMING_NOTHING = sourceNamed("mock", false);
+export const SOURCE_AFFIRMING_NOTHING = sourceNamed(
+  "mock-identity-source",
+  false,
+);
 
-export const MOCK_SOURCE = {
+export const MOCK_IDENTITY_SOURCE = {
   /** The source that affirms nothing, which is what the older cases arrive
    *  through. */
   name: SOURCE_AFFIRMING_NOTHING,
-  issuer: configured("MOCK_ISSUER"),
+  issuer: configured("MOCK_IDENTITY_SOURCE_ISSUER"),
 } as const;
 
 /** The mock Identities, each with what the source says about its address
@@ -282,16 +293,16 @@ export function aRelocatingIdentity() {
  * The Broker as the source knows it: a client, registered with a callback.
  *
  * The callback is Keycloak's path for an Identity Source with the alias
- * `mock`. That is the one place a test here names a Keycloak path, and
- * it asserts nothing about the Broker with it: it is the address this source
- * was told to send the Broker's codes to, so signing in at the source as the
- * Broker would means asking for that address.
+ * `mock-identity-source`. That is the one place a test here names a Keycloak
+ * path, and it asserts nothing about the Broker with it: it is the address this
+ * source was told to send the Broker's codes to, so signing in at the source as
+ * the Broker would means asking for that address.
  */
 const THE_BROKER_AS_CLIENT: Client = {
   id: declaration.client.id,
   name: "the Broker",
   secret: declaration.client.secret,
-  redirectUri: `${BROKER_ISSUER}/broker/mock/endpoint`,
+  redirectUri: `${BROKER_ISSUER}/broker/mock-identity-source/endpoint`,
 };
 
 /** What the source handed over for one sign-in, in the two places it can say
@@ -321,10 +332,12 @@ export async function signInAtMock(
   identity: MockIdentity | { username: string; password: string },
   /** What the Broker asks the source for, read from the realm. Defaults to
    *  what most sources get; pass `SCOPE_ASKING_FOR_NAMES` for the other. */
-  scope = declaredSource("mock").asksFor,
+  scope = declaredSource("mock-identity-source").asksFor,
 ): Promise<MockAnswer> {
   const discovery = (await (
-    await fetch(`${MOCK_SOURCE.issuer}/.well-known/openid-configuration`)
+    await fetch(
+      `${MOCK_IDENTITY_SOURCE.issuer}/.well-known/openid-configuration`,
+    )
   ).json()) as SourceDiscovery;
   const client = THE_BROKER_AS_CLIENT;
   const browser = new Browser();
@@ -385,7 +398,7 @@ export async function signInAtMock(
   const { payload } = await jwtVerify(
     tokens.id_token ?? "",
     createRemoteJWKSet(new URL(discovery.jwks_uri)),
-    { issuer: MOCK_SOURCE.issuer, audience: client.id },
+    { issuer: MOCK_IDENTITY_SOURCE.issuer, audience: client.id },
   );
   const userinfo = (await (
     await fetch(discovery.userinfo_endpoint, {

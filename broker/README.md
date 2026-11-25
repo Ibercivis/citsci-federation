@@ -18,10 +18,10 @@ hostname means the same thing to a browser and to a container on the compose
 network, and `.env` says why.
 
 
-In `testing`, the one Identity the realm declares is `demo` / `demo-password`, and its
-sign-in page also offers the Mock Identity Sources, whose Identities are
-declared in `mock-source/mock.json` (password `mock`). In `production` and
-`demo` there are neither: Google and GitHub are the only Identity Sources.
+In `testing`, the one Identity the realm declares is `demo` / `demo-password`,
+and its sign-in page also offers the Mock Identity Sources, whose Identities are
+declared in `mock-identity-source/mock.json` (password `mock`). In `production`
+and `demo` there are neither: Google and GitHub are the only Identity Sources.
 
 Admin console: under the same origin, at `/admin` (`admin` / `admin`) — **for
 looking, not for changing.** A change made there is configuration no reviewer
@@ -46,12 +46,13 @@ Keycloak imports. That file exists only in the image, so nobody can edit it by
 hand. The same step turns `realm/user-profile.json` into the realm's user
 profile.
 
-**A layer only adds.** The testing layer may append entries to the base's
-lists. It may not set a value of the base, nor declare an entry under a key the
-base already uses: either would make the base mean something different
-depending on the mode, and `derive.ts` refuses both. A case that needs a
-variant of a base entry declares a new one beside it under its own key, the way
-`mock-affirming-a` and `mock-affirming-b` sit beside `mock`.
+**A layer only adds.** The testing layer may append entries to the base's lists.
+It may not set a value of the base, nor declare an entry under a key the base
+already uses: either would make the base mean something different depending on
+the mode, and `derive.ts` refuses both. A case that needs a variant of a base
+entry declares a new one beside it under its own key, the way
+`mock-identity-source-affirming-a` and `mock-identity-source-affirming-b` sit
+beside `mock-identity-source`.
 
 ### Which layer an addition belongs in
 
@@ -60,7 +61,7 @@ should, and they are the testing layer:
 
 - **A credential anybody can read here**, like the `demo` Identity's password.
 - **An Identity Source that vouches for nobody**, like the Mock Identity
-  Sources, which say whatever `mock-source/mock.json` tells them to.
+  Sources, which say whatever `mock-identity-source/mock.json` tells them to.
 - **A client registered so that it can be refused**, like
   `misconfigured-client`.
 - **A client standing in for a Brokered App**, like `brokered-app-public` and
@@ -288,11 +289,11 @@ that sends one (#28).
 
 It is declared in `realm/user-profile.json`, not in `realm/base.json`. The
 realm format has no field of its own for a user profile, only a `components`
-entry whose value is the whole profile as one escaped JSON string, which
-nobody can review. So the profile is kept readable in a file of its own, and
+entry whose value is the whole profile as one escaped JSON string, which nobody
+can review. So the profile is kept readable in a file of its own, and
 `realm/derive.ts` makes the `components` entry from it. If the profile ever
-stops being applied, the cases in `tests/mock-source.test.ts` notice: they stop
-on "Update Account Information".
+stops being applied, the cases in `tests/mock-identity-source.test.ts` notice:
+they stop on "Update Account Information".
 
 ### The Local Credential
 
@@ -469,7 +470,7 @@ later decides its own `trustEmail` (ADR-0004).
 
 ### The Mock Identity Source
 
-A test Identity Source this repository runs itself (`mock-source/`), so
+A test Identity Source this repository runs itself (`mock-identity-source/`), so
 that what a source says about an address can be decided by hand: per Identity,
 and separately for the ID token and for userinfo. Every registration is in the
 testing layer. Each is declared with a display name that says it is not for
@@ -480,31 +481,31 @@ source per Person, so a second Identity from the *same* source is refused by
 the schema — and ADR-0004 is entirely about what happens when a Person's
 second Identity arrives. One source cannot stage either half of it.
 
-- **`mock` affirms nothing**: `trustEmail` off, which is how a source arrives
-  whose word on an address the Broker has not been told to trust. Everything
-  through it is unverified, whatever its claims say.
-- **`mock-affirming-a` and `mock-affirming-b` affirm addresses**:
-  `trustEmail` on. Two, so that one Person can hold an Identity from each —
-  which is what both halves of the join need, the silent one and the one that
-  waits for the mail. `trustEmail` is set per source and never on the realm
-  (ADR-0004).
-- **`mock-affirming-named` affirms addresses and asks for `profile`**: the
-  only one that does, so an Identity can carry a name in its ID token. A and B
-  ask for `openid email`, which is all issue #28 asks Google for, so the
-  cases built on them see what a launch source sends.
-- **`mock-sending-no-address` is asked for `openid` alone**: so it releases
-  neither the address nor a verdict about one, and an Identity arriving through
-  it reaches `idp-review-profile` with the one required field empty. That is
-  the page issue #182 reports, and nothing else in the declaration reaches it
-  with no address at all. `trustEmail` is on, so a case through it cannot pass
-  merely because the Broker distrusts the source.
+- **`mock-identity-source` affirms nothing**: `trustEmail` off, which is how a
+  source arrives whose word on an address the Broker has not been told to trust.
+  Everything through it is unverified, whatever its claims say.
+- **`mock-identity-source-affirming-a` and `mock-identity-source-affirming-b`
+  affirm addresses**: `trustEmail` on. Two, so that one Person can hold an
+  Identity from each — which is what both halves of the join need, the silent
+  one and the one that waits for the mail. `trustEmail` is set per source and
+  never on the realm (ADR-0004).
+- **`mock-identity-source-affirming-named` affirms addresses and asks for
+  `profile`**: the only one that does, so an Identity can carry a name in its ID
+  token. A and B ask for `openid email`, which is all issue #28 asks Google for,
+  so the cases built on them see what a launch source sends.
+- **`mock-identity-source-sending-no-address` is asked for `openid` alone**: so
+  it releases neither the address nor a verdict about one, and an Identity
+  arriving through it reaches `idp-review-profile` with the one required field
+  empty. That is the page issue #182 reports, and nothing else in the
+  declaration reaches it with no address at all. `trustEmail` is on, so a case
+  through it cannot pass merely because the Broker distrusts the source.
 - **Userinfo is on**, because the reported advisory this source exists to
   stage is about the address being read from userinfo. On is enough: Keycloak
   calls it on every sign-in that returns an access token, names or not
   (`docs/notes/2026-11-23-trust-email-and-userinfo.md`).
-- **Its endpoints are `${MOCK_ISSUER}/…`**, written in by the image build, so
-  the address is declared once, in `.env`, and a testing build without it
-  fails.
+- **Its endpoints are `${MOCK_IDENTITY_SOURCE_ISSUER}/…`**, written in by the
+  image build, so the address is declared once, in `.env`, and a testing build
+  without it fails.
 
 ### Development credentials in the file
 

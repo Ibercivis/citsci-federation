@@ -87,7 +87,7 @@ services:
         BROKER_MODE: ${BROKER_MODE:?declare it in .env}
         # Written into the testing layer by the build, which refuses a
         # testing image without it. Production does not read it.
-        MOCK_ISSUER: ${MOCK_ISSUER:-}
+        MOCK_IDENTITY_SOURCE_ISSUER: ${MOCK_IDENTITY_SOURCE_ISSUER:-}
     # The channel for a value that must not be typed into a tracked file: the
     # launch Identity Sources' credentials, named in `.env.example`. It is
     # absent on most machines, and absent is not an error: each of those names
@@ -241,19 +241,19 @@ services:
 
   # The Mock Identity Source: a test Identity Source this repository
   # declares and runs itself, so that what a source says about an address can
-  # be decided by hand (mock-source/). It is not a launch source and not
-  # part of the Broker; it stands where Google and GitHub stand, outside it,
-  # and that is why it is not behind the proxy. Only in `testing`.
-  mock-source:
+  # be decided by hand (mock-identity-source/). It is not a launch source and
+  # not part of the Broker; it stands where Google and GitHub stand, outside
+  # it, and that is why it is not behind the proxy. Only in `testing`.
+  mock-identity-source:
     profiles: [testing]
     build:
       context: .
-      dockerfile: mock-source/Dockerfile
+      dockerfile: mock-identity-source/Dockerfile
     environment:
       # Not `:?`: Compose interpolates a service whose profile is off, and a
       # production Broker has no Mock Identity Source. The server refuses to
       # start without it, and the testing image refuses to build without it.
-      MOCK_ISSUER: ${MOCK_ISSUER:-}
+      MOCK_IDENTITY_SOURCE_ISSUER: ${MOCK_IDENTITY_SOURCE_ISSUER:-}
       BROKER_ISSUER: ${BROKER_ISSUER:?declare it in .env}
     ports:
       - "8090:8090"
@@ -262,7 +262,7 @@ services:
         aliases:
           # The other half of its issuer, as for the proxy above: `.env`
           # says why one name has to work on both sides.
-          - mock.localhost
+          - mock-identity-source.localhost
     healthcheck:
       test:
         [
