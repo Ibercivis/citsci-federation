@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { describe, expect, it } from "vitest";
 import { CONFIDENTIAL_CLIENT } from "./clients.ts";
+import { PERSON_IDENTIFIER } from "./broker.ts";
 import { attempt, authenticate } from "./brokered-app.ts";
 import { linkMailedTo, mailCountTo } from "./mailbox.ts";
 import {
@@ -26,6 +27,32 @@ import {
  * Broker, and `tests/verified-email-join.test.ts` holds that path for every
  * source.
  */
+
+describe("a GitHub Identity whose primary address GitHub verified", () => {
+  it("joins the Person who already holds that address", async () => {
+    const first = await authenticate(
+      CONFIDENTIAL_CLIENT,
+      arriving(AFFIRMING_SOURCE_A, "octocat-verified"),
+    );
+    expect(first.claims.sub).toMatch(PERSON_IDENTIFIER);
+
+    const throughGitHub = await authenticate(
+      CONFIDENTIAL_CLIENT,
+      arrivingThroughGitHub("github-octocat"),
+    );
+
+    expect(throughGitHub.claims.sub).toBe(first.claims.sub);
+  });
+
+  it("is a Person straight away at an address nobody holds", async () => {
+    const { claims } = await authenticate(
+      CONFIDENTIAL_CLIENT,
+      aGitHubNewcomer(true).arriving(),
+    );
+
+    expect(claims.sub).toMatch(PERSON_IDENTIFIER);
+  });
+});
 
 describe("a GitHub Identity whose primary address GitHub did not verify", () => {
   it("joins nobody who holds that address, and mails it instead", async () => {
