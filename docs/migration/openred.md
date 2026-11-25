@@ -53,8 +53,9 @@ Described by what each kind of account **has**, because that is what decides its
   it was already sent still works.
 - **A Google account of the application's own**, with no password. Moving it means the Person
   signing in through the Broker *with Google*, which is a different Identity and so a different
-  Person Identifier: nothing matches the two but the address, and an address is not an identity
-  (ADR-0002). Closing the application's Google route before such an account is linked locks it out.
+  Person Identifier: nothing matches the two but the address, which ADR-0018 makes enough once both
+  sides have confirmed it and the Person says so. Closing the application's Google route before such
+  an account is linked locks it out.
 - **An account that is also a device owner.** Every `Device` has an ingest token that authenticates
   a measurement upload without a session. Moving the account does not touch the token, which is what
   makes the move safe for data collection in the field — but see section 5.
@@ -73,8 +74,9 @@ One line each, each one testable.
   `EmailAddress` table, not on `auth_user.email`, so rows created outside allauth can collide — and
   this application's `CustomRegisterSerializer` checks `User.objects.filter(email=...)` rather than
   `EmailAddress`, so the two tables can disagree.
-- **R4** — Linking is an act of whoever owns both accounts, never a match on address alone. The
-  integration already refuses the address match; migration must not quietly reintroduce it.
+- **R4** — An account links only on ADR-0018's two conditions, and locally that is a verified
+  `account_emailaddress` row. `dj-rest-auth` refuses the link outright, so the switch is code on the
+  `ibercivis` path rather than a setting.
 - **R5** — `/admin/` keeps a way in for at least one account before any of this application's own
   passwords is removed.
 - **R6** — The Flutter client signs in through the Broker before `POST /dj-rest-auth/registration/`
@@ -110,7 +112,7 @@ With the consequence of the wrong order, which is the part that is forgettable.
 | Step | Owner |
 |---|---|
 | Confirming an address the Broker will hold | the Person, from their own mailbox |
-| Linking an existing account to a Person | the Person, signed in to both — no tooling for it yet |
+| Linking an existing account to a Person | the Person, answering on arrival (ADR-0018) |
 | The `requirements.txt` pin | the application maintainer, in a pull request against `main` |
 | Closing the registration endpoint | the application maintainer, once R6 holds |
 | Deciding `/admin/`'s way in | the application maintainer |
