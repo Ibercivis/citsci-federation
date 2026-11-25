@@ -108,8 +108,8 @@ with. It is the one thing the source remembers.
 
 GitHub is not an OpenID provider, and what it says about an address is not a
 claim: it is the `verified` field of each entry in its `/user/emails` list.
-Keycloak's own GitHub provider never reads that field. No OpenID mock can stage
-it, so `github.ts` serves the four endpoints that provider calls, under
+Keycloak's own GitHub provider never reads that field, which is why the Broker
+runs one of ours (`broker/verified-email/`). No OpenID mock can stage it, so `github.ts` serves the four endpoints that provider calls, under
 `/github`: authorize, token, `/user` and `/user/emails`.
 
 It is declared under `github` in `mock.json`: the alias it answers for, and

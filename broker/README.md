@@ -515,9 +515,10 @@ second Identity arrives. One source cannot stage either half of it.
   declaration reaches it with no address at all. `trustEmail` is on, so a case
   through it cannot pass merely because the Broker distrusts the source.
 - **`mock-identity-source-github` imitates GitHub**, at
-  `${MOCK_IDENTITY_SOURCE_ISSUER}/github`, with `trustEmail` on as GitHub will
-  be. It is not an OpenID source: what it says about an address is the
-  `verified` field of its `/user/emails` list (`mock-identity-source/README.md`).
+  `${MOCK_IDENTITY_SOURCE_ISSUER}/github`, through `citsci-github` with
+  `trustEmail` on, as `github` is in the base. It is not an OpenID source:
+  what it says about an address is the `verified` field of its `/user/emails`
+  list (`mock-identity-source/README.md`).
 - **Userinfo is on**, because the reported advisory this source exists to
   stage is about the address being read from userinfo. On is enough: Keycloak
   calls it on every sign-in that returns an access token, names or not
