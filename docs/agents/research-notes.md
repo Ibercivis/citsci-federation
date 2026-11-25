@@ -24,6 +24,14 @@ note only when one of its branches is yours.
   credentials, Identities and sessions, and changes no password and no address: those are
   `kc_action` browser steps. It cannot replace the Account Console from a server. Open it before
   automating a Person's credential operations or building a profile screen.
+- **Two compose files in one Dependabot entry**
+  (`2026-11-19-dependabot-one-entry-two-compose-files.md`) — one entry reads every compose file in
+  its directory into one dependency keyed by the bare image name, so `postgres` in `compose.yaml`
+  and in `compose.apps.yaml` is **one** dependency: one pull request rewrites both, each along its
+  own tag track, and `ignore: dependency-name` silences both. No single entry can express the
+  per-file split `issue #139` wanted — only `exclude-paths`, which drops a whole file, or giving a
+  file a directory of its own. Open it before changing `.github/dependabot.yml`, or when a bump you
+  expected never arrived.
 - **Repeated prose** (`2026-11-20-repeated-prose.md`) — seven consecutive words in two places is
   where prose written twice starts; shorter than that is the domain's own vocabulary.
   `scripts/check-repeated-prose.sh` prints those pairs, and is a reminder rather than a gate. Open
