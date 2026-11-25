@@ -54,7 +54,7 @@ Making the separate account anyway means storing it without its address or under
 break password reset and mail, and both are hand-written code in the application (ADR-0016).
 
 The cost: someone with an existing account cannot use the Broker at that application until migration
-links the two.
+links the two. ADR-0018 holds what that linking is, and no application has enabled it.
 
 ## Amended on 2026-11-20
 
