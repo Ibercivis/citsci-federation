@@ -16,6 +16,7 @@
 import { createHash, randomUUID } from "node:crypto";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import declaration from "./mock.json" with { type: "json" };
+import { refuseOverlappingPrefixes } from "./newcomers.ts";
 
 type GitHubIdentity =
   (typeof declaration.github.identities)[keyof typeof declaration.github.identities];
@@ -28,6 +29,10 @@ export type GitHubNewcomerShape =
 
 /** The GitHub newcomer shapes, by whether GitHub verified the address. */
 export const GITHUB_NEWCOMERS = declaration.github.newcomers;
+
+// Guarded on their own: these logins are served by this handler and never
+// reach the OpenID sources', so a GitHub prefix cannot collide with theirs.
+refuseOverlappingPrefixes(Object.values(GITHUB_NEWCOMERS));
 
 /**
  * A GitHub Identity the Broker has never met: any login under one of the
