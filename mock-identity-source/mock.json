@@ -1,14 +1,14 @@
 {
   "sources": [
-    "mock",
-    "mock-affirming-a",
-    "mock-affirming-b",
-    "mock-affirming-named",
-    "mock-sending-no-address"
+    "mock-identity-source",
+    "mock-identity-source-affirming-a",
+    "mock-identity-source-affirming-b",
+    "mock-identity-source-affirming-named",
+    "mock-identity-source-sending-no-address"
   ],
   "client": {
     "id": "citsci-broker",
-    "secret": "mock-source-development-secret"
+    "secret": "mock-identity-source-development-secret"
   },
   "newcomers": {
     "unverified": {

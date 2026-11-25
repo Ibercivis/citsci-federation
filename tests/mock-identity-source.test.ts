@@ -12,13 +12,13 @@ import { PERSON_IDENTIFIER } from "./broker.ts";
 import {
   AFFIRMING_SOURCE_A,
   AFFIRMING_SOURCE_B,
-  MOCK_SOURCES,
+  MOCK_IDENTITY_SOURCES,
   SCOPE_ASKING_FOR_NAMES,
   type MockIdentity,
   aRelocatingIdentity,
   arriving,
   signInAtMock,
-} from "./mock-source.ts";
+} from "./mock-identity-source.ts";
 
 /**
  * The Mock Identity Source: an Identity Source this repository declares
@@ -110,7 +110,7 @@ describe("a Person arriving through either of two sources", () => {
     expect(throughB.idToken.sub).toBe(throughA.idToken.sub);
 
     const address = String(throughA.idToken.email);
-    const sourceNames = MOCK_SOURCES.flatMap((source) => [
+    const sourceNames = MOCK_IDENTITY_SOURCES.flatMap((source) => [
       source.alias,
       source.name,
     ]);
@@ -120,8 +120,9 @@ describe("a Person arriving through either of two sources", () => {
         Object.keys(body).toSorted(),
       );
       for (const seen of [body, other]) {
-        // Without the address, wherever it appears: it is the Person's own,
-        // the same through both, and `mock` is part of its domain.
+        // Without the address, wherever it appears: it is the Person's own
+        // and the same through both. Its domain is `mock.test`, which an
+        // alias could collide with.
         const text = JSON.stringify(seen).replaceAll(address, "");
         for (const name of sourceNames) {
           expect(text, place).not.toContain(name);
@@ -142,7 +143,7 @@ describe("the Mock Identity Source on the Broker's sign-in page", () => {
       /mock/i.test(text),
     );
 
-    expect(offered).toHaveLength(MOCK_SOURCES.length);
+    expect(offered).toHaveLength(MOCK_IDENTITY_SOURCES.length);
     for (const name of offered) expect(name).toMatch(/not for launch/i);
   });
 
@@ -156,7 +157,7 @@ describe("the Mock Identity Source on the Broker's sign-in page", () => {
 
     const offered = linkTextsOn(signInPage?.html ?? "");
 
-    for (const source of MOCK_SOURCES) {
+    for (const source of MOCK_IDENTITY_SOURCES) {
       expect(offered.some((text) => text.includes(source.name))).toBe(true);
     }
   });
@@ -197,9 +198,10 @@ describe("the Mock Identity Source says what it is told to", () => {
   });
 
   it("puts a name in the ID token when asked for profile, and only then", async () => {
-    // Asked for what `mock-affirming-named` asks for, and then for what the
-    // other sources ask for. Without the second half a source that always sent
-    // names would let every case pass as the named one.
+    // Asked for what `mock-identity-source-affirming-named` asks for, and
+    // then for what the other sources ask for. Without the second half a
+    // source that always sent names would let every case pass as the named
+    // one.
     const named = await signInAtMock(
       "advisory-split-named",
       SCOPE_ASKING_FOR_NAMES,

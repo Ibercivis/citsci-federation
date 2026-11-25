@@ -90,14 +90,14 @@ written to be thrown away.
 
 `compose.yaml` declares the Broker — the reverse proxy, the OpenID provider
 behind it, and that provider's own database — and the Mock Identity Source
-outside it, in [`mock-source/`](mock-source/), which exists so the tests can
-decide what a source says about an address. None of it is a launch source. One
-server stands behind three Identity Sources there, because a Person cannot hold
-two Identities from the same source, and the rule under test is about their
-second one. The proxy is in
-front **in every environment, including local** — the reason is parity of
-form, since the cookie, TLS, redirect-URI and CORS failures that depend on
-deployment shape otherwise appear for the first time in production (ADR-0001).
+outside it, in [`mock-identity-source/`](mock-identity-source/), which exists so
+the tests can decide what a source says about an address. None of it is a launch
+source. One server stands behind three Identity Sources there, because a Person
+cannot hold two Identities from the same source, and the rule under test is
+about their second one. The proxy is in front **in every environment, including
+local** — the reason is parity of form, since the cookie, TLS, redirect-URI and
+CORS failures that depend on deployment shape otherwise appear for the first
+time in production (ADR-0001).
 
 `compose.apps.yaml` declares how each Brokered App runs **in the Composition**, and
 that is not the same as declaring that application's infrastructure: its own

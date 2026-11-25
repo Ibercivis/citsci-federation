@@ -147,7 +147,7 @@ jobs:
       # Source's is the other half of a refusal that happened there.
       - name: The Broker's and the Mock Identity Source's logs, when the suite failed
         if: failure()
-        run: docker compose logs keycloak mock-source
+        run: docker compose logs keycloak mock-identity-source
 
   # The base alone, as a real deployment would run it. It is the only run that
   # shows the base starts without the testing layer, and the only one where

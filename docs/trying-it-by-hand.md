@@ -109,11 +109,12 @@ instead of registered.
 
 ### 3. A Person arriving from an Identity Source
 
-The same URL, but instead of typing a password choose **Mock source**: `mock-verified` / `mock`.
+The same URL, but instead of typing a password choose **Mock Identity Source**: `mock-verified` /
+`mock`.
 
-That source is a server this repository runs ([`mock-source/`](../mock-source/)) so that the tests
-can decide what a source says about an address. It is not a launch source, and it starts only in
-`testing`: in `demo` the sign-in page has no **Mock source**.
+That source is a server this repository runs ([`mock-identity-source/`](../mock-identity-source/))
+so that the tests can decide what a source says about an address. It is not a launch source, and it
+starts only in `testing`: in `demo` the sign-in page has no **Mock Identity Source**.
 
 ### 4. The Person, as the Broker holds them
 
@@ -121,8 +122,8 @@ http://broker.localhost:8080/realms/citsci/account, as whoever step 2 or 3 left 
 
 The only screen in the composition that shows the **Person** rather than one application's account:
 the profile, the sessions, and — for a Person who arrived from an Identity Source — the source they
-are linked to. Step 3's `mock-verified` is linked to `mock`; `demo` is not linked to anything,
-because `demo` signs in with a local credential.
+are linked to. Step 3's `mock-verified` is linked to `mock-identity-source`; `demo` is not linked to
+anything, because `demo` signs in with a local credential.
 
 It is Keycloak's own screen, not ours. Nothing in the pilot links to it and nothing depends on it,
 but it is the shortest answer to "so what does the Broker actually know about me".

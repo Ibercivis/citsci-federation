@@ -90,14 +90,15 @@ updates:
           - minor
           - patch
 
-  # The base images in `broker/Dockerfile` and `mock-source/Dockerfile`.
+  # The base images in `broker/Dockerfile` and
+  # `mock-identity-source/Dockerfile`.
   #
   # `directories`, because this ecosystem reads the folder it is pointed at and
   # not the tree beneath it: one entry at `/` would read neither file.
   - package-ecosystem: docker
     directories:
       - "/broker"
-      - "/mock-source"
+      - "/mock-identity-source"
     schedule:
       interval: weekly
     groups:

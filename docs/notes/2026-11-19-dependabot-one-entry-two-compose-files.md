@@ -89,7 +89,7 @@ about the failure mode failed verification, and the `target-branch` workaround c
 #1778 was refuted outright. A throwaway public repo would settle it in one commit.
 
 `directories` expands to one job per directory, which is why the `docker` entry over `/broker` and
-`/mock-source` bumps the `node` pin they share twice.
+`/mock-identity-source` bumps the `node` pin they share twice.
 
 ## Still open: `postgres` produced no pull request at all
 

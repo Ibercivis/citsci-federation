@@ -40,9 +40,10 @@ const identityNamed = (username: string): DeclaredIdentity | undefined =>
 const lastSignedInAs = new Map<string, string>();
 
 /** What each scope releases. The grant below gives every one of them, so the
- *  scopes are spelled here once. `profile` is what `mock-affirming-named`
- *  asks for, the way a launch source would the day the Broker wants names;
- *  it releases only what an Identity declares. */
+ *  scopes are spelled here once. `profile` is what
+ *  `mock-identity-source-affirming-named` asks for, the way a launch source
+ *  would the day the Broker wants names; it releases only what an Identity
+ *  declares. */
 const CLAIMS = {
   openid: ["sub"],
   email: ["email", "email_verified"],
@@ -56,7 +57,7 @@ function required(name: string): string {
   return value;
 }
 
-const ISSUER = required("MOCK_ISSUER");
+const ISSUER = required("MOCK_IDENTITY_SOURCE_ISSUER");
 /**
  * The one client it serves is the Broker, which calls back at a path per
  * Identity Source alias. This server stands behind every alias `mock.json`
@@ -95,7 +96,9 @@ function derivedSigningKey(seed: string): webcrypto.JsonWebKey {
   };
 }
 
-const signingKey = derivedSigningKey("mock-source-development-signing-key");
+const signingKey = derivedSigningKey(
+  "mock-identity-source-development-signing-key",
+);
 
 const provider = new Provider(ISSUER, {
   clients: [
@@ -108,7 +111,7 @@ const provider = new Provider(ISSUER, {
     },
   ],
   jwks: { keys: [{ ...signingKey, alg: "ES256", use: "sig" }] },
-  cookies: { keys: ["mock-source-development-cookie-key"] },
+  cookies: { keys: ["mock-identity-source-development-cookie-key"] },
   claims: CLAIMS,
   // By default the ID token carries only `sub` when an access token is issued
   // alongside it, and the scope's claims are left to userinfo. Off, so the ID

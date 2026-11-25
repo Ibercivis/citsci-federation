@@ -2,7 +2,7 @@
 # one dependency is pinned in the root package.json and lockfile rather than
 # in a second pair of its own that could drift from the first.
 FROM node:26.13.1-alpine
-WORKDIR /mock-source
+WORKDIR /mock-identity-source
 # Node stopped shipping Corepack with the runtime after 24, so it is installed
 # here. It reads `packageManager` from the root package.json, which stays the
 # only place pnpm's version is written; `npm install -g pnpm@<version>` would
@@ -12,7 +12,8 @@ COPY package.json pnpm-lock.yaml ./
 # `--ignore-scripts` because the root's `prepare` installs git hooks, which
 # have no business in an image and whose tool is a devDependency.
 RUN pnpm install --prod --frozen-lockfile --ignore-scripts
-COPY mock-source/server.ts mock-source/newcomers.ts mock-source/mock.json ./
+COPY mock-identity-source/server.ts mock-identity-source/newcomers.ts \
+  mock-identity-source/mock.json ./
 USER node
 # Node runs TypeScript itself by stripping the types: nothing to compile.
 CMD ["node", "server.ts"]

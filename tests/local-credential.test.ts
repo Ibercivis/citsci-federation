@@ -29,7 +29,7 @@ import {
   AFFIRMING_SOURCE_A,
   AFFIRMING_SOURCE_B,
   arriving,
-} from "./mock-source.ts";
+} from "./mock-identity-source.ts";
 
 /**
  * The Local Credential (ADR-0005): an email address and a password the Broker

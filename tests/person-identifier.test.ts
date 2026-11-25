@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { CLIENT_TYPES, CONFIDENTIAL_CLIENT, PUBLIC_CLIENT } from "./clients.ts";
 import { authenticate, everyPlace, introspect } from "./brokered-app.ts";
 import { PERSON_IDENTIFIER } from "./broker.ts";
-import { AFFIRMING_SOURCE_A, arriving } from "./mock-source.ts";
+import { AFFIRMING_SOURCE_A, arriving } from "./mock-identity-source.ts";
 
 /*
  * The Person Identifier (ADR-0002) is all a Brokered App ever stores about

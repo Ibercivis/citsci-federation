@@ -25,7 +25,7 @@ omit `email_verified`, or about to rely on a Person's stored `emailVerified`.
 - The address and the verdict are first read from the ID token.
 - Userinfo is then called whenever `disableUserInfo` is off, a userinfo URL is set and an access
   token came back. Names in the ID token do not prevent it, and no version back to 18.0.0 had such a
-  condition. `mock-source/README.md` used to say otherwise.
+  condition. `mock-identity-source/README.md` used to say otherwise.
 - If userinfo carries `email`, both `email` and `email_verified` are replaced by userinfo's. An absent
   `email_verified` there becomes `null`, not the ID token's value. Names are replaced the same way.
 - The verdict goes into the brokered context as `email_verified`, which is what our condition reads.
@@ -45,10 +45,10 @@ Broker's database:
 
 | Identity | Source | ID token | userinfo | Stored |
 | --- | --- | --- | --- | --- |
-| `mock-split` (17 Nov) | `mock` | `split@`, verified | `shared@`, unverified | `shared@`, unverified |
-| probe, named | `mock-affirming-named` | `probe-decoy@`, verified, with `name` and `preferred_username` | `probe-named@`, unverified | `probe-named@`, unverified, no name |
-| probe, silent, before PR #155 | `mock-affirming-b` | `probe-silent@`, **unverified** | `probe-silent@`, nothing said | `probe-silent@`, **verified** |
-| probe, silent, after PR #155 | `mock-affirming-b` | the same | the same | no address, unverified, `UPDATE_EMAIL` pending |
+| `mock-split` (17 Nov) | `mock-identity-source` | `split@`, verified | `shared@`, unverified | `shared@`, unverified |
+| probe, named | `mock-identity-source-affirming-named` | `probe-decoy@`, verified, with `name` and `preferred_username` | `probe-named@`, unverified | `probe-named@`, unverified, no name |
+| probe, silent, before PR #155 | `mock-identity-source-affirming-b` | `probe-silent@`, **unverified** | `probe-silent@`, nothing said | `probe-silent@`, **verified** |
+| probe, silent, after PR #155 | `mock-identity-source-affirming-b` | the same | the same | no address, unverified, `UPDATE_EMAIL` pending |
 
 The named row is the experiment issue #24 asked for: a name in the ID token, and userinfo still read.
 The silent rows are the gap, and what `WithholdUnverifiedEmail` makes of it.
@@ -57,8 +57,8 @@ On 26.7.1, with PR #155's withholding rule switched off so that what Keycloak st
 
 | Identity | Source | ID token | userinfo | Stored |
 | --- | --- | --- | --- | --- |
-| probe, split | `mock-affirming-b` | `probe-decoy-old@`, verified | `probe-split-old@`, **unverified** | `probe-split-old@`, **verified**; signed in |
-| probe, silent | `mock-affirming-b` | `probe-silent-old@`, unverified | `probe-silent-old@`, nothing said | `probe-silent-old@`, unverified, `VERIFY_EMAIL` pending |
+| probe, split | `mock-identity-source-affirming-b` | `probe-decoy-old@`, verified | `probe-split-old@`, **unverified** | `probe-split-old@`, **verified**; signed in |
+| probe, silent | `mock-identity-source-affirming-b` | `probe-silent-old@`, unverified | `probe-silent-old@`, nothing said | `probe-silent-old@`, unverified, `VERIFY_EMAIL` pending |
 
 The first row is the advisory. The second is why the gap is the fix's: before it, the ID token's
 verdict survived a silent userinfo.
