@@ -154,29 +154,71 @@ done
 # through the proxy. A 502 means that application is not up; a 400 usually
 # means it refused the hostname, which is the one failure this composition's
 # shape exists to surface early.
+#
+# The verdict rests on the second argument rather than on the status code. A
+# proxy left serving a previous branch's Caddyfile routed every hostname to the
+# Broker, which answered each one with a 302 to its admin console — and a check
+# that read the code alone reported a composition where every address answered.
+# Nothing was wrong with those codes. They were just not the applications'.
+#
+# So each address carries a string only its own application could have put in
+# the answer. All eight were read off the running composition (`issue #201`),
+# not off a template: a marker nobody has seen in a response is the same bet
+# this check exists to stop taking.
 echo
 echo "== every address, read back through the proxy"
 check() {
-  # `-w '%{http_code}'` prints 000 of its own accord when the connection never
-  # happened, and curl exits non-zero as well — so a fallback that echoed 000
-  # too would make `000000`, which matches nothing below and reads as ok. This
-  # one only covers curl failing to run at all.
-  code=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 15 "$1") || code=${code:-000}
-  case "$code" in
-    000 | 400 | 502 | 503) failed=1; verdict="FAILED" ;;
-    *) verdict="ok" ;;
+  url=$1
+  marker=$2
+
+  # curl appends `%{http_code}` to the body, and that code is three digits
+  # always, so the tail of this is the code and the rest is the answer. curl
+  # prints 000 of its own accord when the connection never happened, which is
+  # why the fallback only has to cover curl failing to run at all.
+  #
+  # No `-L`. A redirect is not the page that was asked for, and the case that
+  # made this check necessary was a 302: following it would have fetched the
+  # Broker's own page and failed on the marker anyway, one request later and
+  # one step further from the cause.
+  answer=$(curl -sS --max-time 15 -w '%{http_code}' "$url" 2>/dev/null) || answer=${answer:-000}
+  code=${answer#"${answer%???}"}
+  body=${answer%???}
+
+  case "$body" in
+    *"$marker"*) verdict="ok" ;;
+    *) failed=1; verdict="FAILED" ;;
   esac
-  printf '%-7s %s  %s\n' "$verdict" "$code" "$1"
+
+  printf '%-7s %s  %s\n' "$verdict" "$code" "$url"
+  [ "$verdict" = ok ] || printf '             nothing in that answer said: %s\n' "$marker"
 }
 
-check "$BROKER_ISSUER/.well-known/openid-configuration"
-check "$LOSTATNIGHT_BASE_URL/"
-check "$GEONITY_API_BASE_URL/admin/login/"
-check "$GEONITY_WEB_BASE_URL/"
-check "$GEONITY_ADMIN_BASE_URL/"
-check "$OPENRED_API_BASE_URL/admin/login/"
-check "$OPENRED_WEB_BASE_URL/"
-check "$MAIL_BASE_URL/"
+# The realm announces the issuer it was configured with (ADR-0001), so the
+# configured value is the marker. No other realm can claim it, and a Keycloak
+# answering from somewhere else would announce its own.
+check "$BROKER_ISSUER/.well-known/openid-configuration" "\"issuer\":\"$BROKER_ISSUER\""
+
+check "$LOSTATNIGHT_BASE_URL/" '<title>Lost At Night</title>'
+
+# `/api/schema/` rather than `/admin/login/`, for both Django applications:
+# neither has customised the admin, so those two login pages are the same page
+# and a marker read off one would pass for the other. Each schema carries the
+# title that application set in its own settings, and generating one imports
+# every serializer and URLconf it has — a better answer to "is it up" than a
+# login form, which needs nothing but Django.
+check "$GEONITY_API_BASE_URL/api/schema/" 'title: citsci-api'
+check "$OPENRED_API_BASE_URL/api/schema/" 'title: OpenRed API'
+
+# The two Geonity front-ends are one template used twice: same title, same
+# `/src/main.tsx`, 610 and 632 bytes of difference-free HTML but for the icon.
+# That line is therefore the marker, and these two are the weakest of the
+# eight — a change of favicon fails this check rather than passing it, and the
+# fix is the line below.
+check "$GEONITY_WEB_BASE_URL/" 'href="/favicon.webp"'
+check "$GEONITY_ADMIN_BASE_URL/" 'href="/favicon.png"'
+
+check "$OPENRED_WEB_BASE_URL/" '<title>Open-red</title>'
+check "$MAIL_BASE_URL/" '<title>Mailpit</title>'
 
 echo
 echo "The Broker's admin console: ${BROKER_ISSUER%/realms/*}/admin/ (admin / admin)"
