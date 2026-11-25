@@ -561,18 +561,25 @@ export async function redeemCode(
   form: Record<string, string>,
   clientAuth: ClientAuth = "in the form",
 ): Promise<TokenResponse> {
-  const inTheHeader = Boolean(client.secret) && clientAuth === "in the header";
+  const { id, redirectUri, secret } = client;
+  // Where the secret goes, decided once: a client without one authenticates
+  // nowhere, and a client with one sends it in whichever place it was asked for.
+  const authenticating =
+    secret === undefined
+      ? { form: {}, header: undefined }
+      : clientAuth === "in the header"
+        ? { form: {}, header: { id, secret } }
+        : { form: { client_secret: secret }, header: undefined };
+
   return postToken(
     {
       grant_type: "authorization_code",
-      client_id: client.id,
-      redirect_uri: client.redirectUri,
-      ...(client.secret && !inTheHeader
-        ? { client_secret: client.secret }
-        : {}),
+      client_id: id,
+      redirect_uri: redirectUri,
+      ...authenticating.form,
       ...form,
     },
-    inTheHeader ? { id: client.id, secret: client.secret! } : undefined,
+    authenticating.header,
   );
 }
 
