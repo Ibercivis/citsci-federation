@@ -13,7 +13,10 @@ import { configured } from "./broker.ts";
  *
  * **No screen is rendered here.** This suite fetches documents and calls APIs;
  * it runs no JavaScript, so what it holds is the application's own sign-in
- * contract through its own origin, not the page a Person would see. Asserting
+ * contract through its own origin, not the page a Person would see. The one
+ * thing it holds about the Broker is the field seam 3 reads the Person
+ * Identifier from, which is served whether or not a Broker account is behind
+ * it. Asserting
  * the page is seam 3's job (`issue #34`). The two failures that need a browser
  * — the Google provider throwing on mount, the map with no basemap — are
  * recorded in `docs/trying-it-by-hand.md` and checked by hand.
@@ -42,6 +45,25 @@ async function answering(url: string): Promise<boolean> {
   return fetch(url, { redirect: "manual", signal: AbortSignal.timeout(5_000) })
     .then((response) => response.status < 500)
     .catch(() => false);
+}
+
+/** Signs the seeded Person in through the front end's own origin and hands
+ *  back the credential that follows.
+ *
+ *  Not a bearer token: that application sets `USE_JWT` off and keeps DRF's own
+ *  token model, so the credential is `key` and the scheme is `Token`. The front
+ *  end reads it the same way (`src/services/api.ts`). */
+async function signIn(): Promise<string> {
+  const response = await fetch(`${WEB}/dj-rest-auth/login/`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(SEEDED_PERSON),
+  });
+  expect(response.status).toBe(200);
+
+  const { key } = (await response.json()) as { key?: string };
+  if (!key) throw new Error("the sign-in answered 200 and carried no token");
+  return key;
 }
 
 const composition = await answering(`${API}/admin/login/`);
@@ -80,18 +102,7 @@ describe.skipIf(!composition)("OpenRed's React front end", () => {
     });
     expect(anonymous.status).toBe(401);
 
-    const signIn = await fetch(`${WEB}/dj-rest-auth/login/`, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify(SEEDED_PERSON),
-    });
-    expect(signIn.status).toBe(200);
-
-    // Not a bearer token: that application sets `USE_JWT` off and keeps DRF's
-    // own token model, so the credential is `key` and the scheme is `Token`.
-    // The front end reads it the same way (`src/services/api.ts`).
-    const { key } = (await signIn.json()) as { key?: string };
-    expect(key).toBeTruthy();
+    const key = await signIn();
 
     const tracks = await fetch(`${WEB}${path}`, {
       headers: { accept: "application/json", authorization: `Token ${key}` },
@@ -99,5 +110,30 @@ describe.skipIf(!composition)("OpenRed's React front end", () => {
 
     expect(tracks.status).toBe(200);
     expect((await tracks.json()) as unknown[]).not.toHaveLength(0);
+  });
+
+  it("serves the field seam 3 reads the Person Identifier from", async () => {
+    const key = await signIn();
+
+    const me = await fetch(`${WEB}/dj-rest-auth/user/`, {
+      headers: { accept: "application/json", authorization: `Token ${key}` },
+    });
+    expect(me.status).toBe(200);
+
+    // The endpoint that application's own profile screen calls, which is where
+    // seam 3 will read the identifier (`issue #34`). This Person existed before
+    // the pilot, so hers is null — the value belongs to an arrival through the
+    // Broker, and that one is a browser's to drive. What a Person arriving here
+    // cannot show, the field being served at all can: drop it from the
+    // serializer and seam 3 has nothing to read.
+    //
+    // It needs the application half of `issue #30` on `federation`, which is
+    // the branch `scripts/checkout-apps.sh` builds. Until that merges this is
+    // the one case here that an un-integrated OpenRed fails — which is the
+    // merge order this repository already owes the applications, asserted
+    // rather than written down.
+    const person = (await me.json()) as Record<string, unknown>;
+    expect(person).toHaveProperty("ibercivis_account_id");
+    expect(person.ibercivis_account_id).toBeNull();
   });
 });
