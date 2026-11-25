@@ -89,3 +89,11 @@ note only when one of its branches is yours.
   ADR-0005 promises, and no shipped condition can see whether a Person holds a password or arrived
   through a source. Open it before declaring a reset-credentials flow in `broker/realm/`, before
   costing a condition or required action of our own, or to write the case `issue #124` asks for.
+- **A CONDITIONAL `reset-password`**
+  (`2026-11-25-a-conditional-reset-password-turns-recovery-into-a-mail-link-sign-in.md`) — measured,
+  and the note above was right: the import keeps CONDITIONAL while the Admin API still refuses to
+  offer it, and recovery for a Person holding no password then serves no page and sends them back to
+  the application signed in, writing nothing to the Person at all. Recovery for a Person who holds a
+  password is unchanged. So the lever converts the path to a Local Credential into a passwordless
+  sign-in by mail link rather than closing it. Open it for the declaration to transcribe, or to write
+  the case `issue #124` asks for.

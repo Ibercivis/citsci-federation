@@ -15,7 +15,9 @@ Person holding none would be returned to the application signed in, with no page
 credential written. The Account Console's button has no declared lever but the realm-wide one
 already ruled out, and `resetPasswordAllowed: false` takes recovery from every Person, including the
 Local Credential holders ADR-0005 commits recovery to. Anything narrower than those three is code of
-ours, in a jar this repository already builds.
+ours, in a jar this repository already builds. Everything in this paragraph about the CONDITIONAL
+lever was measured the next day and held:
+`2026-11-25-a-conditional-reset-password-turns-recovery-into-a-mail-link-sign-in.md`.
 
 **Read on only if** you are writing the case issue #124 asks for, declaring a reset-credentials flow
 in `broker/realm/`, costing a condition or a required action of our own, or deciding what ADR-0005
@@ -85,8 +87,9 @@ and the Person holding no password, nothing adds `UPDATE_PASSWORD`, `ResetPasswo
 `super.authenticationComplete()`. The existing note already measured that this flow returns an
 authorization code, and that `ResetCredentialEmail`'s `force-login` default does not ask a brokered
 Person to sign in again. So the predicted result is: mail arrives, link clicked, browser returns to
-the application authenticated, no page, no credential. **Unmeasured.** It is one run of the existing
-recovery case against a realm carrying the flow, watching whether the `password-new` page appears.
+the application authenticated, no page, no credential. **Measured, and that is what happens**
+(`2026-11-25-a-conditional-reset-password-turns-recovery-into-a-mail-link-sign-in.md`), which also
+has the declaration to transcribe.
 
 **The built-in flow stays in the realm.** `importAuthenticationFlows` calls
 `DefaultAuthenticationFlows.migrateFlows` at `:1522`, before it reads the bindings, and that method
@@ -199,13 +202,13 @@ ledger — it is one artefact, in this repository, covered by this repository's 
 ADR-0016 asks for still applies to the first criterion: a lever that leaves the mail link signing
 People in has not improved security, it has moved what the link does.
 
-## Unmeasured, and what would settle each
+## Measured since, and what is left
 
-- Whether a CONDITIONAL `reset-password` execution survives a realm import and reads back as
-  CONDITIONAL from `GET /admin/realms/citsci/authentication/flows/<alias>/executions`. The code says
-  yes at every step; nobody has run it.
-- Whether the mail link then signs a passwordless Person in with no page. Predicted above.
-- Whether a `hardcoded-attribute-idp-mapper` attribute survives with no `unmanagedAttributePolicy`
-  declared, on the create path and on a FORCE re-arrival.
+Both claims about the CONDITIONAL lever — that the import keeps it and reads it back, and that the
+mail link then signs a passwordless Person in with no page — were measured on 25 November 2026 and
+held, `issue #213`:
+`2026-11-25-a-conditional-reset-password-turns-recovery-into-a-mail-link-sign-in.md`.
 
-The first two are `issue #213`, which the shape of the decision in `issue #124` now rests on.
+Still unmeasured: whether a `hardcoded-attribute-idp-mapper` attribute survives with no
+`unmanagedAttributePolicy` declared, on the create path and on a FORCE re-arrival. One sign-in
+through the Mock Identity Source and one `GET /admin/realms/citsci/users/<id>` settles it.
