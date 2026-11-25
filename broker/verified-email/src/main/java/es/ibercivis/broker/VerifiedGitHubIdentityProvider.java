@@ -1,6 +1,7 @@
 package es.ibercivis.broker;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import org.jboss.logging.Logger;
 import org.keycloak.broker.oidc.OAuth2IdentityProviderConfig;
 import org.keycloak.broker.provider.BrokeredIdentityContext;
 import org.keycloak.http.simple.SimpleHttp;
@@ -34,6 +35,15 @@ import org.keycloak.social.github.GitHubIdentityProvider;
  */
 public class VerifiedGitHubIdentityProvider extends GitHubIdentityProvider {
 
+  /**
+   * Says why a list could not be read. Unverified is the right answer then,
+   * but its only symptom is every GitHub arrival being mailed, which a wrong
+   * {@code apiUrl} or a token without {@code user:email} would cause too. The
+   * address is never logged: it is personal data, and the URL and the status
+   * are what the diagnosis needs.
+   */
+  private static final Logger LOG = Logger.getLogger(VerifiedGitHubIdentityProvider.class);
+
   public VerifiedGitHubIdentityProvider(
       KeycloakSession session, OAuth2IdentityProviderConfig config) {
     super(session, config);
@@ -61,6 +71,9 @@ public class VerifiedGitHubIdentityProvider extends GitHubIdentityProvider {
             .header("Accept", "application/json")
             .asResponse()) {
       if (response.getStatus() != 200) {
+        LOG.warnf(
+            "GitHub's email list at %s answered %d, so the address counts as unverified.",
+            emailUrl, response.getStatus());
         return false;
       }
       for (JsonNode entry : response.asJson()) {
@@ -70,6 +83,10 @@ public class VerifiedGitHubIdentityProvider extends GitHubIdentityProvider {
       }
       return false;
     } catch (Exception unreadable) {
+      LOG.warnf(
+          unreadable,
+          "GitHub's email list at %s could not be read, so the address counts as unverified.",
+          emailUrl);
       return false;
     }
   }
