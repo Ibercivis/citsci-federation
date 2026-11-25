@@ -41,6 +41,15 @@ request. `.github/workflows/pr.yaml` runs it and
 `scripts/check-pr-metadata.sh` is the check itself, runnable by hand with a
 title and a body as its first two arguments.
 
+The `federation` drift check is the third, and its input is five other
+repositories' branches. Nothing it reads moves when this repository does, so as
+a `pre-push` gate it would fail for work somebody else did and pass on the week
+nobody pushed here — the week the number matters.
+`.github/workflows/federation-drift.yaml` runs it weekly,
+`scripts/check-federation-drift.sh` is the check, and
+`pnpm federation-drift:check` runs it by hand. It deletes itself with the
+pilot: `docs/verification.md` says when and the script says how.
+
 ## Dependency versions are exact
 
 Every version in `package.json` is a single version, not a range. Install with

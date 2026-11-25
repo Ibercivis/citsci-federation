@@ -18,28 +18,19 @@
 
 set -eu
 
-# One line per repository the composition builds from: the folder under apps/,
-# then the remote. The folder is named after the repository rather than after
-# the application, because what lands in it is that repository and `git` is run
-# in it by hand afterwards.
-#
-# compose.apps.yaml builds from these paths, and the two lists have to agree:
-# a repository added here without a service there is a slow clone nobody uses.
-APPS="
-gdalface|https://github.com/Ibercivis/gdalface.git
-citsci-api|https://github.com/Ibercivis/citsci-api.git
-geonity|https://github.com/Ibercivis/Geonity.git
-openred|https://github.com/Ibercivis/OpenRed.git
-openred-react|https://github.com/Ibercivis/openred-react.git
-"
-
 BRANCH=federation
 
 root=$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)
 mkdir -p "$root/apps"
 
-echo "$APPS" | while IFS='|' read -r folder remote; do
-  [ -n "$folder" ] || continue
+# Which repositories, and from where, is `scripts/apps.list` — one list, read
+# here and by `check-federation-drift.sh`. That file says why it is a file.
+#
+# It arrives on fd 3 rather than on stdin, because `git` below is then unable
+# to consume the rest of it. What that would cost is a repository skipped, with
+# nothing said.
+while IFS='|' read -r folder remote <&3; do
+  case "$folder" in '' | '#'*) continue ;; esac
   path="$root/apps/$folder"
 
   if [ ! -d "$path/.git" ]; then
@@ -74,4 +65,4 @@ echo "$APPS" | while IFS='|' read -r folder remote; do
   else
     echo "apps/$folder: $BRANCH moved to $(git -C "$path" rev-parse --short HEAD) — rebuild with --build"
   fi
-done
+done 3<"$root/scripts/apps.list"

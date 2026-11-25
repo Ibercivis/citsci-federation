@@ -1,0 +1,24 @@
+# Every repository the Brokered Composition builds from: the folder under
+# apps/, then the remote.
+#
+# One list and two readers. `checkout-apps.sh` clones each repository at its
+# `federation` branch; `check-federation-drift.sh` asks GitHub how far that
+# branch has fallen behind the repository's own default branch. Written out
+# twice, the two would disagree the day a sixth application is integrated, and
+# the one that disagreed silently would be the check.
+#
+# The folder is named after the repository rather than after the application,
+# because what lands in it is that repository and `git` is run in it by hand
+# afterwards.
+#
+# compose.apps.yaml builds from these paths, and the two lists have to agree: a
+# repository added here without a service there is a slow clone nobody uses.
+#
+# A reader skips a line that opens with `#` and a line that is empty. Nothing
+# else is a comment: the second field is a URL, and `#` inside one is part of
+# it.
+gdalface|https://github.com/Ibercivis/gdalface.git
+citsci-api|https://github.com/Ibercivis/citsci-api.git
+geonity|https://github.com/Ibercivis/Geonity.git
+openred|https://github.com/Ibercivis/OpenRed.git
+openred-react|https://github.com/Ibercivis/openred-react.git

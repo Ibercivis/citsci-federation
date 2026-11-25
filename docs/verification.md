@@ -17,6 +17,7 @@ with itself. `CODING_STANDARDS.md` holds the two rules no tool enforces.
 | Does the `gh pr create` hook refuse what it is for, and nothing else? | its own cases | `pnpm require-issue-link:check` | `scripts/hooks/require-issue-link.sh` |
 | Is every file's licence declared? | `reuse lint`, from a container | `pnpm reuse:lint` | `REUSE.toml`, ADR-0013 |
 | Does a sign-in actually work? | Vitest against a real Broker | `pnpm broker:up && pnpm test` | `compose.yaml`, ADR-0010 |
+| How far behind is each `federation` branch? | `gh`, over GitHub's compare API | `pnpm federation-drift:check` | `scripts/check-federation-drift.sh` |
 
 `pnpm check` is the first five, and is the only definition of "checked". The licence check is the
 one that needs Docker running, which makes `pnpm check` need it too; ADR-0013 says why it is worth
@@ -36,6 +37,7 @@ independently — which is why its own `7.0.x` is not a claim about ours.
 | `pre-commit` | format + lint, staged files only, **checks and never fixes** | `--no-verify` |
 | `pre-push` | `pnpm check`; the suite too, when a Broker is up | `--no-verify` |
 | CI | `pnpm check`, `actionlint` and `shellcheck`; then its own Broker and the suite | none for the developer |
+| the weekly cron | `federation-drift`, Mondays at 07:00 UTC, and on demand | it gates nothing: what it buys is a number read on a cadence |
 | the merge button | the ruleset on `main`: a pull request, one approving review, `check`, `tests`, `base` and `pr` green | three named people, on a pull request only |
 
 CI cannot be skipped the way a hook can, and since 13 November 2026 **a red CI stops the merge**: a
@@ -52,6 +54,22 @@ reference in one of them or the words `No ticket`. The rules live in
 `scripts/check-pr-metadata.sh`, each next to the reason it exists. Two of them — the issue
 reference and the title's length — do not apply to a pull request opened by `dependabot[bot]`:
 a generated subject is not the sentence either rule was written to read. The script says why.
+
+`federation-drift` is the weekly row, and it is the only one that reads something outside this
+repository: how far each application's `federation` branch has fallen behind the branch it was cut
+from. Five or more commits behind fails. **Who is told is this row's weak link.** A failed
+scheduled run mails one account, and GitHub's own pages disagree about which — [Notifications for
+workflow runs](https://docs.github.com/en/actions/concepts/workflows-and-actions/notifications-for-workflow-runs)
+says the person who created the workflow, [Events that trigger
+workflows](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows)
+says whoever last edited the cron, and both say re-enabling a disabled schedule moves it again
+(read 25 November 2026). So the durable place is the Actions tab, and the thing that would change
+our mind is a week where a branch drifted and nobody noticed anyway: then the number has to land in
+the issue tracker instead, which `issue #201` costed and did not build.
+
+It also **expires on 31 January 2027**, with the pilot. Past that date the script fails saying what
+to delete, because a `federation` branch behind its `main` stops being a defect the moment the
+pilot stops deploying from it, and a red run every Monday teaches people to ignore a red run.
 
 Nothing in those rows bumps the pinned versions the checks run at. **Dependabot** does, through the
 same gate as anyone's pull request; `.github/dependabot.yml` holds what it groups and what it must

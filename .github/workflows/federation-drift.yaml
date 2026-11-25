@@ -1,0 +1,43 @@
+name: Federation drift
+
+# Weekly rather than on a push, because what this reads is five other
+# repositories' branches and none of them moves when this one does. A gate on
+# our own pull requests would fail for work somebody else did, and pass on a
+# week nobody pushed here at all — which is exactly the week the number
+# matters.
+#
+# Monday morning, so the number is there before anyone plans a week on top of a
+# `federation` branch.
+#
+# Two ways this stops without saying so. GitHub disables a scheduled workflow
+# after 60 days with no commit in the repository; and a cron is not a promise,
+# so a run can simply be late. Neither is worth defending against here: the
+# pilot ends in January, and the script expires with it.
+on:
+  schedule:
+    - cron: "0 7 * * 1"
+  # So the first run does not wait a week, and so a refresh can be confirmed
+  # the moment it lands.
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  drift:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      # All five application repositories are public, so this repository's own
+      # token reads them: no personal access token, nothing stored, nothing to
+      # rotate. The day one of them goes private this step 404s, and the
+      # script's own message names the repository that did.
+      #
+      # `gh` is preinstalled on this runner. Nothing else is: no node, no pnpm,
+      # no composition.
+      - name: How far behind its default branch each federation branch is
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: ./scripts/check-federation-drift.sh
