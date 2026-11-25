@@ -106,13 +106,12 @@ note only when one of its branches is yours.
   sign-in by mail link rather than closing it. Open it for the declaration to transcribe, or to write
   the case `issue #124` asks for.
 - **Two factories under one provider id**
-  (`2026-11-25-two-provider-factories-under-one-id.md`) — Keycloak 26.8.1 picks the higher `order()`,
-  and the stock factory's is 0; at equal order it picks the factory outside the `org.keycloak`
-  packages, which is ours either way. Documented in the Server Development Guide, measured both
-  ways, and fixed into the image at `kc.sh build`. The collision is logged at debug only, so a test
-  is the only guard, and exactly one case of `tests/github-source.test.ts` fails on the stock
-  provider. `issue #225` took the override on this evidence. Open it when a factory of ours claims
-  an id Keycloak ships, or before touching `order()` on the GitHub provider.
+  (`2026-11-25-two-provider-factories-under-one-id.md`) — the collision is settled and documented,
+  and ours wins on two independent grounds, so an override is not a race. `issue #225` registered
+  our GitHub provider under Keycloak's own id on that evidence. Keycloak logs the collision at debug
+  level alone, which leaves one case of `tests/github-source.test.ts` as the entire guard. Open it
+  when a factory of ours claims an id Keycloak ships, or before touching `order()` on the GitHub
+  provider.
 - **Reading the Broker's pages** (`2026-11-26-reading-the-brokers-pages.md`) — the regexes
   `tests/brokered-app.ts` used to carry misread 64 of 370 real pages' text: undecoded entities, and
   a script body leaked because Keycloak writes `<SCRIPT>` in upper case. happy-dom and parse5 read

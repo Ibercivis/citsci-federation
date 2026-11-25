@@ -106,7 +106,7 @@ async function requestSentTo(name: string): Promise<URL> {
 describe.each(LAUNCH_SOURCES)(
   "the $alias button",
   ({ alias, authorize, scope, pkceMethod, darkMark }) => {
-    const { name, provider } = declaredSource(alias);
+    const { name, providerId } = declaredSource(alias);
 
     it("sends the Person to the source's own authorization page", async () => {
       const request = await requestSentTo(name);
@@ -141,15 +141,24 @@ describe.each(LAUNCH_SOURCES)(
       const { page } = await signInPage();
       const button = buttonFor(page, alias);
 
-      expect(button).toContain(`img/social/${provider}.svg`);
+      expect(button).toContain(`img/social/${providerId}.svg`);
       expect(button).not.toContain("img/social/default");
     });
 
-    it.runIf(darkMark)("draws a mark made for a dark page too", async () => {
+    it.runIf(darkMark)("offers a dark page the mark made for one", async () => {
       const { page } = await signInPage();
+      const button = buttonFor(page, alias);
 
-      expect(buttonFor(page, alias)).toContain(
-        `img/social/${provider}-light.svg`,
+      // Which mark goes with which scheme, and not merely that both are
+      // named: the two are a `<picture>`, and the pair wired the other way
+      // round would satisfy their presence alone.
+      expect(button).toMatch(
+        new RegExp(
+          `<source[^>]*srcset="[^"]*img/social/${providerId}-light\\.svg"[^>]*media="\\(prefers-color-scheme: dark\\)"`,
+        ),
+      );
+      expect(button).toMatch(
+        new RegExp(`<img[^>]*src="[^"]*img/social/${providerId}\\.svg"`),
       );
     });
 

@@ -171,18 +171,17 @@ describe("a GitHub Identity whose verdict the Broker cannot read", () => {
 });
 
 /**
- * What the cases above prove is proved through the Mock Identity Source's
- * GitHub imitation. It reaches the launch GitHub source, which no test can
- * sign in through, only because both name the same Keycloak provider — and
- * that provider is the stock id, which `issue #225` is why.
+ * Everything above is staged against the imitation, never against GitHub. It
+ * carries to the launch source — the one a Person presses, and the one no case
+ * here can reach — only while the two run through one provider.
  *
- * The mark that id draws on the button is held in
- * `tests/launch-sources.test.ts`.
+ * The mark that provider's id draws on the button is held in
+ * `tests/launch-sources.test.ts` (`issue #225`).
  */
 describe("the provider these cases exercise", () => {
   it("is the one the launch GitHub source goes through", () => {
-    expect(declaredSource("mock-identity-source-github").provider).toBe(
-      declaredSource("github").provider,
+    expect(declaredSource("mock-identity-source-github").providerId).toBe(
+      declaredSource("github").providerId,
     );
   });
 });

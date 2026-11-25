@@ -457,10 +457,8 @@ later decides its own `trustEmail` (ADR-0004).
   to it.** The login theme draws GitHub's mark only for that id, and reads the
   id rather than the alias, so an id of our own cost the button its mark —
   which act 2 of `docs/demo-script.md` presses in front of people
-  (`issue #225`). Keycloak keeps the higher `order()` when two factories share
-  an id, as its Server Development Guide prescribes, and the stock factory sets
-  none; the alternative was a login theme of our own, maintained against every
-  move of the Keycloak pin (ADR-0017), for the same icon.
+  (`issue #225`). The alternative was a login theme of our own, maintained
+  against every move of the Keycloak pin (ADR-0017), for the same icon.
 - **Their credentials are `${NAME:not-configured}`.** The value comes from
   outside the repository (`.env.example` names them). A name nobody valued
   would otherwise be imported as the literal `${NAME}`. The default makes the
@@ -494,13 +492,12 @@ the OpenID provider reads the claim. Both paths then rest on what GitHub said,
 and whatever cannot be established counts as unverified.
 
 It registers under the stock id, `github`, so the button keeps GitHub's mark.
-Keycloak settles two factories under one id by `order()`, ours is 1 against the
-stock factory's 0, and at equal order it would still pick ours as the one
-outside the `org.keycloak` packages
-(`docs/notes/2026-11-25-two-provider-factories-under-one-id.md`). It reports the
-collision at debug level and nowhere else, so a rebuild resolving it the other
-way would be silent: one case in `tests/github-source.test.ts` fails against the
-stock provider, and that is the whole guard.
+Which of the two factories then answers to that id is settled rather than
+raced, and `docs/notes/2026-11-25-two-provider-factories-under-one-id.md` holds
+the rule and the measurements. Keycloak reports the collision at debug level and
+nowhere else, so nothing announces a build that resolved it the other way: one
+case in `tests/github-source.test.ts` fails against the stock provider, and that
+is the whole guard.
 
 ### The Mock Identity Source
 

@@ -48,10 +48,10 @@ export interface DeclaredSource {
   /** The scope the Broker asks this source for. It decides which claims the
    *  source puts in its ID token, so a case about those reads it here. */
   asksFor: string;
-  /** The Keycloak provider the Broker runs this source through. The sign-in
-   *  page draws the button's mark by this id and never by the alias, and two
-   *  sources naming the same id are served by the same code. */
-  provider: string;
+  /** The id of the Keycloak provider the Broker runs this source through. The
+   *  sign-in page draws the button's mark by this id and never by the alias,
+   *  and two sources naming the same id are served by the same code. */
+  providerId: string;
 }
 
 /**
@@ -97,7 +97,7 @@ export function declaredSource(alias: string): DeclaredSource {
     name: provider.displayName,
     affirmsAddresses: provider.trustEmail,
     asksFor,
-    provider: provider.providerId,
+    providerId: provider.providerId,
   };
 }
 
