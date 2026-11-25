@@ -24,9 +24,8 @@
 # image is Maven 3.9 on resolver 1.9, which reads `aether.connector.http.` and
 # ignores — in silence, leaving the 30 seconds in place — every property it
 # does not know. Both spellings were put to a local server that refuses
-# everything it is asked for, and
-# `docs/notes/2026-11-24-maven-retry-and-the-warm-layer.md` carries what each
-# of them did there.
+# everything it is asked for, and `PR #207` carries what each of them did
+# there — the wrong one changed nothing at all.
 #
 # `intervalMax` is deliberately not set, and it is the trap of the three. It is
 # not a cap on the wait: once the next interval would pass it, the resolver
@@ -48,14 +47,15 @@ WORKDIR /build
 # is the layer a Java-only edit reuses, and `package` is what warms it,
 # because `package` is what follows: the same lifecycle resolves the same
 # plugins and the same classpath. The second line then compiles against a
-# repository that is already complete, which the note below measures with
-# `--offline`.
+# repository that is already complete, which `PR #207` measures by running it
+# with `--offline`.
 #
 # `dependency:go-offline` ran here until `issue #183` counted it, and it was
 # over-inclusive and under-inclusive at once: it fetched a few hundred
 # artifacts `package` never asks for, and still left `package` resolving from
 # Central. The one thing it is named for, leaving the repository complete, is
-# the thing it did not do. The counts are in the note above.
+# the thing it did not do. `PR #207` has the counts, for it and for
+# `dependency:resolve`, which was measured at the same time and is no better.
 #
 # No `mvn` line here names a plugin by its `dependency:`-style prefix, and the
 # next one added must not either: a prefix is resolved by two metadata requests
