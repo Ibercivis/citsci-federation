@@ -507,16 +507,22 @@ services:
   # repository's lock file *is* in step with its package.json, and `npm ci`
   # writes to neither — so the install is reproducible and the checkout stays
   # clean, which scripts/checkout-apps.sh needs in order to keep updating it.
-  # It runs only when the volume is empty, because `npm ci` deletes
-  # node_modules before it installs and would otherwise do that on every
-  # start.
+  # It runs when the lock file is not the one already installed, which a stamp
+  # inside the volume answers: `npm ci` deletes node_modules before it
+  # installs, so running it on every start would do that every time.
+  #
+  # The stamp rather than react-scripts being present, which is what this
+  # asked for until `issue #30` added a package to that lock file: on a volume
+  # populated before such a branch the guard passes, nothing installs, and the
+  # dev server starts without the package. The install survives a populated
+  # mount, which is the question that shape raises.
   openred-web:
     image: node:24-bookworm-slim
     working_dir: /app
     volumes:
       - ./apps/openred-react:/app
       - openred-web-node-modules:/app/node_modules
-    command: sh -c "([ -x node_modules/.bin/react-scripts ] || npm ci --no-audit --no-fund) && exec npm start"
+    command: sh -ec "cmp -s package-lock.json node_modules/.installed || { npm ci --no-audit --no-fund; cp package-lock.json node_modules/.installed; }; exec npm start"
     environment:
       # The API through this dev server's own proxy (`src/setupProxy.js`), not
       # from the browser, as in production behind nginx — and what the front
