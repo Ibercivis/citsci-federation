@@ -205,6 +205,13 @@ rather than their API's: `<GEONITY_WEB_BASE_URL>/auth/ibercivis/callback` and
 flow and receives the code, and the API redeems it with the secret. So the
 client is confidential, and the browser carries PKCE.
 
+**Three places name that page**: here, `compose.apps.yaml`, and the front end
+that serves it. Deriving it inside the API instead would move the copy rather
+than remove it — the path would then be declared twice within one application.
+Nothing asserts the three agree, and a disagreement arrives as
+`invalid_redirect_uri` on the walk through; a case that compared them is worth
+writing the day that costs somebody an hour.
+
 An unset name survives the import as the literal `${NAME}`, so a client whose
 secret is that string is the signature of a missing variable rather than of a
 mistake in this file. `compose.yaml` passes the three of each, and fails to
