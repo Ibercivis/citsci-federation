@@ -61,3 +61,8 @@ PostGIS stays on 16-3.5 until that application moves; whether it ever does is no
 - A pin of ours becomes theirs the day they pin it. An `.nvmrc` in a front end would take `node`.
 - Deploying the composition would break this rule: a deployment owes currency as well as parity.
   ADR-0009 defers whether that ever happens.
+
+## Amended on 2026-11-24
+
+OpenRed's integration (`issue #30`) tightened the exception above, which had read as though a pin
+the integration's own correctness needs may simply be raised. On OpenRed it could not be.
