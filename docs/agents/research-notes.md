@@ -82,3 +82,12 @@ note only when one of its branches is yours.
   are each measured and each useless. Open it before touching `PATIENCE_MS` in `tests/mailbox.ts`,
   or to cost a testing-only cooldown — which needs `broker/README.md`'s "A layer only adds" changed
   first.
+- **Signing out across the Brokered Apps**
+  (`2026-11-24-signing-out-across-the-brokered-apps.md`) — `django-allauth` 65.15.0 has neither half
+  of logout as a relying party, so every path is hand-written; the ID token is unstorable by any
+  setting, because `SocialToken` has no field for one; and the logout token's `sub` is the bare
+  Keycloak id, not the Person Identifier, so `sid` is what an application can match. Open it before
+  the ADR for story 17 or its build tickets, before costing a Brokered App's sign-out, before
+  setting the realm's session lifetimes — the longest-lived credential is an application's, not the
+  Broker's — or before landing silent sign-in (`issue #157`) where sign-out leaves the Broker
+  session alive.
