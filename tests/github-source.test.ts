@@ -5,6 +5,7 @@ import { attempt, authenticate } from "./brokered-app.ts";
 import { linkMailedTo, mailCountTo } from "./mailbox.ts";
 import {
   AFFIRMING_SOURCE_A,
+  aGitHubNewcomer,
   arriving,
   arrivingThroughGitHub,
   primaryAddressOf,
@@ -51,13 +52,14 @@ describe("a GitHub Identity whose primary address GitHub did not verify", () => 
 
   it("is not a Person until an address is confirmed by mail", async () => {
     // Nobody holds this address. The Broker keeps none it was not sure of,
-    // asks for one, and mails it. A fresh one per run, so the count is this
-    // run's.
+    // asks for one, and mails it. A newcomer and an address per run: an
+    // Identity held once is not asked again, so a second run would see no
+    // mail.
     const address = `${randomUUID()}@newcomer.test`;
 
     const unconfirmed = await attempt(
       CONFIDENTIAL_CLIENT,
-      arrivingThroughGitHub("github-unconfirmed", address),
+      aGitHubNewcomer(false).arriving(address),
     );
 
     // Signed straight in is what an address GitHub had verified would get,

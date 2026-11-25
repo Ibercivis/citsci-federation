@@ -120,9 +120,13 @@ page and the client with the OpenID sources.
 | Identity | Primary address | GitHub says |
 |---|---|---|
 | `github-octocat` | `octocat@mock.test` | verified |
-| `github-newcomer` | `github-newcomer@mock.test` | verified |
 | `github-spoofer` | `spoofed@mock.test` | **unverified** |
-| `github-unconfirmed` | `github-unconfirmed@mock.test` | **unverified** |
+
+It mints newcomers too, for the reason `newcomers.ts` does: any login under
+`github-verified-newcomer-` or `github-unverified-newcomer-` is an Identity at
+`<login>@mock.test`, verified or not as the prefix says. `github.ts` mints them
+rather than `newcomers.ts`, because their shape is GitHub's list and not a pair
+of claims.
 
 ## The advisory's Identities
 

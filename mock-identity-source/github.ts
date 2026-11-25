@@ -13,7 +13,7 @@
  * which costs a sign-in in flight and nothing else.
  */
 
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import declaration from "./mock.json" with { type: "json" };
 
@@ -22,6 +22,55 @@ type GitHubIdentity =
 
 const IDENTITIES: Record<string, GitHubIdentity> =
   declaration.github.identities;
+
+export type GitHubNewcomerShape =
+  (typeof declaration.github.newcomers)[keyof typeof declaration.github.newcomers];
+
+/** The GitHub newcomer shapes, by whether GitHub verified the address. */
+export const GITHUB_NEWCOMERS = declaration.github.newcomers;
+
+/**
+ * A GitHub Identity the Broker has never met: any login under one of the
+ * prefixes `mock.json` declares, at `<login>@mock.test`, verified or not as the
+ * prefix says. The OpenID sources mint theirs in `newcomers.ts`, and for the
+ * same reason: a case about a first arrival runs once per Broker otherwise.
+ *
+ * GitHub's numeric `id` is derived from the login, so the same login is the
+ * same Identity on every sign-in and two logins never share one.
+ */
+function newcomerNamed(login: string): GitHubIdentity | undefined {
+  const shape = Object.values(GITHUB_NEWCOMERS).find((candidate) =>
+    login.startsWith(candidate.usernamePrefix),
+  );
+  if (!shape) return undefined;
+  return {
+    password: shape.password,
+    id: Number.parseInt(
+      createHash("sha256").update(login).digest("hex").slice(0, 12),
+      16,
+    ),
+    email: null,
+    emails: [
+      { email: `${login}@mock.test`, primary: true, verified: shape.verified },
+    ],
+  };
+}
+
+const identityNamed = (login: string): GitHubIdentity | undefined =>
+  IDENTITIES[login] ?? newcomerNamed(login);
+
+/** One newcomer of that shape, fresh per run, and the address GitHub will
+ *  hand over for it. */
+export function aGitHubNewcomerUnder(shape: GitHubNewcomerShape): {
+  username: string;
+  password: string;
+  address: string;
+} {
+  const username = `${shape.usernamePrefix}${randomUUID()}`;
+  const primary = newcomerNamed(username)?.emails[0];
+  if (!primary) throw new Error(`${username} falls under no newcomer prefix.`);
+  return { username, password: shape.password, address: primary.email };
+}
 
 export const GITHUB_PREFIX = "/github";
 
@@ -118,7 +167,7 @@ export function gitHubImitation({
       };
       if (
         carried.redirect_uri !== brokerCallback ||
-        IDENTITIES[login]?.password !== form.get("password")
+        identityNamed(login)?.password !== form.get("password")
       ) {
         const complaint =
           "No mock GitHub Identity with that username and password.";
@@ -167,7 +216,7 @@ export function gitHubImitation({
     }
 
     const login = loginOf(req);
-    const identity = login === undefined ? undefined : IDENTITIES[login];
+    const identity = login === undefined ? undefined : identityNamed(login);
     if (path === `${GITHUB_PREFIX}/api/user` && identity) {
       send(res, 200, {
         id: identity.id,

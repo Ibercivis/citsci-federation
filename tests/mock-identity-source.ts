@@ -29,6 +29,10 @@ import {
   aNewcomerUnder,
   aRelocatingNewcomer,
 } from "../mock-identity-source/newcomers.ts";
+import {
+  GITHUB_NEWCOMERS,
+  aGitHubNewcomerUnder,
+} from "../mock-identity-source/github.ts";
 import { declaredSource } from "./realm.ts";
 
 /**
@@ -153,20 +157,38 @@ export const GITHUB_SOURCE = sourceNamed(declaration.github.source, true);
 
 export type GitHubIdentity = keyof typeof declaration.github.identities;
 
-/** An arrival through the GitHub imitation, as one of its Identities, giving
- *  `address` if the Broker asks for one of its own. */
-export const arrivingThroughGitHub = (
-  identity: GitHubIdentity,
-  address?: string,
-) => ({
+/** An arrival through the GitHub imitation, as one of its Identities. */
+export const arrivingThroughGitHub = (identity: GitHubIdentity) => ({
   as: {
     through: GITHUB_SOURCE,
     username: identity,
     password: declaration.github.identities[identity].password,
-    ...(address === undefined ? {} : { address }),
   },
   pkce: createPkce("S256"),
 });
+
+/**
+ * An arrival through the GitHub imitation from an Identity the Broker has
+ * never met, whose primary address GitHub did or did not verify, and that
+ * address. `gives` is what it answers if the Broker asks for an address of
+ * its own.
+ */
+export function aGitHubNewcomer(verified: boolean) {
+  const { address, ...credentials } = aGitHubNewcomerUnder(
+    verified ? GITHUB_NEWCOMERS.verified : GITHUB_NEWCOMERS.unverified,
+  );
+  return {
+    address,
+    arriving: (gives?: string) => ({
+      as: {
+        through: GITHUB_SOURCE,
+        ...credentials,
+        ...(gives === undefined ? {} : { address: gives }),
+      },
+      pkce: createPkce("S256"),
+    }),
+  };
+}
 
 /** The primary address GitHub hands over for one of the imitation's
  *  Identities, which is where the Broker's mail goes. */

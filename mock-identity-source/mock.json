@@ -163,18 +163,6 @@
           { "email": "octocat@mock.test", "primary": true, "verified": true }
         ]
       },
-      "github-newcomer": {
-        "password": "mock",
-        "id": 9002,
-        "email": null,
-        "emails": [
-          {
-            "email": "github-newcomer@mock.test",
-            "primary": true,
-            "verified": true
-          }
-        ]
-      },
       "github-spoofer": {
         "password": "mock",
         "id": 9003,
@@ -182,18 +170,18 @@
         "emails": [
           { "email": "spoofed@mock.test", "primary": true, "verified": false }
         ]
-      },
-      "github-unconfirmed": {
+      }
+    },
+    "newcomers": {
+      "verified": {
+        "usernamePrefix": "github-verified-newcomer-",
         "password": "mock",
-        "id": 9004,
-        "email": null,
-        "emails": [
-          {
-            "email": "github-unconfirmed@mock.test",
-            "primary": true,
-            "verified": false
-          }
-        ]
+        "verified": true
+      },
+      "unverified": {
+        "usernamePrefix": "github-unverified-newcomer-",
+        "password": "mock",
+        "verified": false
       }
     }
   }
