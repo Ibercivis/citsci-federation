@@ -20,7 +20,7 @@ import { DEMO_IDENTITY } from "./clients.ts";
  *
  * One application is not single sign-on. Arriving at a *second* application
  * already signed in is what the project exists to demonstrate, and it waits on
- * the other integrations (`issue #30`, `issue #31`).
+ * the case that crosses two of them (`issue #34`).
  */
 
 const APP = configured("LOSTATNIGHT_BASE_URL");

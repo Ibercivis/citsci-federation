@@ -145,9 +145,9 @@ get is your Person made for them, and one extra confirmation in your way. Say it
 ## Do not improvise these
 
 - **Single sign-out.** Not settled yet. Say so and move on.
-- **OpenRed through the Broker** (`issue #30`). It has its own sign-in and that is all it has.
-  `openred.localhost:8080`'s Google button cannot work either, and
-  [`trying-it-by-hand.md`](trying-it-by-hand.md) says why.
+- **OpenRed's own Google button**, on `openred.localhost:8080`. It cannot work, and
+  [`trying-it-by-hand.md`](trying-it-by-hand.md) says why. Its **Ibercivis account** button is the
+  one to use (`issue #30`).
 - **Maps.** Blank, for want of a token nobody has locally, and settled:
   [`local-development.md`](local-development.md).
 

@@ -191,19 +191,19 @@ themselves, and a Broker that did not know them would have nothing to broker
 for. What is development-only about them is the value of each `${NAME}`, which
 is `.env`'s business and not the realm's.
 
-**Each registration asserts less than it looks.** The redirect URI is
-`<the application's address>/accounts/oidc/*` — the namespace django-allauth
-serves its callback under, with the provider id left open because the
-integration of each application is what settles it (`issue #30`, `issue #31`,
-`issue #94`). That
-integration narrows the URI to the one path it uses; until then this is a
-development guess like the stand-ins above, and the registration exists so
-that the composition can hand each application a client that answers.
+**Each redirect URI is the one its integration settled on**, and all three
+have landed (`issue #30`, `issue #31`, `issue #94`), so none of them is a
+development guess like the stand-ins above.
 
-Geonity's is narrowed (`issue #31`), and to its **web app's** address rather
-than its API's: `<GEONITY_WEB_BASE_URL>/auth/ibercivis/callback`. The web app
-starts the code flow and receives the code, and the API redeems it with the
-secret. So the client is confidential, and the browser carries PKCE.
+LostAtNight's is the namespace django-allauth serves its callbacks under,
+`<LOSTATNIGHT_BASE_URL>/accounts/oidc/*`, because its own library serves that
+path and redeems the code in the process that receives it.
+
+Geonity's and OpenRed's are one page each, and on their **web app's** address
+rather than their API's: `<GEONITY_WEB_BASE_URL>/auth/ibercivis/callback` and
+`<OPENRED_WEB_BASE_URL>/auth/ibercivis/callback`. The web app starts the code
+flow and receives the code, and the API redeems it with the secret. So the
+client is confidential, and the browser carries PKCE.
 
 An unset name survives the import as the literal `${NAME}`, so a client whose
 secret is that string is the signature of a missing variable rather than of a
