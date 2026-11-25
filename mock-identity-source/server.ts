@@ -59,19 +59,22 @@ function required(name: string): string {
 }
 
 const ISSUER = required("MOCK_IDENTITY_SOURCE_ISSUER");
+/** Where the Broker receives a code for the Identity Source under `alias`. */
+const brokerCallbackFor = (alias: string): string =>
+  `${required("BROKER_ISSUER")}/broker/${alias}/endpoint`;
+
 /**
  * The one client it serves is the Broker, which calls back at a path per
- * Identity Source alias. This server stands behind every alias `mock.json`
- * declares, because a callback it does not serve is a source no sign-in can
- * finish through.
+ * Identity Source alias. These are the OpenID ones, every alias in `sources`,
+ * because a callback this server does not serve is a source no sign-in can
+ * finish through. The GitHub imitation's alias is declared apart, and
+ * `github.ts` checks its callback itself.
  *
  * Several, because a Person cannot hold two Identities from the same source:
  * `federated_identity` refuses the second by primary key, before any rule of
  * ours is reached.
  */
-const BROKER_CALLBACKS = declaration.sources.map(
-  (alias) => `${required("BROKER_ISSUER")}/broker/${alias}/endpoint`,
-);
+const BROKER_CALLBACKS = declaration.sources.map(brokerCallbackFor);
 
 /**
  * The signing key, the same on every start: derived from a declared seed, so
@@ -188,7 +191,7 @@ async function formBody(req: IncomingMessage): Promise<URLSearchParams> {
 const handleProtocol = provider.callback();
 
 const handleGitHub = gitHubImitation({
-  brokerCallback: `${required("BROKER_ISSUER")}/broker/${declaration.github.source}/endpoint`,
+  brokerCallback: brokerCallbackFor(declaration.github.source),
   signInPage,
   formBody,
 });
