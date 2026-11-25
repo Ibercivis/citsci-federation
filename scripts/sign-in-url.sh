@@ -38,8 +38,8 @@ case "$app" in
   # bar is still the Broker's half, done.
   geonity)     client=$GEONITY_CLIENT_ID;     callback=$GEONITY_WEB_BASE_URL/auth/ibercivis/callback ;;
   # OpenRed's callback is a page of its React app, which hands the code to its
-  # API, the same shape as Geonity's (`issue #30`) -- and it answers the same
-  # way when reached from here, with nothing of its own to finish.
+  # API (`issue #30`) — Geonity's shape again, and it answers the same way when
+  # reached from here, with nothing of its own to finish.
   openred)     client=$OPENRED_CLIENT_ID;     callback=$OPENRED_WEB_BASE_URL/auth/ibercivis/callback ;;
   *)
     echo "No such application: $app" >&2

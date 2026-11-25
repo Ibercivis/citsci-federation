@@ -545,9 +545,9 @@ services:
       # mounted unconditionally and `LoginPage` calls `useGoogleLogin` as a
       # top-level hook, so an empty value throws from Google's own script
       # before /login renders — taking the whole page down with it, the
-      # Ibercivis account button included. The value is the placeholder that application's
-      # .env.example ships, for the same reason. Pressing the Google button
-      # fails, and locally it could not work anyway.
+      # Ibercivis account button included. The value is the placeholder that
+      # application's .env.example ships, for the same reason. Pressing the
+      # Google button fails, and locally it could not work anyway.
       REACT_APP_GOOGLE_CLIENT_ID: 000000000000-localdevplaceholder.apps.googleusercontent.com
       # The Broker's issuer and the client the API is registered as: this app
       # reads discovery from the issuer, in the browser, and asks for a code for
