@@ -158,12 +158,10 @@ but it is the shortest answer to "so what does the Broker actually know about me
 
 ### 5. Signing in to an application with an Ibercivis account
 
-http://lostatnight.localhost:8080/accounts/login/ → **Sign in with your Ibercivis account**.
-
-The first half of the project's claim, clickable: the application sends you to the Broker, the Broker
-signs you in, the application redeems the code itself and you come back signed in. `demo` /
-`demo-password` as in step 2, and the Broker asks for consent on the way, because the client is
-declared `consentRequired`.
+Step 2 was this sign-in, watched at the Broker. Seen from LostAtNight it is the first half of the
+project's claim: the application sends you to the Broker, the Broker signs you in, and the
+application redeems the code itself. The consent screen is there because the client is declared
+`consentRequired`.
 
 Then http://lostatnight.localhost:8080/user-profile/: the personal area names the **Ibercivis
 account** and shows the identifier the Broker minted — the same string every application in the
