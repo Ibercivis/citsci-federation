@@ -133,9 +133,10 @@ Each of those is a measurement of a production database. Taken, the figures go t
 
 ## 8. Status
 
-`not started`. Written 24 November 2026 against `Ibercivis/OpenRed` at `federation` plus the
-`issue #30` integration, and `Ibercivis/openred-flutter` at `master`. Nothing has been agreed with
-the maintainer.
+`not started` — nothing has been agreed with the maintainer. Written 2026-11-24 against
+`Ibercivis/OpenRed` at `561e7bf` and `Ibercivis/openred-react` at `74bae1c`, both on
+`ibercivis-account`, which is `issue #30`'s branch off `federation`, and `Ibercivis/openred-flutter`
+at `c57c117` on `main`.
 
 **What migration would not remove.** ADR-0007 keeps this application's own sign-in with no sunset
 date, so its password store stays whatever migration does. The exposure the pilot removes here is
