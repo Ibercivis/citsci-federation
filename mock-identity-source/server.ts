@@ -18,6 +18,7 @@ import { type IncomingMessage, createServer } from "node:http";
 import { type KoaContextWithOIDC, Provider } from "oidc-provider";
 import declaration from "./mock.json" with { type: "json" };
 import { type DeclaredIdentity, newcomerNamed } from "./newcomers.ts";
+import { GITHUB_PREFIX, gitHubImitation } from "./github.ts";
 
 const IDENTITIES: Record<string, DeclaredIdentity> = declaration.identities;
 
@@ -153,14 +154,24 @@ const escapeHtml = (value: string): string =>
 const OWN_NAME = "Mock Identity Source (not for launch)";
 
 /** The sign-in page. It says what it is, so nobody mistakes it for a real one. */
-const signInPage = (uid: string, complaint = ""): string => `<!doctype html>
+const signInPage = (
+  action: string,
+  complaint = "",
+  carried: Record<string, string> = {},
+): string => `<!doctype html>
 <html lang="en">
 <head><meta charset="utf-8"><title>${escapeHtml(OWN_NAME)}</title></head>
 <body>
 <h1>${escapeHtml(OWN_NAME)}</h1>
 <p>A test Identity Source. It vouches for nobody.</p>
 ${complaint ? `<p role="alert">${escapeHtml(complaint)}</p>` : ""}
-<form method="post" action="/interaction/${escapeHtml(uid)}">
+<form method="post" action="${escapeHtml(action)}">
+${Object.entries(carried)
+  .map(
+    ([name, value]) =>
+      `<input type="hidden" name="${escapeHtml(name)}" value="${escapeHtml(value)}">`,
+  )
+  .join("\n")}
 <label>Username <input type="text" name="username"></label>
 <label>Password <input type="password" name="password"></label>
 <button type="submit" name="login">Sign in</button>
@@ -176,8 +187,24 @@ async function formBody(req: IncomingMessage): Promise<URLSearchParams> {
 
 const handleProtocol = provider.callback();
 
+const handleGitHub = gitHubImitation({
+  brokerCallback: `${required("BROKER_ISSUER")}/broker/${declaration.github.source}/endpoint`,
+  signInPage,
+  formBody,
+});
+
 const server = createServer((req, res) => {
-  const { pathname } = new URL(req.url ?? "/", ISSUER);
+  const url = new URL(req.url ?? "/", ISSUER);
+  const { pathname } = url;
+  if (pathname.startsWith(`${GITHUB_PREFIX}/`)) {
+    handleGitHub(req, res, url).catch((error: unknown) => {
+      console.error(error);
+      if (!res.headersSent)
+        res.writeHead(500, { "content-type": "text/plain" });
+      res.end("the GitHub imitation failed");
+    });
+    return;
+  }
   const interaction = /^\/interaction\/([^/]+)$/.exec(pathname);
   if (!interaction) {
     void handleProtocol(req, res);
@@ -188,7 +215,7 @@ const server = createServer((req, res) => {
     const { uid } = await provider.interactionDetails(req, res);
     if (req.method !== "POST") {
       res.writeHead(200, { "content-type": "text/html; charset=utf-8" });
-      res.end(signInPage(uid));
+      res.end(signInPage(`/interaction/${uid}`));
       return;
     }
     const form = await formBody(req);
@@ -197,7 +224,10 @@ const server = createServer((req, res) => {
     if (identity?.password !== form.get("password")) {
       res.writeHead(401, { "content-type": "text/html; charset=utf-8" });
       res.end(
-        signInPage(uid, "No mock Identity with that username and password."),
+        signInPage(
+          `/interaction/${uid}`,
+          "No mock Identity with that username and password.",
+        ),
       );
       return;
     }

@@ -140,6 +140,61 @@
       "password": "mock",
       "idToken": { "email": "silent-squat@mock.test", "email_verified": true },
       "userinfo": { "email": "silent-squat@mock.test", "email_verified": true }
+    },
+    "octocat-verified": {
+      "password": "mock",
+      "idToken": { "email": "octocat@mock.test", "email_verified": true },
+      "userinfo": { "email": "octocat@mock.test", "email_verified": true }
+    },
+    "spoofed-verified": {
+      "password": "mock",
+      "idToken": { "email": "spoofed@mock.test", "email_verified": true },
+      "userinfo": { "email": "spoofed@mock.test", "email_verified": true }
+    }
+  },
+  "github": {
+    "source": "mock-identity-source-github",
+    "identities": {
+      "github-octocat": {
+        "password": "mock",
+        "id": 9001,
+        "email": null,
+        "emails": [
+          { "email": "octocat@mock.test", "primary": true, "verified": true }
+        ]
+      },
+      "github-newcomer": {
+        "password": "mock",
+        "id": 9002,
+        "email": null,
+        "emails": [
+          {
+            "email": "github-newcomer@mock.test",
+            "primary": true,
+            "verified": true
+          }
+        ]
+      },
+      "github-spoofer": {
+        "password": "mock",
+        "id": 9003,
+        "email": null,
+        "emails": [
+          { "email": "spoofed@mock.test", "primary": true, "verified": false }
+        ]
+      },
+      "github-unconfirmed": {
+        "password": "mock",
+        "id": 9004,
+        "email": null,
+        "emails": [
+          {
+            "email": "github-unconfirmed@mock.test",
+            "primary": true,
+            "verified": false
+          }
+        ]
+      }
     }
   }
 }

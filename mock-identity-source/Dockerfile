@@ -13,7 +13,7 @@ COPY package.json pnpm-lock.yaml ./
 # have no business in an image and whose tool is a devDependency.
 RUN pnpm install --prod --frozen-lockfile --ignore-scripts
 COPY mock-identity-source/server.ts mock-identity-source/newcomers.ts \
-  mock-identity-source/mock.json ./
+  mock-identity-source/github.ts mock-identity-source/mock.json ./
 USER node
 # Node runs TypeScript itself by stripping the types: nothing to compile.
 CMD ["node", "server.ts"]
