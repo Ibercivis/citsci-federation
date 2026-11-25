@@ -80,3 +80,12 @@ note only when one of its branches is yours.
   setting the realm's session lifetimes — the longest-lived credential is an application's, not the
   Broker's — or before landing silent sign-in (`issue #157`) where sign-out leaves the Broker
   session alive.
+- **What would turn off adding a Local Credential**
+  (`2026-11-24-what-would-turn-off-adding-a-local-credential.md`) — CONDITIONAL on the
+  `reset-password` execution is declarable, because neither the importer nor the Admin API checks
+  `REQUIREMENT_CHOICES`, and it stops the password but not the mail link, which would then sign a
+  passwordless Person in with no page at all. The Account Console's button has no declared lever
+  short of disabling `UPDATE_PASSWORD` for everybody, `resetPasswordAllowed: false` withdraws what
+  ADR-0005 promises, and no shipped condition can see whether a Person holds a password or arrived
+  through a source. Open it before declaring a reset-credentials flow in `broker/realm/`, before
+  costing a condition or required action of our own, or to write the case `issue #124` asks for.
