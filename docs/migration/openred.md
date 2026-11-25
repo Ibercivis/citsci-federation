@@ -29,10 +29,13 @@ section 7 names them.
   no usable password. An address already held by an account is refused, so today no existing account
   is ever reached through the Broker.
 - **One library version differs between the branches.** `dj-rest-auth` is 7.2.0 on `federation`,
-  in both of its dependency lists, because 6.0.0 and the pinned allauth cannot do the OAuth2 code
-  flow together. `main` keeps 6.0.0, which is what production installs until the integration lands
-  there; both lists on `federation` agree, so nothing deploying that branch is caught out
-  (ADR-0017).
+  in both of its dependency lists. On 6.0.0 two call sites raise a `TypeError` against the pinned
+  allauth before any request leaves the process — the mechanism sits beside the pin in that
+  application's `local_dev/requirements.txt` — so the code flow needs either this version or
+  application code that absorbs both. The version was chosen over that code, which is the
+  weighing ADR-0017's exception asks for rather than a case of the pin being immovable. `main`
+  keeps 6.0.0, which is what production installs until the integration lands there; both lists on
+  `federation` agree, so nothing deploying that branch is caught out (ADR-0017).
 - A Person's work hangs off Django's own user: devices, tracks, measurements, missions, campaigns
   and stations. Nothing is keyed on an email address, which is what makes a move possible at all.
 - Anonymous reading already exists and produces no account: `IsAuthenticatedOrReadOnly` serves the
