@@ -28,13 +28,17 @@ const LAUNCH_SOURCES = [
     alias: "google",
     authorize: "https://accounts.google.com/o/oauth2/v2/auth",
     scope: "openid email",
-    pkce: true,
+    /** The challenge method the Broker sends this source, or `null` for one
+     *  that takes none. GitHub's OAuth has no PKCE, so what is worth holding
+     *  there is the parameter's absence: it is what would notice a challenge
+     *  arriving at a source that cannot bind a code with it. */
+    pkceMethod: "S256",
   },
   {
     alias: "github",
     authorize: "https://github.com/login/oauth/authorize",
     scope: "user:email",
-    pkce: false,
+    pkceMethod: null,
   },
 ];
 
@@ -72,7 +76,7 @@ async function requestSentTo(name: string): Promise<URL> {
 
 describe.each(LAUNCH_SOURCES)(
   "the $alias button",
-  ({ alias, authorize, scope, pkce }) => {
+  ({ alias, authorize, scope, pkceMethod }) => {
     const { name } = declaredSource(alias);
 
     it("sends the Person to the source's own authorization page", async () => {
@@ -92,11 +96,16 @@ describe.each(LAUNCH_SOURCES)(
       expect(request.searchParams.get("scope")).toBe(scope);
     });
 
-    it.runIf(pkce)("binds the code to this request with PKCE", async () => {
+    it("sends the PKCE challenge this source accepts, and none where it accepts none", async () => {
       const request = await requestSentTo(name);
 
-      expect(request.searchParams.get("code_challenge_method")).toBe("S256");
-      expect(request.searchParams.get("code_challenge")).toBeTruthy();
+      expect(request.searchParams.get("code_challenge_method")).toBe(
+        pkceMethod,
+      );
+      // A challenge is there exactly when a method is.
+      expect(Boolean(request.searchParams.get("code_challenge"))).toBe(
+        Boolean(pkceMethod),
+      );
     });
 
     it("names a client id, never the placeholder's literal text", async () => {
