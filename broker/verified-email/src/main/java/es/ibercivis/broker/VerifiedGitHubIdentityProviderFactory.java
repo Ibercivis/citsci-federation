@@ -16,10 +16,10 @@ import org.keycloak.social.github.GitHubIdentityProviderFactory;
  * button whatever the alias is called ({@code issue #225}).
  *
  * <p>Two factories under one id is settled and not left to chance: Keycloak
- * keeps the higher {@code order()}, which is what its Server Development Guide
- * prescribes for overriding a built-in provider, and the stock factory
- * overrides no {@code order()} at all. At equal order ours would still win, as
- * the one outside the {@code org.keycloak} packages. Both are measured in
+ * keeps the higher {@code order()}, documented as the way to replace a
+ * provider it ships, and the stock factory sets none. At equal order ours
+ * would still win, as the one outside the {@code org.keycloak} packages. Both
+ * measured in
  * {@code docs/notes/2026-11-25-two-provider-factories-under-one-id.md}.
  *
  * <p>Keycloak reports the collision at debug level, so a rebuild resolving it
