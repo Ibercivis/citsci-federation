@@ -54,12 +54,20 @@ name: citsci-apps
 # `.env`, never compiled in (ADR-0001) — under the name each one's integration
 # settled, in that application's own words, on its `federation` branch. All
 # three chose `IBERCIVIS_ACCOUNT_*`: LostAtNight (`issue #94`), Geonity
-# (`issue #31`) and OpenRed (`issue #30`), each for its API and its front end
-# alike.
+# (`issue #31`) and OpenRed (`issue #30`). An Ibercivis account is what they
+# call signing in through the Broker, and `Broker` names nothing in a Django
+# site that already has a task queue.
+#
+# Every process of every application is told, worker included, so one settings
+# file answers for all of them; only the service that runs the sign-in is given
+# the credentials. Each front end reads the same value under its own build
+# tool's prefix, which an anchor cannot carry.
 #
 # The value is the issuer, which has to be reachable from inside this network as
 # well as from a browser: the proxy answers to `broker.localhost` on both sides
 # of the port mapping, and `.env` says why it has to.
+x-ibercivis-account: &ibercivis-account
+  IBERCIVIS_ACCOUNT_ISSUER: ${BROKER_ISSUER:?declare it in .env}
 
 # The catcher every application here sends to; the service itself is declared
 # in compose.yaml, where the Broker's own stack is. All three applications keep
@@ -74,15 +82,9 @@ x-mail: &mail
 # the host validation the proxy makes safe — but not the client credentials:
 # those are given to the service that runs the sign-in and to nothing else.
 x-lostatnight: &lostatnight
+  <<: *ibercivis-account
   DJANGO_SETTINGS_MODULE: gdalface.settings_local
   DEBUG: "True"
-  # The Broker, under the name that application's integration gives it: an
-  # Ibercivis account is what it calls signing in through the Broker, and
-  # `Broker` is a word that names nothing in a Django site that already has a
-  # task queue.
-  # Every process is told, so one declaration of the settings answers for all
-  # of them; only the service that runs the sign-in gets the credentials.
-  IBERCIVIS_ACCOUNT_ISSUER: ${BROKER_ISSUER:?declare it in .env}
   # Host validation is left open because the proxy is the only way in and it
   # forwards nothing but the hostnames it serves. The alternative is to repeat
   # an address `.env` already declares, in a form Django can parse, which is
@@ -104,9 +106,7 @@ x-lostatnight: &lostatnight
 # filler that settings file insists on, and where the Broker is. The client
 # credentials go to the API alone.
 x-geonity: &geonity-env
-  <<: *mail
-  # The Broker, under the name Geonity's integration gives it (`issue #31`).
-  IBERCIVIS_ACCOUNT_ISSUER: ${BROKER_ISSUER:?declare it in .env}
+  <<: [*ibercivis-account, *mail]
   # Set explicitly rather than left to the default: that settings file
   # infers DEBUG from whether `runserver` is on the command line, so the
   # worker would start with DEBUG=False and try to reach SES with the
@@ -431,11 +431,7 @@ services:
     # this argument.
     command: ["api"]
     environment: &openred-env
-      <<: *mail
-      # Every process is told where the Broker is, so one settings file answers
-      # for all of them; only the service that runs the sign-in gets the
-      # credentials.
-      IBERCIVIS_ACCOUNT_ISSUER: ${BROKER_ISSUER:?declare it in .env}
+      <<: [*ibercivis-account, *mail]
       # No default in that settings file, so it has to be given.
       SECRET_KEY: local-development-only-not-a-secret
       DEBUG: "True"
