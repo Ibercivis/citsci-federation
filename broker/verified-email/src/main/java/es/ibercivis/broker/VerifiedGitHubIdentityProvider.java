@@ -27,8 +27,10 @@ import org.keycloak.social.github.GitHubIdentityProvider;
  * back in {@link #setEmailVerified} on the create. Both paths then rest on the
  * same fact.
  *
- * <p>Whatever cannot be established counts as unverified: an address not in
- * the list, a list that cannot be read. Refusing is the safe answer.
+ * <p>Whatever cannot be established counts as unverified, on both paths: an
+ * address not in the list, a list that cannot be read, a verdict the create
+ * path cannot read back. Both read it through
+ * {@link UnverifiedEmailCondition#saysVerified}. Refusing is the safe answer.
  */
 public class VerifiedGitHubIdentityProvider extends GitHubIdentityProvider {
 
@@ -72,16 +74,21 @@ public class VerifiedGitHubIdentityProvider extends GitHubIdentityProvider {
     }
   }
 
-  /** As {@code OIDCIdentityProvider} does: on a trusted source, the address
-   *  is as verified as the source said it was, and no more. */
+  /**
+   * On a trusted source, the address is as verified as GitHub said it was, and
+   * no more. Unlike {@code OIDCIdentityProvider}, a verdict that cannot be read
+   * back does not fall to Keycloak's default, which on a trusted source would
+   * store it verified: the create path runs on a context carried through the
+   * authentication session, where it may come back as text.
+   */
   @Override
   protected void setEmailVerified(UserModel user, BrokeredIdentityContext context) {
-    Object verified = context.getContextData().get(IDToken.EMAIL_VERIFIED);
-    if (!Boolean.TRUE.equals(getConfig().isTrustEmail())
-        || !(verified instanceof Boolean affirmed)) {
+    if (!getConfig().isTrustEmail()) {
       super.setEmailVerified(user, context);
       return;
     }
-    user.setEmailVerified(affirmed);
+    user.setEmailVerified(
+        UnverifiedEmailCondition.saysVerified(
+            context.getContextData().get(IDToken.EMAIL_VERIFIED)));
   }
 }
