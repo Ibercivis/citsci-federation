@@ -161,10 +161,10 @@ pins would otherwise read the identity from an unsigned `userinfo` response, and
 creates is named `user`, because the service sends no first name and that application's username
 generator reads nothing else.
 
-**The registration closure is `agualis`'s to walk, in all three**, and it is a name rather than a
-test on purpose: the Broker cannot see whether an application still has a sign-up form, and no test
-in this repository runs the JavaScript that would render one. `issue #34` is what turns it into an
-assertion; until then it is this walk.
+**The registration closure is walked by name**: `agorer` walks OpenRed's, `agualis` walks
+LostAtNight's and Geonity's. A name rather than a test on purpose — the Broker cannot see whether an
+application still has a sign-up form, and no test in this repository runs the JavaScript that would
+render one. `issue #34` is what turns it into an assertion; until then it is this walk.
 
 ### 6. An account that existed before the Broker
 
