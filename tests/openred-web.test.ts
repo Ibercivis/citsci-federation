@@ -122,7 +122,7 @@ describe.skipIf(!composition)("OpenRed's React front end", () => {
 
     // The endpoint that application's own profile screen calls, which is where
     // seam 3 will read the identifier (`issue #34`). This Person existed before
-    // the pilot, so hers is null — the value belongs to an arrival through the
+    // the Broker, so hers is null — the value belongs to an arrival through the
     // Broker, and that one is a browser's to drive. What a Person arriving here
     // cannot show, the field being served at all can: drop it from the
     // serializer and seam 3 has nothing to read.

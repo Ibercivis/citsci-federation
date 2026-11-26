@@ -1,7 +1,7 @@
 # Migration — OpenRed
 
 What OpenRed's existing accounts would need in order to move onto the Broker. Migration is outside
-the pilot's committed scope; this record exists so that it is cheap if time allows. It is not a
+the committed scope; this record exists so that it is cheap if time allows. It is not a
 commitment. See `docs/agents/migration-requirements.md` for how to read and extend it.
 
 No figure here was measured. The counts that would decide the populations below do not exist yet;
@@ -22,7 +22,7 @@ section 7 names them.
 - **A Google provider of its own**: `POST /dj-rest-auth/google/`, with the application's own Google
   client. It does not pass through the Broker. A new Google login is connected to an existing
   account holding the same address (`users/adapters.py`,
-  `AUTO_CONNECT_BY_EMAIL_PROVIDERS`), which is behaviour that predates the pilot and was narrowed to
+  `AUTO_CONNECT_BY_EMAIL_PROVIDERS`), which is behaviour that predates the Broker and was narrowed to
   that one provider rather than removed.
 - **The Broker** arrives as the `ibercivis` OpenID Connect provider (`issue #30`). An account it
   creates is a `SocialAccount(provider='ibercivis', uid=<Person Identifier>)` on a new `User` with
@@ -145,7 +145,7 @@ Each of those is a measurement of a production database. Taken, the figures go t
 at `c57c117` on `main`.
 
 **What migration would not remove.** ADR-0007 keeps this application's own sign-in with no sunset
-date, so its password store stays whatever migration does. The exposure the pilot removes here is
+date, so its password store stays whatever migration does. The exposure the Broker removes here is
 the *new* registrations the web no longer takes — and not the mobile ones, which continue. The
 decision that would actually remove the password store is the one to close local sign-in, and
 nobody has made it.
