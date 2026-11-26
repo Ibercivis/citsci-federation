@@ -111,14 +111,6 @@ export async function requestAuthorization(
   return browser.get(`${authorization_endpoint}?${query.toString()}`);
 }
 
-const unescapeHtml = (value: string): string =>
-  value
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&amp;/g, "&");
-
 /**
  * A page as a browser holds it: its address and its HTML. The two travel
  * together because neither is much use alone — a form on a page may submit to
@@ -217,12 +209,6 @@ export function formsOn(page: Page): HtmlForm[] {
     return { action: new URL(action, page.url).href, fields, controls };
   });
 }
-
-/** The text a link shows a Person, with its markup taken out. */
-const visibleText = (html: string): string =>
-  unescapeHtml(html.replace(/<[^>]*>/g, " "))
-    .replace(/\s+/g, " ")
-    .trim();
 
 /** The links in some HTML, by what they say and where they point as written. */
 function anchorsIn(html: string): Array<{ text: string; href: string }> {
@@ -338,15 +324,10 @@ function question(page: Page, arrival: Arrival): Question | null {
   return null;
 }
 
-/** What a Person would read on a page: the markup stripped, and the scripts
- *  and stylesheets a browser never shows stripped first. Exported because a
- *  refusal the Broker words itself reaches a case through no other channel. */
-export const readableTextOf = (html: string): string =>
-  visibleText(
-    html
-      .replace(/<script\b[\s\S]*?<\/script>/g, " ")
-      .replace(/<style\b[\s\S]*?<\/style>/g, " "),
-  );
+/** What a Person would read on a page: its text, with the scripts and
+ *  stylesheets a browser never shows left out. Exported because a refusal the
+ *  Broker words itself reaches a case through no other channel. */
+export const readableTextOf = (html: string): string => textUnder(parse(html));
 
 /** Reads the Broker's own complaint off a page, so a failed step says why. */
 function pageComplaint({ html }: Page): string {
