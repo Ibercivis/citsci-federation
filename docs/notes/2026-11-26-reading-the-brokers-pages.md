@@ -36,6 +36,11 @@ code were not committed.
 sized and not measured: 22 MB and 27 packages buy nothing happy-dom does not. No newer parser
 turned up. Every licence in these trees is MIT, ISC, BSD or Apache-2.0.
 
+Once adopted, happy-dom cost the suite about 2 to 3 seconds, on a run of about 13 seconds: two runs
+took 15.2 s and 16.3 s, against 12.9 s on `main`, each on a freshly reset Broker. Vitest's import
+share doubled, because every test file that reads a page imports happy-dom afresh. That is about
+twice what the per-page figures above predict.
+
 ## Dead ends
 
 - **cheerio's `.attr("value")`** answers with jQuery's idea of the value: `"on"` for a checkbox
