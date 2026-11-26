@@ -21,15 +21,15 @@ stop applying the moment it is revoked does not, and a person who belongs to a h
 carry a hundred claims so that almost none of them is read. **Carry what changes slowly, query what
 changes fast.**
 
-**The pilot implements none of this.** ADR-0003 stands exactly as written: roles stay local to each
+**Nothing here is implemented yet.** ADR-0003 stands exactly as written: roles stay local to each
 Brokered App, the Broker emits no role and no entitlement claim, and nothing about authorisation
-crosses it. This ADR adds no scope to the pilot. It exists because the options that a later
+crosses it. This ADR adds nothing to what is being built. It exists because the options that a later
 implementation will reach for first are the wrong ones, and the reasons are not obvious enough to
 re-derive under deadline.
 
 ## Considered Options
 
-The five applications in the pilot were read for this in November 2026, so the options below are
+The five integrated applications were read for this in November 2026, so the options below are
 weighed against what is actually there rather than against what a federation usually looks like.
 Three facts from that reading decide most of it: no application uses group or model-level permissions
 at all; the one role-like flag they share means something materially different in each, ranging from
@@ -60,11 +60,11 @@ application is an object inside that application** — not one of them crosses a
 
 ## Consequences
 
-**Nothing is built, and the pilot's promise to the applications does not change.** ADR-0007 amended
+**Nothing is built, and the promise made to the applications does not change.** ADR-0007 amended
 that promise to "the authentication hook and the registration link", and this decision does not add a
 third item to it. What follows is what we would want to be true when an implementation is eventually
 written — for our own applications as they gain an intermediate role, and as advice to whoever
-implements the Broker's half. It is not an ask inside the pilot.
+implements the Broker's half. It is not an ask today.
 
 **The cheap thing to get right is where a local grant is written down.** A grant indexed by Person
 Identifier — already the only identifier an application gets — and kept as versioned configuration
@@ -89,7 +89,7 @@ small, and a small claim is also the only version of this that can ship.
 stop being optional. ADR-0004 knowingly accepts that whoever controls a mailbox can become a Person,
 which is tolerable for a contributor and not for someone holding authority in several applications —
 so the per-action assurance check that ADR-0003 reserves becomes a requirement for whoever holds the
-membership. And no `Organization` entity exists in the pilot, as the spec records; membership would
+membership. And no `Organization` entity exists yet, as the spec records; membership would
 be the first thing to need one.
 
 **What would reopen this**, so that deferral has an end condition rather than being indefinite: a

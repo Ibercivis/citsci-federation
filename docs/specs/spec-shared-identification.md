@@ -1,4 +1,4 @@
-# Spec — Shared identification pilot
+# Spec — Shared identification
 
 ## Problem Statement
 
@@ -26,7 +26,7 @@ Two Identities belong to the same Person when they present the same **Verified E
 joining rule: sign in with Google today and GitHub tomorrow under one confirmed address, and both
 applications see one Person, with no linking flow to go through and nothing to configure. The price is
 stated plainly rather than hidden: one human reachable at two unrelated addresses is **two Persons**, and
-the pilot offers no way to join them.
+the Broker offers no way to join them.
 
 From the Person's side: sign in once, move between applications without signing in again, and never be
 asked to remember which button was pressed last time.
@@ -35,14 +35,14 @@ From the foundation's side: a new application integrates by delegating authentic
 identifier and closing its own registration. Adding a fourth Identity Source later changes nothing in any
 application.
 
-This is a pilot, and it runs as **one Docker composition**: the Broker and every integrated application
+The whole of it runs as **one Docker composition**: the Broker and every integrated application
 together, brought up with a single command (ADR-0009). On a laptop today, and at a public address the day
 somebody outside the team needs to click through it — a later decision, not a rewrite. Accounts that
 already exist in the applications keep their current per-application sign-in, untouched and with no sunset
-date; the Broker serves accounts created from now on. The pilot closes at the end of January.
+date; the Broker serves accounts created from now on. The first phase closes at the end of January.
 
-**A pilot here means an early stage, not a throwaway.** The code written now will change a great deal
-and does not yet satisfy specifications and standards that become necessary later — EOSC-node
+**This is built in phases, and every phase goes to production.** The code written now will change a
+great deal and does not yet satisfy specifications and standards that a later phase needs — EOSC-node
 conformance among them, if this ever becomes the germ of a Spanish node, which is why that
 conformance is listed out of scope rather than denied. The decisions recorded in `docs/adr/` are
 taken to be built on: what is rough is expected to be hardened, and nothing here is written to be
@@ -86,14 +86,14 @@ discarded.
 
 ### A person who does not identify themselves
 
-26. As a person who contributes without identifying myself, I want to carry on doing that in the applications that allow it, so that the pilot does not raise the price of taking part.
+26. As a person who contributes without identifying myself, I want to carry on doing that in the applications that allow it, so that the Broker does not raise the price of taking part.
 27. As a researcher reading the data, I want to tell identified contributions from anonymous ones, so that I can judge what I am looking at.
 28. As a person contributing anonymously, I want to be told that this contribution cannot later be attributed to me, so that I choose knowingly between convenience and credit.
 
 ### An existing account holder
 
-29. As a person who already had an account in an application before the pilot, I want my existing sign-in to keep working exactly as before, so that the pilot does not lock me out.
-30. As an existing account holder, I want not to be forced into a migration I did not ask for, so that nothing I rely on breaks while the pilot is being evaluated.
+29. As a person who already had an account in an application before the Broker, I want my existing sign-in to keep working exactly as before, so that the Broker does not lock me out.
+30. As an existing account holder, I want not to be forced into a migration I did not ask for, so that nothing I rely on breaks as the Broker is rolled out.
 31. As an existing account holder, I want to be told at the point of choice what signing in through the Broker does: I am turned away while my address is held here, and I get a separate account under any other. That way I am not surprised to find my old contributions missing.
 32. As a person new to an application, I want one place to get an account rather than two, so that I am not offered a choice whose consequences I cannot see.
 
@@ -121,7 +121,7 @@ discarded.
 49. As the Broker operator, I want insecure flows to be refused rather than merely unused, so that a future misconfiguration cannot quietly enable them.
 50. As the Broker operator, I want the Keycloak version pinned, so that a security property the design depends on cannot change underneath me.
 51. As the Broker operator, I want to know when what is running differs from what is declared, so that drift is detected rather than discovered.
-52. As the Broker operator, I want to run the entire pilot on a laptop, so that nothing waits for a machine to be provisioned.
+52. As the Broker operator, I want to run the entire composition on a laptop, so that nothing waits for a machine to be provisioned.
 53. As the Broker operator, I want the Broker's own services declared here and no other system's infrastructure, so that a dependency bump in another project cannot break this one.
 54. As the Broker operator, I want to change the Broker's public address without a data migration, so that the final hostname can be chosen later.
 
@@ -131,15 +131,15 @@ discarded.
 56. As Ibercivis, I want a new application to be able to join without a bespoke identity project, so that the cost of starting a project goes down.
 57. As Ibercivis, I want passwords held in one place instead of one per application, so that the foundation's exposure stops growing with every project.
 58. As Ibercivis, I want the identifiers we issue to stay unique when they one day sit beside another organisation's, so that federating later does not mean re-identifying everybody.
-59. As Ibercivis, I want the choices made now to leave federation reachable, so that the pilot is a first step and not a dead end.
+59. As Ibercivis, I want the choices made now to leave federation reachable, so that the first phase is a first step and not a dead end.
 
-### The pilot team
+### The project team
 
-60. As a developer on the pilot, I want to bring the Broker and every integrated application up with one command, so that trying single sign-on by hand costs nothing.
-61. As a developer on the pilot, I want a browser test that signs in to one application and arrives already signed in at another, so that the pilot's central claim is demonstrated rather than asserted.
-62. As a developer on the pilot, I want the same composition to run on a laptop now and at a public address later, so that where it is published stays a later decision.
-63. As a developer on the pilot, I want each application's container recipe to live on its `federation` branch, so that the integration stays reversible in a repository that is not ours.
-64. As somebody showing the pilot to the foundation, I want a running pilot to click through, so that what is judged is what was built rather than a description of it.
+60. As a developer on the project, I want to bring the Broker and every integrated application up with one command, so that trying single sign-on by hand costs nothing.
+61. As a developer on the project, I want a browser test that signs in to one application and arrives already signed in at another, so that the project's central claim is demonstrated rather than asserted.
+62. As a developer on the project, I want the same composition to run on a laptop now and at a public address later, so that where it is published stays a later decision.
+63. As a developer on the project, I want each application's container recipe to live on its `federation` branch, so that the integration stays reversible in a repository that is not ours.
+64. As somebody showing the project to the foundation, I want a running system to click through, so that what is judged is what was built rather than a description of it.
 
 ## Implementation Decisions
 
@@ -148,7 +148,7 @@ discarded.
 - The Broker is **Keycloak**, at a **pinned version**, run behind a **reverse proxy in every environment, including local**. The reason for the proxy is parity of form: cookie, TLS, redirect-URI and CORS failures that depend on deployment shape otherwise appear for the first time in production. The reason for pinning is ADR-0004: a security property of the design rests on how Keycloak treats a verified email, so the version is not allowed to move on its own.
 - The `issuer` differs per environment and is **read from configuration**. It is never persisted in any database and never reconstructed by concatenating parts (ADR-0001). `/realms/<name>` stays in the path; stripping it fights Keycloak's multi-realm design and, with ADR-0001 and ADR-0002 in place, protects nothing still at risk.
 - The Broker's own `compose` stack — Keycloak, the PostgreSQL it needs and an **SMTP endpoint** — is declared **in this repository**. Locally the SMTP endpoint is a mail catcher. Mail is no longer optional: ADR-0004 and ADR-0005 both depend on the Broker being able to confirm an address.
-- **This repository declares the pilot's composition, not any application's production infrastructure.** Alongside the Broker's own services, it declares how each integrated Brokered App is run **for the pilot** — built from that application's `federation` branch (ADR-0009). How those applications are deployed for real is still not declared here, and containerising them in production is still not this pilot's work.
+- **This repository declares the Brokered Composition, not any application's production infrastructure.** Alongside the Broker's own services, it declares how each integrated Brokered App is run **in the composition** — built from that application's `federation` branch (ADR-0009). How those applications are deployed on their own machines is still not declared here, and containerising them there is still not work taken on here.
 
 ### Identity
 
@@ -157,7 +157,7 @@ discarded.
 - **Identities join by Verified Email** (ADR-0004). An Identity arriving with a Verified Email already held becomes an Identity of that same Person; an Identity arriving at an address no Person holds becomes a new Person. The address is read **once**, when that Identity first arrives, and never consulted again — so changing an email at Google afterwards costs nothing, and can never cause a later join.
 - **Only a verified address joins anything, and the Broker will verify one itself.** Where the source did not, the join waits for a link mailed there to be followed (ADR-0004). Google and GitHub affirm the address themselves; `trustEmail` is set **per Identity Source**, never globally, and only where the source actually makes the affirmation.
 - **A source that hands over no verified address causes the Broker to ask for one and confirm it by mail.** One mechanism covers all three cases that need it: ORCID, which affirms no email at all; GitHub, when the primary address is not released; and registration with a Local Credential. This is also what ORCID's own integration guide instructs integrators to do.
-- **Two different addresses are two Persons, and the pilot offers no merge.** A merge flow is deliberately future work, and when it comes it must **add an alias** rather than reassign, because ADR-0002 promises a Person Identifier is never reassigned.
+- **Two different addresses are two Persons, and the Broker offers no merge.** A merge flow is deliberately future work, and when it comes it must **add an alias** rather than reassign, because ADR-0002 promises a Person Identifier is never reassigned.
 - **Identity Sources at launch: Google, GitHub and the Local Credential.** ORCID is deferred, for a reason that is not about credentials — see Further Notes. More sources are added later as declared configuration.
 - **Local Credentials** (ADR-0005): self-service registration with **mandatory email confirmation**; the **email address is the sign-in identifier** and there is no separate username; **password recovery by email** owned by the Broker; and a **declared password policy** — minimum length 12, no composition rules, no expiry or rotation, and a common-password list if it is free.
 - **Keycloak's Account Console is enabled** and is the Broker's only user-facing surface: where a Person changes their password, changes their email address and sees their own Identities. Changing an email requires confirming the new address, and has no effect on any join and none at all on the Person Identifier. The account REST API reads credentials and Identities but changes no password and no address — both are browser steps — so it does not replace the console; measured against the pinned version in `docs/notes/2026-11-18-account-rest-api-credential-operations.md`.
@@ -173,8 +173,8 @@ discarded.
 
 - Authorisation attaches to the **Person**. The Identity used to arrive does not change what a Person may do (ADR-0003).
 - The Broker emits **no role and no entitlement claims**. Roles stay local to each Brokered App.
-- **Assurance is no longer uniform**: "Google affirms this address" and "somebody confirmed a link in that mailbox" are different things, and no Brokered App can tell them apart. That is accepted for the pilot, and ADR-0003 leaves a per-action assurance check available later without changing the model.
-- No **Organization** entity exists in the pilot. It becomes an attribute of an Identity Source when a second organisation exists.
+- **Assurance is no longer uniform**: "Google affirms this address" and "somebody confirmed a link in that mailbox" are different things, and no Brokered App can tell them apart. That is accepted for now, and ADR-0003 leaves a per-action assurance check available later without changing the model.
+- No **Organization** entity exists yet. It becomes an attribute of an Identity Source when a second organisation exists.
 
 ### Protocol
 
@@ -199,16 +199,16 @@ discarded.
 ### Integration with the Brokered Apps
 
 - Integration is **additive on the way in and subtractive in one place**: each Brokered App gains delegated sign-in, keeps its existing sign-in for accounts that already exist with no sunset date, and **closes its own registration path** (ADR-0007).
-- That registration link is a change **beyond** the authentication hook, and so is the container recipe the pilot needs. The promise to those repositories is now "the authentication hook, the registration link, and a Dockerfile on the `federation` branch" — not "nothing else" — and every part of it is asked for rather than assumed. All of it lands on the `federation` branch: `main` is never touched, and the way those applications are deployed today does not change (ADR-0009).
+- That registration link is a change **beyond** the authentication hook, and so is the container recipe the composition needs. The promise to those repositories is now "the authentication hook, the registration link, and a Dockerfile on the `federation` branch" — not "nothing else" — and every part of it is asked for rather than assumed. All of it lands on the `federation` branch: `main` is never touched, and the way those applications are deployed today does not change (ADR-0009).
 - **The closure reaches the web front end, not the API endpoint.** Where a Flutter client shares an application's API, the registration endpoint stays alive while that client depends on it. Exposure therefore falls on the web and not on mobile, and ADR-0007 states that limit rather than implying otherwise.
 
 ### Deployment
 
-- **The pilot is one Docker composition and it runs wherever Docker runs** (ADR-0009): the Broker, its PostgreSQL, the mail catcher, the reverse proxy and every integrated Brokered App, each built from its own `federation` branch, all up with one command. It starts on a laptop, so nothing in it waits on a machine being provisioned.
+- **The Broker and its applications are one Docker composition, and it runs wherever Docker runs** (ADR-0009): the Broker, its PostgreSQL, the mail catcher, the reverse proxy and every integrated Brokered App, each built from its own `federation` branch, all up with one command. It starts on a laptop, so nothing in it waits on a machine being provisioned.
 - **Every service is reached through the proxy by hostname, never by a port on localhost.** This is the parity-of-form argument the Broker already makes, extended to the applications: redirect URIs, cookies and CORS take the shape they will have in production rather than a shape only localhost allows.
-- **Where the pilot is published, and whether it is published at all, is a later decision.** The current OVH infrastructure is not needed to make progress and nothing is built on it. When the question arrives, the answer costs a hostname and a certificate — ADR-0001 is what keeps it that cheap.
-- **Everything in the composition is fixtures.** The stories about accounts that existed before the pilot need an account that already exists, and the composition creates it. No production data and no personal data goes into it, which is also what would make a public address safe.
-- Production, afterwards, is OVH virtual or physical machines. The existing applications run there **directly on the host** — a process manager, a reverse proxy and a PostgreSQL local to each machine — and **none of them is containerised today**. A containerised Broker is therefore a new shape on those machines rather than a continuation of one, and containerising anything else is not this pilot's work.
+- **Where the composition is published, and whether it is published at all, is a later decision.** The current OVH infrastructure is not needed to make progress and nothing is built on it. When the question arrives, the answer costs a hostname and a certificate — ADR-0001 is what keeps it that cheap.
+- **Everything in the composition is fixtures.** The stories about accounts that existed before the Broker need an account that already exists, and the composition creates it. No production data and no personal data goes into it, which is also what would make a public address safe.
+- Production, afterwards, is OVH virtual or physical machines. The existing applications run there **directly on the host** — a process manager, a reverse proxy and a PostgreSQL local to each machine — and **none of them is containerised today**. A containerised Broker is therefore a new shape on those machines rather than a continuation of one, and containerising anything else is not work taken on here.
 - **Backups are inherited, not designed.** Daily PostgreSQL dumps and folder copies already exist and will be followed; this repository declares none. What inheriting them means in practice is **confirming that the policy reaches the Broker's own PostgreSQL**, which is a new database no existing policy knows about. That confirmation is a task before production, not an assumption.
 - Deferring all of this is free because of ADR-0001: the hostname is configuration, so choosing it later costs a coordinated configuration change and one forced re-login, not a data migration.
 
@@ -244,7 +244,7 @@ The single seam for all behaviour. A test helper behaves like a real Brokered Ap
 
 What is asserted at this seam:
 
-- **ADR-0004, the positive direction** — the same Verified Email arriving through two different Identity Sources yields **one** Person Identifier, with no linking flow in between. This is now reachable without building anything, which is what makes ADR-0002's cross-source promise demonstrable inside the pilot.
+- **ADR-0004, the positive direction** — the same Verified Email arriving through two different Identity Sources yields **one** Person Identifier, with no linking flow in between. This is now reachable without building anything, which is what makes ADR-0002's cross-source promise demonstrable inside the composition.
 - **ADR-0004, the negative direction, and it is the most important assertion in the repository** — an Identity presenting an **unverified** email joins nobody on that claim; where a Person holds the address, the join waits for the Broker's own mail. This single test is what separates automatic joining from account takeover. It is a first-class assertion, written first, and it is also where the reported `trustEmail` advisory gets checked against the pinned version.
 - **ADR-0004, the stated limit** — two different Verified Emails yield **two** Person Identifiers, and nothing in the responses offers to join them.
 - **ADR-0002** — the Person Identifier is present in `sub` and `voperson_id`; present in ID token, userinfo, introspection and access token; identical across two sign-ins; never changed by an email address changing afterwards.
@@ -269,11 +269,11 @@ What is asserted at this seam:
 
 - **One sign-in, two applications** — a Person signs in at one Brokered App through the Broker,
   goes to a second one and is **not** asked to sign in again (story 14), and both applications
-  report the **same Person Identifier** where each already exposes it. This is the pilot's central
+  report the **same Person Identifier** where each already exposes it. This is the project's central
   claim, and this test is the only place it is demonstrated rather than inferred.
 - **The registration link is gone** from each integrated web front end, and newcomers are sent to
   the Broker (ADR-0007). The Broker cannot see this; a browser can.
-- **An account that existed before the pilot still signs in the old way**, unchanged (ADR-0007).
+- **An account that existed before the Broker still signs in the old way**, unchanged (ADR-0007).
 - **Anonymous use still works without touching the Broker**, where the application allows it
   (ADR-0006).
 
@@ -297,28 +297,28 @@ One thing, and it is the consequence of a decision rather than an oversight:
   roles, so nothing outside the application can see whether it did.
 
 The second item used to be that each Brokered App actually closed its own registration path
-(ADR-0007). It is now asserted at seam 3 for every application in the pilot's composition: the Broker
+(ADR-0007). It is now asserted at seam 3 for every application in the Brokered Composition: the Broker
 still cannot verify it, but a browser can (ADR-0010). For an application that is integrated and not in
-the composition it stays a check by hand, and it stays the part on which the pilot's claim to reduce
+the composition it stays a check by hand, and it stays the part on which the project's claim to reduce
 exposure rests.
 
 ## Out of Scope
 
-- **A public address for the pilot.** The composition runs wherever Docker runs and starts on a laptop (ADR-0009). Publishing it is a later decision, taken if and when somebody outside the team needs to click through it, and the composition is built so that the decision costs a hostname.
-- **Migration of existing users.** Existing accounts keep their current per-application sign-in. The **rehearsal** of that migration against anonymised production data is also out: the data will arrive, the rehearsal is attempted only if January allows, and nothing in the pilot depends on it.
-- **A merge flow for two Persons.** Two different Verified Emails stay two Persons for the whole pilot (ADR-0004).
-- **Deployment to OVH**, containerising the existing applications **in production**, and any backup work. The containers written for the pilot run the applications for the pilot and nothing else, and they live on the `federation` branch (ADR-0009). The existing policies are inherited and will be followed before production; none of it is designed or declared here.
+- **A public address for the composition.** The composition runs wherever Docker runs and starts on a laptop (ADR-0009). Publishing it is a later decision, taken if and when somebody outside the team needs to click through it, and the composition is built so that the decision costs a hostname.
+- **Migration of existing users.** Existing accounts keep their current per-application sign-in. The **rehearsal** of that migration against anonymised production data is also out: the data will arrive, the rehearsal is attempted only if January allows, and nothing else depends on it.
+- **A merge flow for two Persons.** Two different Verified Emails stay two Persons (ADR-0004).
+- **Deployment to OVH**, containerising the existing applications **in production**, and any backup work. The containers written for the composition run the applications there and nothing else, and they live on the `federation` branch (ADR-0009). The existing policies are inherited and will be followed when that work arrives; none of it is designed or declared here.
 - **ORCID as an Identity Source at launch.** Deferred on a finding, not on credentials — see Further Notes.
 - **A custom Broker theme** beyond the foundation's name and logo.
-- **The central Profile service.** Out of the pilot and deliberately not foreclosed — which is why tokens must not become the transport for Profile data.
+- **The central Profile service.** Out of scope and deliberately not foreclosed — which is why tokens must not become the transport for Profile data.
 - **An Organization entity.**
-- **Mobile and Flutter clients**, as a committed deliverable. The pilot is Django and React, and public clients with PKCE leave mobile additive later at the cost of one redirect URI. One **reference integration** in a single Flutter application is an optional extra: not committed, nothing in the pilot depends on it, and its purpose is to leave a worked example rather than to ship mobile.
+- **Mobile and Flutter clients**, as a committed deliverable. What is built here is Django and React, and public clients with PKCE leave mobile additive later at the cost of one redirect URI. One **reference integration** in a single Flutter application is an optional extra: not committed, nothing here depends on it, and its purpose is to leave a worked example rather than to ship mobile.
 - **Claiming an anonymous contribution** for a Person afterwards. That anonymous use produces no Person is now decided (ADR-0006); whether a past anonymous contribution can ever be attributed is recorded as undecided, and making it possible would be work in the application, not in the Broker.
 - **Roles, entitlements or group membership issued by the Broker.**
 - **Outbound federation** — other organisations consuming identities we issue — and any test of it.
 - **Any implementation of OpenID Federation.**
 - **EOSC, eduGAIN and AARC conformance**: no Infrastructure Proxy, no eduGAIN service-provider membership, no Sirtfi self-assessment, no REFEDS Code of Conduct notice, no R&S declaration, no AARC-G069 URN namespace, no published collaborations page. Whenever this step is costed, cost it as **operations rather than protocol**: the current EOSC EU Node onboarding policy makes mandatory a Service Management System compliant with ISO/IEC 20000 or FitSM, TRL 7 with defined SLAs, integration with the Node's monitoring and helpdesk — the latter requiring a level 2/3 support rota — infrastructure located in the EU27, and Free and Open Source Software throughout. For a foundation this size the binding constraint is the helpdesk rota and the service management system, not the AAI integration. Two things follow: previous estimates of this step are too low, and the mandatory-FOSS clause is one we already satisfy, Keycloak being Apache-2.0 and this repository being public. Note also that **reaching eduGAIN and being an AARC-conformant Community AAI are separable**, with very different costs; when the step arrives, establish which of the two is actually wanted. Evidence in `docs/notes/cos4cloud-research.md`.
-- **Application registration by third-party organisations.** Pilot applications are Ibercivis's own.
+- **Application registration by third-party organisations.** The applications integrated here are Ibercivis's own.
 - **Resource discovery and streaming** — the third service of the wider programme. Untouched, and its vocabulary is still undefined, though it need not start from a blank page: **OGC Best Practice 21-068 (STAplus)** is a freely implementable vocabulary for exactly this shape of problem — many contributors, each owning what they uploaded, each wanting attribution, across platforms run by different organisations — and it is still under active standardisation in OGC. Its reference server implementation already authenticates against Keycloak, so a STAplus endpoint would need no broker but ours. Read it before inventing a vocabulary; summary and citations in `docs/notes/cos4cloud-research.md`.
 - **The final production hostname.** Deferred on purpose; ADR-0001 is what makes deferring it safe.
 
@@ -376,11 +376,11 @@ to be updated: it will be revised by hand when they reply. None of the five ques
 depends on anything decided here, but question P5 asks them to read this specification — which is the
 reason it was rewritten before they could open it.
 
-**Timing.** The pilot closes at the end of January with a team of two. The optional and deferred items
+**Timing.** The first phase closes at the end of January with a team of two. The optional and deferred items
 above are the first things to cut, in this order: the migration rehearsal against anonymised data,
 the EOSC sandbox enrolment, the outbound-direction experiment, and the EU-Citizen.Science audit.
 End-to-end tests used to head that list. They no longer do: they are committed (ADR-0010), and so is
-the composition they run against (ADR-0009), because the pilot will be judged by somebody clicking
+the composition they run against (ADR-0009), because what is built will be judged by somebody clicking
 through it.
 
 The one optional item worth defending against that list is the **Flutter reference integration**. It is

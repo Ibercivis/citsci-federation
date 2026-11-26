@@ -36,8 +36,8 @@ because an agent opens most pull requests here, and no check supplies a second p
 
 The three bypass actors are the way out when the reviewer is away. They are named one by one
 rather than granted through the repository's admin role: there are ten admins, most of them there
-for other work in the organisation, and the escape belongs to the people accountable for the
-pilot.
+for other work in the organisation, and the escape belongs to the people accountable for this
+project.
 
 `pr` is the check on the pull request's title and body. They are published as the merge commit's
 message and stay editable after review, which is why CI re-reads them on every edit.

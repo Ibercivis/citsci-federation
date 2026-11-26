@@ -1,7 +1,7 @@
 # Migration — Geonity
 
 What Geonity's existing accounts would need in order to move onto the Broker. Migration is outside
-the pilot's committed scope; this record exists so that it is cheap if time allows. It is not a
+the committed scope; this record exists so that it is cheap if time allows. It is not a
 commitment. See `docs/agents/migration-requirements.md` for how to read and extend it.
 
 No figure here was measured. The counts that would decide the populations below do not exist yet;

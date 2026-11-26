@@ -5,7 +5,7 @@ The **Broker**: one place where a **Person** proves who they are, which every
 Source** and every application recognises them by a single **Person
 Identifier**, without holding a password of its own.
 
-- What it is for, and what it does not do: [`docs/specs/spec-shared-identification-pilot.md`](docs/specs/spec-shared-identification-pilot.md)
+- What it is for, and what it does not do: [`docs/specs/spec-shared-identification.md`](docs/specs/spec-shared-identification.md)
 - The decisions, and what they cost: [`docs/adr/`](docs/adr/)
 - The words, used in one sense each: [`GLOSSARY.md`](GLOSSARY.md)
 - What checks the code, and what does not yet: [`docs/verification.md`](docs/verification.md),
@@ -75,16 +75,16 @@ Every map is blank, and OpenRed's Google button cannot work.
 [`docs/trying-it-by-hand.md`](docs/trying-it-by-hand.md) says why, and what
 else does not work yet.
 
-Each application is seeded with accounts that **existed before the pilot** —
+Each application is seeded with accounts that **existed before the Broker** —
 invented, on `.invalid` addresses, from each application's own `seed_local`
 command — so that "an existing sign-in keeps working" is something to click
 rather than a claim. No production data and no personal data is in any of it.
 
-**It is early-stage on purpose** (ADR-0009): development constants in plain
-sight, DEBUG on, the Django development server, and parts that are missing on
-purpose. It is not deployed anywhere, it depends on no provisioned machine, and
-nothing in this state reaches production — which is not the same as being
-written to be thrown away.
+**The composition as it stands is the development build** (ADR-0009):
+development constants in plain sight, DEBUG on, the Django development server,
+and parts that are missing on purpose. It depends on no provisioned machine, and
+nothing in this state is what gets deployed — hardening it is later work on
+this same composition rather than on a rewrite.
 
 ## What is declared here, and what is not
 

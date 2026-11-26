@@ -19,7 +19,7 @@ import { DEMO_IDENTITY } from "./clients.ts";
  * `pnpm apps:up` is what makes it run.
  *
  * One application is not single sign-on. Arriving at a *second* application
- * already signed in is what the pilot exists to demonstrate, and it waits on
+ * already signed in is what the project exists to demonstrate, and it waits on
  * the other integrations (`issue #30`, `issue #31`).
  */
 

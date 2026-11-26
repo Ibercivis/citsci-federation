@@ -7,7 +7,7 @@ liveness claim carries that date. -->
 **Verdict.** A live, single-vendor, **closed-source** hosted OAuth2/OIDC authorization server run by
 **Secure Dimensions GmbH** (Munich), brokering **SAML2** logins from eduGAIN, Google, Facebook and
 GitHub into OIDC. Built inside EU citizen-science projects (LandSense, Cos4Cloud, CitiObs) and still
-answering. **It changes nothing in the pilot and should not become our Broker, now or later** — it
+answering. **It changes nothing here and should not become our Broker, now or later** — it
 mints the subject identifier itself, has no concept of a Person, has no local credential, and has no
 SLA or price with its last funding ending 31 December 2026. It is not a dead endpoint, though, which
 is why the reasoning is written down rather than waved away.

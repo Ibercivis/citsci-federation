@@ -1,12 +1,9 @@
-# The Pilot Composition's reverse proxy is Caddy, not the nginx production runs
-
-**The term is now Brokered Composition** (`GLOSSARY.md`). This ADR, and its file name, keep the
-words the decision was taken in; nothing else does.
+# The Brokered Composition's reverse proxy is Caddy, not the nginx production runs
 
 The reverse proxy ADR-0001 puts in front of the Broker in every environment is **Caddy**, in the
-Pilot Composition and nowhere else. The machines that serve the foundation's applications today are
+Brokered Composition and nowhere else. The machines that serve the foundation's applications today are
 fronted by nginx, every virtual host of them, and this decision does not propose changing that. If
-the Pilot Composition is ever published at a public address — the decision ADR-0009 defers — the
+the Brokered Composition is ever published at a public address — the decision ADR-0009 defers — the
 front door there is nginx, and the fifteen lines of `proxy/Caddyfile` become a virtual host.
 
 **ADR-0001 asks for parity of form, not parity of software.** The form is the hostname a Brokered
@@ -16,14 +13,14 @@ That shape is identical under either tool, and the failures the ADR exists to su
 cookies that do not travel, a `redirect_uri` that does not match, CORS, HTTP where HTTPS is assumed
 — are caused by the shape rather than by the proxy that imposes it.
 
-What decides it, then, is the cost of the file. The proxy in the Pilot Composition holds no policy:
+What decides it, then, is the cost of the file. The proxy in the Brokered Composition holds no policy:
 it routes one hostname to one container, answers `/healthz` so that `compose up --wait` can tell the
 proxy apart from what is behind it, and adds the forwarded headers without being told to. The same
 thing in nginx is a longer file in which every header is set by hand — set one wrong and the
 Broker publishes an issuer nobody can use, with an error that names nothing. Caddy also obtains
-certificates on its own, which costs nothing today (the pilot runs on HTTP locally and its
+certificates on its own, which costs nothing today (the composition runs on HTTP locally and its
 configured issuer says so out loud) and is the cheapest answer available the day somebody wants to
-show the pilot over HTTPS.
+show the composition over HTTPS.
 
 ## Considered Options
 
@@ -33,7 +30,7 @@ show the pilot over HTTPS.
   free — local HTTP and production TLS differ, so the file is edited either way — while the cost
   of the longer file and the hand-written headers is paid in the composition every day.
 - **Traefik, configured from container labels.** Rejected. It earns its keep when services come and
-  go and the proxy has to discover them; the Pilot Composition's services are a short, fixed,
+  go and the proxy has to discover them; the Brokered Composition's services are a short, fixed,
   hand-written list. It would spread the proxy's configuration across every service's labels, which
   is more places to look rather than fewer.
 - **No proxy locally.** Not reopened here. ADR-0001 settled it, and Keycloak publishes no port of
@@ -41,13 +38,13 @@ show the pilot over HTTPS.
 
 ## Consequences
 
-**One tool in the house that nothing in production uses.** Accepted, and bounded by what the Pilot
-Composition is: early-stage (ADR-0009), configured by a single file, and not the way anything is
-deployed for real. Nobody has to learn Caddy in order to deploy anything, and nobody is on call for
+**One tool in the house that nothing in production uses.** Accepted, and bounded by what the
+Brokered Composition is today: the development build (ADR-0009), configured by a single file, and not
+what gets deployed. Nobody has to learn Caddy in order to deploy anything, and nobody is on call for
 it.
 
 **The day the proxy holds policy, this decision is wrong.** Rate limits, address allowlists,
-anything decided at the edge: policy living in a tool only the pilot runs is a real cost rather than
+anything decided at the edge: policy living in a tool only the composition runs is a real cost rather than
 a notional one, and that is the trigger to revisit this. Today the file holds none of it, terminates
 no TLS, and has the admin API switched off so that nothing but the file can configure it.
 

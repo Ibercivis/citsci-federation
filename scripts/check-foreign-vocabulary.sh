@@ -19,7 +19,8 @@
 # allowed and will still be printed. What is checked is that somebody read it.
 set -euo pipefail
 
-# Ours in any casing. Kept lowercase: the diff scan lowercases what it compares.
+# Ours in any casing, plus `pilot`, retired here and still jargon there. Kept
+# lowercase: the diff scan lowercases what it compares.
 LOOSE='pilot|brokered app|federated app|federation proxy|broker'
 # The common noun is the application's; the capitalised term is ours.
 STRICT_GREP='\b(Person|Persons)\b'

@@ -1,5 +1,5 @@
 #!/bin/sh
-# Leaves this machine with nothing of the pilot running and no data behind it,
+# Leaves this machine with nothing of the composition running and no data behind it,
 # so that the next `pnpm apps:up` is a first run again.
 #
 # Two kinds of stack, treated differently, and the difference is ownership.

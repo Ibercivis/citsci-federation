@@ -50,7 +50,7 @@ else.
 ## Consequences
 
 `docs/learn-artifacts.md` is deleted and `AGENTS.md` describes `docs/orientation/` in its place. The
-two published pages were distilled into `docs/orientation/pilot-architecture.md` and
+two published pages were distilled into `docs/orientation/architecture.md` and
 `docs/orientation/keycloak.md` — rewritten from the spec and the ADRs rather than copied, since both
 were by then wrong — and then deleted, on 16 November 2026. The links already shared with the team
 are dead on purpose: a dead link sends the reader to the spec, a stale page does not. Issue #20 is

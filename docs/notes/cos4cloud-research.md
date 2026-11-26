@@ -66,7 +66,7 @@ grant (`52North/sensorweb-server-sta`, last release `v4.0.2-STAPLUS` 2023-02-17,
 detected), and both advertised demo endpoints — `cos4cloud.demo.secure-dimensions.de`,
 `cos4cloud.sta.52north.org` — no longer resolve.
 
-**Verdict: not adoptable today** (we have no sensor data service and need none in the pilot) **but
+**Verdict: not adoptable today** (we have no sensor data service and need none now) **but
 the one asset here that would save us inventing something.** Reading it costs an afternoon.
 
 ## 2. The shared sign-in was AUTHENIX — three findings about the *project*

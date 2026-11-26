@@ -16,7 +16,7 @@ not work yet are in the walkthrough — read it once before running this.
    repository and never will be.
 2. **The GitHub account's primary address has to be the one Google signs in with, and verified at
    GitHub.** Act 2 is the whole point of the demo and it proves nothing otherwise: two addresses are
-   two Persons, on purpose (ADR-0004), and the pilot has no merge flow to show. An address GitHub has
+   two Persons, on purpose (ADR-0004), and there is no merge flow to show. An address GitHub has
    not verified still joins, but only through the mail: act 2 stops on **verify your email** and
    the link is in the catcher.
 3. **Start from nothing.**
@@ -76,7 +76,7 @@ accounts that existed before it.
 
 ## Act 2 — a second Identity, and the same Person
 
-A fresh private window. This is the act the pilot exists for, and it is silent: GitHub affirms the
+A fresh private window. This is the act the project exists for, and it is silent: GitHub affirms the
 address, so the Person is asked nothing in between.
 
 1. http://lostatnight.localhost:8080/accounts/login/ → **Sign in with your Ibercivis account** →
@@ -90,14 +90,14 @@ address, so the Person is asked nothing in between.
    http://broker.localhost:8080/realms/citsci/account → one Person with **both** accounts linked, and
    the sessions.
 
-## Act 3 — an account that existed before the pilot
+## Act 3 — an account that existed before the Broker
 
 The other half of the claim, and it takes a minute.
 
 1. http://lostatnight.localhost:8080/accounts/login/, in another private window →
    `volunteer1@lostatnight.invalid` / `devpass12345`. Signed in, unchanged, with no Broker involved.
 2. The view → **unchanged.** That account is LostAtNight's, it is not a Person, and the Broker never
-   hears about it. Migration is out of the pilot's scope.
+   hears about it. Migration is out of scope.
 3. http://lostatnight.localhost:8080/accounts/signup/ → it offers the Broker's button and creates
    nothing. Registration on a Brokered App is the Broker's job now (ADR-0007).
 
@@ -144,7 +144,7 @@ get is your Person made for them, and one extra confirmation in your way. Say it
 
 ## Do not improvise these
 
-- **Single sign-out.** The pilot did not settle it. Say so and move on.
+- **Single sign-out.** Not settled yet. Say so and move on.
 - **OpenRed through the Broker** (`issue #30`). It has its own sign-in and that is all it has.
   `openred.localhost:8080`'s Google button cannot work either, and
   [`trying-it-by-hand.md`](trying-it-by-hand.md) says why.
@@ -155,12 +155,12 @@ get is your Person made for them, and one extra confirmation in your way. Say it
 
 - **"Must I use Google?"** No: **Register** at the Broker is an address and a password it holds
   itself (ADR-0005). Act 4 is that path.
-- **"My GitHub address is a different one."** Then you are two Persons, and the pilot has no merge
-  flow. ADR-0004 took that deliberately, and a future merge has to add an alias rather than
+- **"My GitHub address is a different one."** Then you are two Persons, and there is no merge
+  flow yet. ADR-0004 took that deliberately, and a future merge has to add an alias rather than
   reassign, because an identifier is never reassigned (ADR-0002).
 - **"So whoever reads my mail becomes me?"** Yes, and it is written down as accepted rather than
   overlooked (ADR-0004). The same mailbox already recovers the password.
 - **"What do the applications learn about me?"** The identifier, and whatever you tell them
   yourself. No name, no roles: the Broker issues neither (ADR-0003).
 - **"Where can I try it?"** Nowhere yet. The composition runs on a laptop, and a public address is a
-  later decision the pilot left cheap to take (ADR-0001).
+  later decision we left cheap to take (ADR-0001).

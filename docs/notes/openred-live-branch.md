@@ -20,7 +20,7 @@ lives in `docs/agents/external-repos.md`. -->
 
 # OpenRed's `main` is not a stale copy of the application — it is the application before a model rewrite
 
-**Verdict.** Both halves of the question are true, and they are about different things. **The pilot's
+**Verdict.** Both halves of the question are true, and they are about different things. **Our
 cut is right and should not move**: `origin/main` has only `Measurement` and `Track` in
 `measures/models.py` and one API route, `/api/measurements/`, while the live React front end and the
 deployed hardware call `/api/radiation-measurements/`, `/api/stations/`, `/api/stats/`, `/api/tracks/`
@@ -63,7 +63,7 @@ the feature branch lacks.
 |---|---|---|---|
 | `origin/main` | `2491707` | 2025-07-29 | Alfredo Ferrer |
 | `origin/feature/weather-cache-and-stats` | `e66a6c9` | 2026-11-09 | Francisco Sanz |
-| `origin/federation` | `e66a6c9` | 2026-11-09 | — (same commit; the pilot has added nothing yet) |
+| `origin/federation` | `e66a6c9` | 2026-11-09 | — (same commit; we have added nothing yet) |
 | `origin/local-dev-environment` | `a7e624a` | 2026-11-11 | Alberto Gualis |
 
 `main` has had **no commit for 15 months and 14 days**. The feature branch has commits in July,
@@ -223,19 +223,19 @@ origin/main -- '*.py'` is empty). Its `package.json:61` carries `"proxy": "https
 | Repository | `main` tip | Is `main` the live line? | Shape |
 |---|---|---|---|
 | `Ibercivis/gdalface` | `99c560a`, 2025-12-04, Francisco Sanz | **Yes.** The only other branches are five stale dependabot branches, each 1 ahead and 19–27 behind, all from 2024–early 2025 | 27 PRs, 11 merged into `main` |
-| `Ibercivis/citsci-api` | `347f4df`, **2026-11-11**, Francisco Sanz | **Yes.** Nine of ten non-pilot branches are `behind` or `identical`; only `social-login-email-linking` is 1 ahead, from 2026-11-04 | feature branches land and are left behind |
-| `Ibercivis/Geonity` | `a56caca`, 2026-11-06, "Merge pull request #31 from Ibercivis/feat/image-compression" | **Yes.** All ten non-pilot branches are `behind` | 11 merged PRs into `main`; a real PR workflow |
+| `Ibercivis/citsci-api` | `347f4df`, **2026-11-11**, Francisco Sanz | **Yes.** Nine of ten branches not ours are `behind` or `identical`; only `social-login-email-linking` is 1 ahead, from 2026-11-04 | feature branches land and are left behind |
+| `Ibercivis/Geonity` | `a56caca`, 2026-11-06, "Merge pull request #31 from Ibercivis/feat/image-compression" | **Yes.** All ten branches not ours are `behind` | 11 merged PRs into `main`; a real PR workflow |
 | `Ibercivis/OpenRed` | `2491707`, **2025-07-29** | **No** | 1 PR ever, ours |
 
-In all three siblings, the pilot's `federation` branch sits on `main`'s exact tip — `99c560a`,
+In all three siblings, our `federation` branch sits on `main`'s exact tip — `99c560a`,
 `347f4df`, `a56caca` — which is the rule in `docs/agents/external-repos.md` working as written.
 Geonity even merges through pull requests. **The pattern "stale `main`, real work on a long-lived
-unmerged branch" occurs in exactly one of the four repositories.** The pilot is looking at one
+unmerged branch" occurs in exactly one of the four repositories.** We are looking at one
 repository's accident, and the accident has a cause: a model rewrite in July 2025 that was never
 merged back, by a contributor who then left the repository, in a repo with no PR, no protection and
 no release process to force the question.
 
-**The caveat, and it is worth a line.** The pilot's own internal server survey records that at least
+**The caveat, and it is worth a line.** Our own internal server survey records that at least
 one other Ibercivis application is deployed from a feature branch rather than from its default
 branch, and that branch is not among the branches GitHub lists for that repository — so it exists
 only on the server. (Source read for understanding, not quoted: `docs/private/servicios.md`, which is
@@ -271,12 +271,12 @@ every repository without a caveat, that other case needs its own check — not i
   returns only three shell helpers), and the repository's default branch is `master`, not `main`.
   Aspirational documentation; no evidential value.
 - No Dockerfile, compose file, Makefile, fabfile or ansible directory is committed on either branch
-  of either repository. The pilot's Dockerfile and `compose.yaml` on `local-dev-environment` are
+  of either repository. Our Dockerfile and `compose.yaml` on `local-dev-environment` are
   ours and are for the composition of ADR-0009, not for production.
 
 **What this repository already records**, read for understanding and stated here as a conclusion
 without the infrastructure detail (`docs/private/servicios.md` and `docs/private/openred-map-deploy.md`,
-both gitignored, neither quoted): the pilot's own survey of the production machines, dated 2026,
+both gitignored, neither quoted): our own survey of the production machines, dated 2026,
 records the **OpenRed API's production checkout as sitting on `feature/weather-cache-and-stats`**,
 and already flags, among the things it wants reviewed, that more than one application is deployed
 from a feature branch. For the
@@ -288,7 +288,7 @@ That is a record of what the survey found, and it is consistent with everything 
 not a reading of the server taken for this note. **The two things that genuinely need the host are in
 §8.**
 
-## 5. What a merge would cost the pilot, and what it would buy
+## 5. What a merge would cost us, and what it would buy
 
 ### 5.1 `main` is not the same application
 
@@ -354,7 +354,7 @@ Three of them are fatal on `main`:
   `LightPollutionMeasurement, RadiationMeasurement, Spectrum, Station, Track, WeatherCache` from
   `measures.models` and `Campaign, Mission, Project` from `missions.models`. Six of those nine
   names do not exist on `main` (§5.1). The seed command would not import.
-- `measures/migrations/0002_enable_h3_extension.py` is patched by the pilot (80 changed lines, the
+- `measures/migrations/0002_enable_h3_extension.py` is patched on `federation` (80 changed lines, the
   fix that lets the h3 extension fail softly). **That file does not exist on `main`** — `main`'s
   `measures/0002` is `0002_track`.
 - `openred/settings.py` (51 changed lines) is patched on top of the feature branch's settings, which
@@ -392,12 +392,12 @@ on zoom: `openred-react/src/hooks/useMeasurementsByZoom.ts:322` calls `…/compa
 map. What remains blank is the Mapbox basemap, which needs a `pk.` token
 (`openred-react/src/components/StationMapPicker.tsx:9`) and is already documented above as expected
 and not a defect. `docs/local-development.md` is corrected; the application's `LOCAL-DEV.md` still
-carries the wrong reason. "Deliberately not merged" is the right description of the pilot's stance
+carries the wrong reason. "Deliberately not merged" is the right description of our stance
 towards `main`, not of the endpoint's absence from `federation`.
 
 ### 5.4 What the merge would buy
 
-Nothing the pilot needs, and three things the application would gain:
+Nothing we need, and three things the application would gain:
 
 1. **`Django CI` and CodeQL would start seeing the live code.** Both follow `main` (§2); today they
    watch a branch nobody runs. This is the strongest argument for the merge and it has nothing to do
@@ -408,16 +408,16 @@ Nothing the pilot needs, and three things the application would gain:
    it means** in every repository, with no exception paragraph. Today the exception is written down
    and honoured, which is the next best thing.
 
-None of the three is worth the pilot spending its own time on, and none of them is blocked by the
-pilot's cut.
+None of the three is worth spending our own time on, and none of them is blocked by our
+cut.
 
 ## 6. Whose decision it is
 
-**The pilot can decide alone:** where `federation` is cut from, what lands on it, and what the local
+**We can decide alone:** where `federation` is cut from, what lands on it, and what the local
 environment is built against. `docs/agents/external-repos.md` already owns that choice and already
 records this deviation. Nothing in §1–§5 touches production.
 
-**The pilot cannot decide:** whether `feature/weather-cache-and-stats` merges into `main`, whether
+**We cannot decide:** whether `feature/weather-cache-and-stats` merges into `main`, whether
 `main` becomes the deployed branch, or whether the production checkout changes branch. That is
 someone else's production application, running on someone else's schedule, with a database whose
 migration state we have not read.
@@ -453,7 +453,7 @@ Not "your repository is set up wrong".
    Offer the measurements, not the commit. **Do not open the PR ourselves** — ADR territory aside, we
    cannot test the result against production's migration state.
 4. **Do not propose repointing the deployment.** Changing which branch a running application is
-   deployed from is a separate, riskier act than merging, it buys the pilot nothing, and it should
+   deployed from is a separate, riskier act than merging, it buys us nothing, and it should
    follow a merge by weeks, if at all. If it ever happens, `federation` is re-cut from `main` that
    day and the local environment is rebuilt — and by then it would be rebuilt against code that is
    identical to today's feature branch, so the cost is a rebase, not a rewrite.
@@ -465,15 +465,15 @@ Not "your repository is set up wrong".
 **The condition under which recommendation 1 flips:** `feature/weather-cache-and-stats` merges into
 `main` and the merge commit becomes an ancestor of `main`'s tip. On that day `main` is a superset of
 what `federation` is cut from, the `federation` branch is re-cut from `main`'s latest commit, the
-exception paragraph in `docs/agents/external-repos.md` is deleted, and the pilot's diff
-`origin/main..federation` becomes pilot work only, as everywhere else. Nothing else flips it: not the
+exception paragraph in `docs/agents/external-repos.md` is deleted, and our diff
+`origin/main..federation` becomes our work only, as everywhere else. Nothing else flips it: not the
 feature branch being renamed, not `main` receiving unrelated commits, and not production moving to
 `main` without a merge — if production ever followed `main` without the merge, the application would
 have changed, not the branch policy, and the integration would have to be re-examined from §5.1
 upwards.
 
 **Recommendations 1 and 3 are not in tension, and that is the whole answer to the question asked.**
-The pilot's cut is correct as it stands *and* the merge is worth proposing. They are compatible
+Our cut is correct as it stands *and* the merge is worth proposing. They are compatible
 because the cut is a statement about where OpenRed's code is today, and the merge is a request about
 where it should live tomorrow.
 
@@ -481,7 +481,7 @@ where it should live tomorrow.
 
 The first two need the production host and are the user's to answer or delegate; the note as written
 contacted no server, and question 5's answer says where its own facts come from. **All of them are
-now tracked**: questions 1 and 2 as issue #37, question 5 as issue #38, and the pilot's own share of
+now tracked**: questions 1 and 2 as issue #37, question 5 as issue #38, and our own share of
 the dependency question as issue #39. The text below is kept
 as the reasoning behind each; the tickets carry the work.
 

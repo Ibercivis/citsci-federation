@@ -1,6 +1,6 @@
 # Identities join into one Person by Verified Email
 
-The pilot exists to make one human one Person across the applications, and an explicit linking flow
+The project exists to make one human one Person across the applications, and an explicit linking flow
 was not going to ship by the end of January. So the Broker joins automatically: an Identity arriving
 with a **Verified Email** that matches one already held becomes an Identity of that same Person, and
 an Identity arriving with any other email becomes a new Person. The email is read **once**, when that
@@ -16,7 +16,7 @@ the source affirmed the address, or the Broker confirms it by mail before the jo
 
 - **No automatic linking; linking requires proving control of both accounts.** This was the previous
   decision and it is the safer one: it is the only option under which controlling someone's mailbox
-  does not hand over their Person. It was rejected on delivery, not on merit — the pilot would have
+  does not hand over their Person. It was rejected on delivery, not on merit — we would have
   shipped with no linking at all, leaving the one thing it exists to demonstrate undemonstrated. The
   risk is **accepted knowingly**: whoever controls a mailbox can become that Person. What keeps it
   tolerable is that nothing but a *verified* address counts, and that is now a security property with

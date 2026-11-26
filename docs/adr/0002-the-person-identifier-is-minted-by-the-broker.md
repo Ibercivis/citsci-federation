@@ -29,7 +29,7 @@ The Broker needs a protocol mapper and provider-side storage. The earlier effort
 both, and its `tests/realm-config.test.ts` exists to guard those prohibitions — that test will fail by
 design and must be rewritten to guard the rules in this ADR instead.
 
-Tokens are not the transport for Profile data. The Profile service is out of the pilot but
+Tokens are not the transport for Profile data. The Profile service is out of scope but
 deliberately not foreclosed, and an app that read profile fields from a token would foreclose it.
 
 Opacity is what makes "never reassigned, never recycled" survive a deletion request. An identifier

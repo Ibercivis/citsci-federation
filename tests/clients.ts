@@ -6,7 +6,7 @@
  * never the application itself: the glossary keeps "Brokered App" for that,
  * and these constants are named for the registration so the two do not blur.
  *
- * Two of them, because the pilot has to serve both shapes a Brokered App
+ * Two of them, because the Broker has to serve both shapes a Brokered App
  * comes in: a single-page application that cannot hold a secret, and a
  * server-rendered backend that can. They are stand-ins, declared in the
  * realm's testing layer, and they stay: the applications of the Brokered
@@ -36,7 +36,7 @@ export const PUBLIC_CLIENT: Client = {
 
 /** The confidential shape: a server-rendered backend holding a secret. The
  *  callback is the shape django-allauth serves, which is what the Django
- *  applications of the pilot use. */
+ *  applications in the composition use. */
 export const CONFIDENTIAL_CLIENT: Client = {
   id: "brokered-app-confidential",
   name: "Brokered App (confidential)",

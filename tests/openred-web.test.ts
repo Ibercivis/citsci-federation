@@ -25,7 +25,7 @@ import { configured } from "./broker.ts";
 const WEB = configured("OPENRED_WEB_BASE_URL");
 const API = configured("OPENRED_API_BASE_URL");
 
-/** A Person who existed before the pilot: the address and the password are
+/** A Person who existed before the Broker: the address and the password are
  *  constants of OpenRed's own `seed_local`, which `pnpm apps:up` runs against
  *  an empty database. `ada` rather than `rosa` or `admin` because the seed
  *  gives her tracks of her own — an account with nothing behind it would

@@ -1,7 +1,7 @@
 # Local environments for the Brokered Apps
 
 Every Brokered App gets an environment that runs on a laptop with a sample of data. **One is
-built for each application, as it is integrated** — the pilot is a composition of applications
+built for each application, as it is integrated** — what we run is a composition of applications
 (ADR-0009), and an application nobody can start is an application nobody can integrate.
 
 **No local environment takes data from production.** The rule that makes that cheap rather than
@@ -32,7 +32,7 @@ fourth application takes 8028.
 
 ## What these environments are for, and what not to spend time on
 
-The pilot's claim is **one Person, several applications, no second sign-in** (ADR-0009). What has
+The project's claim is **one Person, several applications, no second sign-in** (ADR-0009). What has
 to work in a local environment is therefore signing in, and the profile that follows the Person
 from one application to the next. Everything else is scenery: it exists so the screens are not
 empty while you click through a sign-in.

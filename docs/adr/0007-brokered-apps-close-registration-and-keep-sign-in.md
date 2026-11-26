@@ -2,18 +2,18 @@
 
 Each Brokered App removes its own registration path and sends new people to the Broker, while
 keeping its existing sign-in working **indefinitely** for accounts that already exist. There is no
-sunset date, and the pilot does not promise to remove it.
+sunset date, and no phase of this work promises to remove it.
 
-The reason is arithmetic. If an application keeps taking new registrations of its own, the pilot ends
-with exactly as many password stores as it started with, plus one more in the Broker. Closing
+The reason is arithmetic. If an application keeps taking new registrations of its own, the foundation
+ends with exactly as many password stores as it started with, plus one more in the Broker. Closing
 registration is the only part of the integration that makes the number go down.
 
 ## Considered Options
 
-- **Keep application registration open alongside the Broker.** Rejected: the pilot could then not
+- **Keep application registration open alongside the Broker.** Rejected: the project could then not
   honestly claim to reduce the foundation's exposure, which is one of the things it exists to show.
 - **Migrate the existing accounts now and close local sign-in too.** Rejected: migration is out of
-  the pilot, and breaking what people already rely on while the pilot is still being evaluated is
+  scope, and breaking what people already rely on while the Broker is being rolled out is
   the fastest way to have it judged on the wrong thing.
 
 ## Consequences
@@ -22,8 +22,8 @@ This is a change to each application **beyond the authentication hook**, which t
 would be the only change. The amended promise is "the authentication hook and the registration link".
 It is one link, but it has to be asked for rather than assumed, and the spec says so.
 
-**The closure reaches the web front end, not the API endpoint.** Two of the pilot's applications are a
-Django API serving both a React front end and a Flutter client, and mobile is out of the pilot. So the
+**The closure reaches the web front end, not the API endpoint.** Two of the integrated applications are a
+Django API serving both a React front end and a Flutter client, and mobile is out of scope. So the
 registration *link* closes while the registration *endpoint* stays alive for as long as a mobile client
 depends on it. The honest consequence is that exposure falls on the web and not on mobile, and this ADR
 promises exactly that much and no more. Mobile closes when mobile enters scope.

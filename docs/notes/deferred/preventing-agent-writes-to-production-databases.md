@@ -8,7 +8,7 @@ on purpose: this repo is public. -->
 > `AGENTS.md` asks agents not to modify a production database without explicit, case-by-case
 > confirmation from the user — and that rule is, by this note's own section 3, a guardrail inside the
 > agent's reach, not a boundary. The decision was made with that understood: the team is small,
-> backups exist, and the time is better spent on the pilot. This note is the plan for when that
+> backups exist, and the time is better spent on delivery. This note is the plan for when that
 > changes; start at Phase 1 in section 8, which is the cheap half and the half the question actually
 > asks for. One limit of the reasoning, recorded so it is not rediscovered later: backups answer a
 > mistaken write, not data read or disclosed, and one of the two hosts keeps its database backups

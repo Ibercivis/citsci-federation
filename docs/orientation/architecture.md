@@ -1,7 +1,7 @@
-# Orientation — the shape of the pilot
+# Orientation — the shape of the system
 
 A first reading, deliberately short. Nothing here decides anything:
-`docs/specs/spec-shared-identification-pilot.md`, `GLOSSARY.md` and `docs/adr/` are the source of
+`docs/specs/spec-shared-identification.md`, `GLOSSARY.md` and `docs/adr/` are the source of
 truth, and where this file disagrees with them, this file is what is wrong.
 
 ## One Broker, one identifier
@@ -54,7 +54,7 @@ through. An unverified address joins nobody until the Broker has confirmed it by
 source that affirms no address makes the Broker ask for one and confirm that.
 
 The price is stated rather than hidden: one human reachable at two unrelated addresses is **two
-Persons**, and the pilot offers no merge. A later merge must add an alias, never reassign.
+Persons**, and the Broker offers no merge. A later merge must add an alias, never reassign.
 
 ## What an integration costs the Brokered App
 
