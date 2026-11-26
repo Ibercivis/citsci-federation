@@ -35,10 +35,10 @@
 # either: a laptop running these applications' own stacks already has 5432 and
 # 5436 taken, and nothing outside this network needs to read them.
 #
-# **Early-stage on purpose** (ADR-0009). Every credential here is a development
-# constant, the Django development server serves every request, DEBUG is on,
-# and the data is invented. Nothing in this state reaches production — which is
-# not the same as being written to be thrown away.
+# **This is the development build** (ADR-0009). Every credential here is a
+# development constant, the Django development server serves every request,
+# DEBUG is on, and the data is invented. Nothing in this state is what gets
+# deployed — hardening it is later work on this same composition.
 #
 # What is NOT here yet, and the ticket that brings it:
 #

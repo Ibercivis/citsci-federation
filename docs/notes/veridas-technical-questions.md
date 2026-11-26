@@ -4,7 +4,7 @@ The five questions were sent to Veridas on 10 November 2026, in Spanish. What fo
 record of them (ADR-0008); the wording that left our hands was the Spanish one, and if a phrase here
 reads better than what was sent, that is the translation flattering us.
 
-The scope of the pilot changed *after* they were sent: automatic merging by verified email, local
+The project's scope changed *after* they were sent: automatic merging by verified email, local
 credentials in the Broker, ORCID out of the launch. Several questions in the reserve — 3.1 ("Keycloak
 must never link by email"), 3.6 (ORCID) and 5.4 ("we have given up linking by email") — therefore
 contradict the decisions now in force.

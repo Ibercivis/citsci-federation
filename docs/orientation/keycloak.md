@@ -31,8 +31,8 @@ arrives in the left column. Our words go in the issues, the commits and the code
 | Account Console | the Broker's only user-facing surface: password, email, own Identities |
 
 Two consequences of the table worth saying out loud. A realm is a closed world — nothing inside one
-is visible from another, and `master` is for administering Keycloak, not for our things; the pilot
-uses one realm. And a Person is created by their first federated sign-in with no password: the
+is visible from another, and `master` is for administering Keycloak, not for our things; we
+use one realm. And a Person is created by their first federated sign-in with no password: the
 Person Identifier lives in a user attribute, which protocol mappers copy into `sub` and
 `voperson_id`.
 
@@ -59,4 +59,4 @@ API under `/admin/realms/<realm>/`, which nothing in this repository calls.
 ## Read next
 
 - `broker/README.md` — the realm, the defaults that had to be broken, and why
-- `docs/orientation/pilot-architecture.md` — the shape the realm serves
+- `docs/orientation/architecture.md` — the shape the realm serves

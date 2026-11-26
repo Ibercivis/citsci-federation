@@ -6,7 +6,7 @@ Identity arrives through the Broker carrying a Verified Email that account alrea
 links on an address alone, nothing links an address the application never confirmed, and nothing
 links in bulk.
 
-**No application enables it during the pilot.** Migration is outside the pilot's committed scope and
+**No application enables it yet.** Migration is outside the committed scope and
 ADR-0007 keeps each application's own sign-in with no sunset date, so the switch waits. What this
 record settles is the rule, which was already written three times — `R1` in
 `docs/migration/geonity.md`, `R1` in `docs/migration/lostatnight.md`, and `R4` in the record for
@@ -135,7 +135,7 @@ against the rule. This is not that rule, on three counts:
   argument above. An application may still require it, and then its migration record says so and
   carries the reason; what no application may do is decide this at integration time, which is the
   divergence this record exists to stop.
-- **Leaving the design undecided for the pilot**, which the issue offered. Rejected: the rule is
+- **Leaving the design undecided for now**, which the issue offered. Rejected: the rule is
   written three times already and two of those versions disagree, so undecided means the fourth
   application writes a fourth version. Deferring the *switch* costs nothing and is what this record
   defers instead.
@@ -155,9 +155,9 @@ ADR names — somebody with an existing account cannot reach it through the Brok
 end for every account whose address the application confirmed. For an account it never confirmed the
 refusal is the end state until a human acts.
 
-**The pilot's arithmetic does not move.** Linking removes no password store, because that sign-in
+**The arithmetic does not move.** Linking removes no password store, because that sign-in
 survives it (ADR-0007). An application whose accounts all link holds exactly the passwords it held
-before, and the decision that would remove them is one this pilot does not take.
+before, and the decision that would remove them is not taken here.
 
 **Nothing enforces this where it is written.** The rule lives in three applications' code, no claim
 carries it, and no configuration in this repository would show an application disobeying. What can

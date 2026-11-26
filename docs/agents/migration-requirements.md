@@ -3,7 +3,7 @@
 What a Brokered App's **existing** accounts would need in order to move onto the Broker, recorded
 one file per app in `docs/migration/<app>.md`.
 
-Migration is **outside the pilot's committed scope**. These records exist so that it is cheap if
+Migration is **outside the committed scope**. These records exist so that it is cheap if
 time allows, and so that its cost is known rather than guessed. **A record is not a commitment.**
 
 ## When this applies

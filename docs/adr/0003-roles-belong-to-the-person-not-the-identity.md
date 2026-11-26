@@ -14,7 +14,7 @@ every Brokered App, against the requirement that apps change as little as possib
 
 ## Consequences
 
-Roles stay local to each Brokered App in the pilot; nothing about roles crosses the Broker.
+Roles stay local to each Brokered App for now; nothing about roles crosses the Broker.
 
 That a broker can decline to carry authorisation data and still be useful is not only our
 expectation. AARC-style research AAIs typically do carry group and entitlement claims, but AUTHENIX —

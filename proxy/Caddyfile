@@ -1,6 +1,6 @@
 # The reverse proxy in front of everything, in every environment including
 # local (ADR-0001, ADR-0012). It holds no policy and terminates no TLS here:
-# its whole job in the pilot is to make the deployment shape the same
+# its whole job here is to make the deployment shape the same
 # everywhere, so that the failures which depend on that shape show up on a
 # laptop rather than for the first time in production.
 #
@@ -18,7 +18,7 @@
 # compose.apps.yaml is where they are declared.
 
 {
-	# Nothing to obtain a certificate for: the pilot runs on HTTP locally and
+	# Nothing to obtain a certificate for: locally this serves plain HTTP, and
 	# the configured issuer says so out loud. In production TLS is terminated
 	# here, and the issuer changes with it — one coordinated configuration
 	# change, which is the whole point of ADR-0001.

@@ -7,7 +7,7 @@ can move from them into a public document without being rewritten first.
 
 The reason is accountability. The record has to be readable by everyone who may be asked to answer
 for it — project partners, reviewers of the European-funded work, auditors, a developer who joins
-after the pilot, and the agents that read these files before changing anything. A record kept half
+in a later phase, and the agents that read these files before changing anything. A record kept half
 in Spanish is a record that each of those audiences can only half read, and the half each one misses
 is not the same half. English is also already the language of the vocabulary these documents are
 about: `issuer`, `sub`, Verified Email, Person Identifier. Writing the prose around those terms in
@@ -39,8 +39,8 @@ readable by the people in it.
   translation that nobody is on the hook for producing.
 - **Bilingual documents, each decision in both languages.** Rejected. Two copies of a decision are
   two decisions as soon as one of them is edited and the other is not, and the ADRs exist precisely
-  to be the one place a decision lives. Nobody would have maintained the second copy, and the pilot
-  closes at the end of January.
+  to be the one place a decision lives. Nobody would have maintained the second copy, and the first
+  phase closes at the end of January.
 - **English for published material, Spanish for internal notes.** Rejected, and this is the option
   that was in force by accident until now. It puts a translation step exactly where the work moves
   fastest, between a note taken on a server and the issue that acts on it, which is where

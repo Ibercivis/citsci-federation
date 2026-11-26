@@ -99,7 +99,7 @@ Single-context: `GLOSSARY.md` and `docs/adr/` at the repo root. See `docs/agents
 
 ### Orientation docs
 
-`docs/orientation/` holds short explainers of the spec and the ADRs, for whoever meets the pilot
+`docs/orientation/` holds short explainers of the spec and the ADRs, for whoever meets the project
 first. They decide nothing: the spec, `GLOSSARY.md` and `docs/adr/` are the source of truth, and an
 explainer that disagrees with them is the thing that is wrong. Keep them **short** — they point at
 the source instead of restating it, and a file is deleted once what it explains is understood.
@@ -111,8 +111,8 @@ are denied in `.claude/settings.json`.
 ### External repositories
 
 Work on the Ibercivis application repositories never touches `main` or `master`. Each gets a branch
-named `federation`, cut from the latest commit of `main`: PRs target it and the pilot deploys from
-it. **What we add there is named in that application's words, never in ours** — our vocabulary stays
+named `federation`, cut from the latest commit of `main`: PRs target it and the composition deploys
+from it. **What we add there is named in that application's words, never in ours** — our vocabulary stays
 in this repository. See `docs/agents/external-repos.md`.
 
 ### Brokered App integrations
@@ -182,7 +182,7 @@ recording one, or reporting one to its owner: `docs/agents/security-findings.md`
 
 What an integrated Brokered App's **existing** accounts would need to move onto the Broker is
 recorded per app in `docs/migration/<app>.md`, as the integration turns it up. Migration is outside
-the pilot's committed scope and a record is not a commitment. Requirements are public, measurements
+the committed scope and a record is not a commitment. Requirements are public, measurements
 taken from a production database are not: `docs/agents/migration-requirements.md`.
 
 ### Production databases

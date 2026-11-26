@@ -7,7 +7,7 @@
 # this script is the only thing that writes it: run it on an empty machine and
 # `pnpm apps:up` has everything it needs but Docker.
 #
-# `federation` is the branch the pilot deploys from in every one of these
+# `federation` is the branch the composition deploys from in every one of these
 # repositories, and `docs/agents/external-repos.md` says why it is never `main`
 # and never a topic branch.
 #

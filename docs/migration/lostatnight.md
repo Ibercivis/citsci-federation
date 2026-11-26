@@ -1,7 +1,7 @@
 # Migration — LostAtNight
 
 What LostAtNight's existing accounts would need in order to move onto the Broker. Migration is
-outside the pilot's committed scope; this record exists so that it is cheap if time allows. It is
+outside the committed scope; this record exists so that it is cheap if time allows. It is
 not a commitment. See `docs/agents/migration-requirements.md` for how to read and extend it.
 
 Measured figures are deliberately absent: they are in `docs/private/security-findings.md` (INT-001,
@@ -37,7 +37,7 @@ Described by what each kind of account **has**, because that is what decides its
 - **A Google provider account and a password.** Already holds two ways in; gains a third. No special
   handling.
 - **Staff and superuser accounts.** Keep local sign-in regardless: administrative access should not
-  depend on an external route while the pilot is being evaluated.
+  depend on a route outside the application.
 
 ## 3. Requirements
 

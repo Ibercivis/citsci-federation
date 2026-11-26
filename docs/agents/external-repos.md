@@ -1,14 +1,14 @@
 # External repositories: the `federation` branch
 
 Scope: every repository that is **not this one** — the Ibercivis application repositories that become
-Brokered Apps, and anything else whose code the pilot has to change. Work inside
+Brokered Apps, and anything else whose code this project has to change. Work inside
 `citsci-federation` itself is unaffected.
 
 ## The rule
 
 **Never commit to `main` or `master` in an external repository — and never commit to `federation`
-either.** All pilot work lives on a branch named exactly `federation` — no prefix, no suffix, one per
-repository. `federation` is the main branch of our prototype, and it is treated like one:
+either.** All of our work lives on a branch named exactly `federation` — no prefix, no suffix, one per
+repository. `federation` is our main branch in that repository, and it is treated like one:
 
 - It is created from the **latest commit of `main`**, and refreshed from there. One repository
   deviates; see **Where `federation` is cut from** below.
@@ -17,11 +17,11 @@ repository. `federation` is the main branch of our prototype, and it is treated 
   made directly on `federation` is a commit nobody read.
 - Pull requests target `federation`, never `main` — unless a defect in `main` itself argues for
   one. See **A pull request against `main`** below; the default is never.
-- The pilot deploys from `federation`. Production keeps following `main`, and the one exception
-  below is the only thing the pilot ever puts there.
-- The application's **container recipe for the pilot** lives here too — a Dockerfile and the
+- The composition deploys from `federation`. The application's own deployment keeps following
+  `main`, and the one exception below is the only thing we ever put there.
+- The application's **container recipe for the composition** lives here too — a Dockerfile and the
   environment it needs, so the application can join the Brokered Composition (ADR-0009). It is written
-  for the pilot and for nothing else, and `main` never sees it.
+  for the composition and for nothing else, and `main` never sees it.
 - The repository's default branch stays as it is. We don't change it, and we don't ask for it.
 
 If `federation` already exists in a repository, use it rather than recreating it. Refreshing it from
@@ -33,8 +33,8 @@ If `federation` already exists in a repository, use it rather than recreating it
 change we put on it is not ours to take back.
 
 One thing lifts the default: **a clear defect in `main` itself** — the application broken on its own
-terms, by the standard of whoever maintains it, with or without a pilot. Not pilot work with a good
-reason behind it, and not an improvement we would like the application to have. A defect we are
+terms, by the standard of whoever maintains it, whether or not we ever touched it. Not our own work
+with a good reason behind it, and not an improvement we would like the application to have. A defect we are
 unsure of waits.
 
 The pull request **says what the defect is and argues for itself**, in the application's own words
@@ -44,7 +44,7 @@ reading the diff (ADR-0014).
 Two have gone through. [OpenRed#3](https://github.com/Ibercivis/OpenRed/pull/3) fixed a CI workflow
 that failed on Python versions the runners no longer offer, and two dependencies missing from
 `requirements.txt` without which a fresh clone does not start — both states of `main` that were not
-the pilot's doing, though re-pointing `main` is what made the first one visible.
+our doing, though re-pointing `main` is what made the first one visible.
 [OpenRed#4](https://github.com/Ibercivis/OpenRed/pull/4) added a compose file for running the suite
 locally, which is **no defect at all** and would not have opened the door by itself. Convenience
 travels well beside a real fix; that is the thing to watch for.
@@ -57,7 +57,8 @@ gets recorded, not where it gets asked.
 ## Vocabulary: the application's words, never ours
 
 **Everything we add to an external repository is named and explained in that application's own
-terms.** The words this project runs on — pilot, Broker, Brokered App, Person, ADR-0009 — are
+terms.** The words this project runs on — Broker, Brokered App, Person, Brokered Composition,
+ADR-0009 — are
 defined in `citsci-federation` and resolve nowhere else. To the people who maintain the application
 they name nothing, and a name that explains nothing misleads instead: `requirements-pilot.txt` was
 the local container's dependency list, so it was jargon *and* wrong about what the file was. That
@@ -111,12 +112,12 @@ merged. The second, if the volume ever argues for it.
 Until 12 November 2026 `Ibercivis/OpenRed` deployed the branch `feature/weather-cache-and-stats`,
 while `main` had stood still since July 2025 — it predated a model rewrite, holding neither the data
 model nor the sign-in path the integration changes, so a `federation` cut from it would have
-described a different application with nothing to integrate. The pilot moved `main` to that deployed
+described a different application with nothing to integrate. We moved `main` to that deployed
 commit, so the default branch, the CI workflow and the documented update procedure now all describe
 the application that actually runs, and `federation` is cut from `main`'s latest commit like
 everywhere else. The deployed tree did not change by a byte; `main` was relabelled, not rebuilt.
 
-This was a one-off on the application's own line of development, **not** a commit of pilot work onto
+This was a one-off on the application's own line of development, **not** a commit of our work onto
 `main`, and it is not a precedent. Nor is it the exception above: that one is a pull request, and
 this was not. The two commits the old `main` carried are preserved on
 `legacy-main-user-groups-heatmap` and left to the application owner to accept or close in
@@ -145,7 +146,7 @@ gh pr create --base federation   # never --base main
 
 ## Transition: a `federation` that was committed to directly
 
-Until 11 November 2026 the pilot committed straight onto `federation`. Moving such a repository to
+Until 11 November 2026 we committed straight onto `federation`. Moving such a repository to
 the reviewed shape loses nothing, because the commits are on the topic branch before `federation`
 moves anywhere:
 
@@ -178,7 +179,7 @@ moves `HEAD` out from under anyone who is on `federation`.
   goes once, and this prints the paragraphs that went twice. Same contract — nothing, or every pair
   read and kept. It reads the diff alone unless given more; `--help` says how.
   `docs/notes/2026-11-20-repeated-prose.md` says what it can and cannot see.
-- `git log --oneline origin/main..<topic>` shows only pilot work, so the branch is still a
+- `git log --oneline origin/main..<topic>` shows only our work, so the branch is still a
   descendant of `main` and nothing unrelated rode in. This now holds in every repository, OpenRed
   included: before 12 November 2026 the base of that range there was
   `origin/feature/weather-cache-and-stats`.

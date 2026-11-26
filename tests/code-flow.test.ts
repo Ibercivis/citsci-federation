@@ -5,9 +5,9 @@ import { ISSUER } from "./broker.ts";
 
 /**
  * The tracer: a Person arrives through the Broker and a Brokered App
- * receives valid tokens. Everything the pilot adds later rests on this.
+ * receives valid tokens. Everything added later rests on this.
  *
- * Both shapes of client run the same flow, because a pilot that works only
+ * Both shapes of client run the same flow, because a Broker that works only
  * for a single-page application or only for a server-rendered backend serves
  * half the applications it exists for.
  */

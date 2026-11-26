@@ -46,7 +46,7 @@ something on it. When a reproduction would help, run the application locally and
 has not been reported. Ask the user who receives it; don't pick a recipient.
 
 The hand-over need not be a written notice: a meeting counts, recorded with its date and who was
-there. What does not count is an intention to raise it. Fixing these is not the pilot's committed
+there. What does not count is an intention to raise it. Fixing these is not in the committed
 scope, so when a finding is deliberately held for a conversation, write that decision and its date
 into the entry — otherwise the next reader cannot tell a held finding from a forgotten one.
 

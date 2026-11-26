@@ -92,8 +92,8 @@ An edit to the declaration does **not** reach a stack that is already up, and
 neither does a change of `BROKER_MODE`. A `reset` is how either lands. Seam 2
 fails on a Broker that has not had one: left in another mode, built from an
 earlier declaration, or holding a realm an earlier container imported. A
-Broker holding state worth keeping will need a migration path that this pilot
-does not have yet.
+Broker holding state worth keeping will need a migration path that does not
+exist yet.
 
 **Re-applying the file on every start was considered and rejected.** Keycloak
 can be told to import with `--override`, which would make "applied at
@@ -172,7 +172,7 @@ a confidential one for a server-rendered backend, which can. Both are
 stand-ins, so both are in the testing layer: a `production` Broker registers
 the applications below and nothing else. The redirect URIs are development
 guesses, and the confidential one follows the callback shape django-allauth
-serves, because the applications of the pilot are Django. A third,
+serves, because the integrated applications are Django. A third,
 `misconfigured-client`, sits beside them and is not a Brokered App:
 `tests/clients.ts` says why.
 

@@ -36,7 +36,7 @@ that promise costs.
 - **A nonce from every client, as the realm required until now.** Rejected on the above: it is
   unsatisfiable by the libraries these applications are built on, and buys nothing where it is
   satisfiable by hand.
-- **No nonce from anybody.** Rejected: a single-page application is in scope for the pilot's
+- **No nonce from anybody.** Rejected: a single-page application is in scope among the integrated
   applications, its ID token does reach a browser, and the requirement costs such a client nothing
   — every browser OIDC library sends a nonce.
 - **A nonce from every client, satisfied by code we write in each application.** Rejected: the

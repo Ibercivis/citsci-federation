@@ -8,7 +8,7 @@ import {
 import { attempt, createPkce } from "./brokered-app.ts";
 
 /**
- * The flows the pilot refuses, refused rather than merely unused: a client
+ * The flows the Broker refuses, refused rather than merely unused: a client
  * registered carelessly tomorrow must not be able to switch one back on.
  *
  * Every case reads what a Brokered App receives — where the Broker turned the
@@ -86,7 +86,7 @@ describe.each(EVERY_REGISTERED_CLIENT)(
     // Every response type that hands a token to the browser at the
     // authorization endpoint, where it lands in a URL: the implicit ones, and
     // the hybrid ones. `code id_token` is here although it returns no access
-    // token, because the pilot allows the code flow and nothing beside it.
+    // token, because the Broker allows the code flow and nothing beside it.
     it.each([
       "token",
       "id_token",

@@ -1,6 +1,6 @@
 # Trying the Brokered Composition by hand
 
-What somebody with a browser does to see the pilot work: the manual pass before a pull request,
+What somebody with a browser does to see the composition work: the manual pass before a pull request,
 feature by feature. What the composition *is* and how it is wired is in the
 [README](../README.md) and ADR-0009 — this file is only the clicking.
 [`demo-script.md`](demo-script.md) is the ordered sequence to run in front of people, and it assumes
@@ -125,14 +125,14 @@ the profile, the sessions, and — for a Person who arrived from an Identity Sou
 are linked to. Step 3's `mock-verified` is linked to `mock-identity-source`; `demo` is not linked to
 anything, because `demo` signs in with a local credential.
 
-It is Keycloak's own screen, not ours. Nothing in the pilot links to it and nothing depends on it,
+It is Keycloak's own screen, not ours. Nothing of ours links to it and nothing depends on it,
 but it is the shortest answer to "so what does the Broker actually know about me".
 
 ### 5. Signing in to an application with an Ibercivis account
 
 http://lostatnight.localhost:8080/accounts/login/ → **Sign in with your Ibercivis account**.
 
-The first half of the pilot's claim, clickable: the application sends you to the Broker, the Broker
+The first half of the project's claim, clickable: the application sends you to the Broker, the Broker
 signs you in, the application redeems the code itself and you come back signed in. `demo` /
 `demo-password` as in step 2, and the Broker asks for consent on the way, because the client is
 declared `consentRequired`.
@@ -152,7 +152,7 @@ and the paragraph beside the button says that an address already used by a Geoni
 refused. Its API's registration endpoint stays open, because the mobile app still creates accounts
 there.
 
-### 6. An account that existed before the pilot
+### 6. An account that existed before the Broker
 
 Every seeded account is invented, on a `.invalid` address that can never receive mail, and its
 password is whatever the seed command printed — `devpass12345` unless somebody passed `--password`.
@@ -169,7 +169,7 @@ password is whatever the seed command printed — `devpass12345` unless somebody
 Everything but Django's own admin signs in by **email address**: all three applications set
 `ACCOUNT_AUTHENTICATION_METHOD = 'email'`.
 
-This is the half of the pilot's claim that is not about the Broker at all: an account that existed
+This is the half of the project's claim that is not about the Broker at all: an account that existed
 before it still signs in, unchanged.
 
 ### 7. Mail nobody outside this machine can receive

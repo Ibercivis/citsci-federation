@@ -1,12 +1,12 @@
-# The end-to-end tests of the pilot live in this repository
+# The end-to-end tests live in this repository
 
-Tests that drive a real browser across the whole pilot live here, not in the Brokered Apps'
+Tests that drive a real browser across the whole composition live here, not in the Brokered Apps'
 repositories. They run against the composition of ADR-0009, and they exist for one assertion no
 single application repository can make: **one sign-in, two applications, the same Person
 Identifier**.
 
-They are no longer optional. The pilot used to commit to the Broker's HTTP surface and to treat
-end-to-end tests as a welcome extra; they are now a deliverable, because the pilot is going to be
+They are no longer optional. The spec used to commit to the Broker's HTTP surface and to treat
+end-to-end tests as a welcome extra; they are now a deliverable, because what is built is going to be
 judged by somebody clicking through it, and what somebody clicks through is worth having a machine
 click through first.
 

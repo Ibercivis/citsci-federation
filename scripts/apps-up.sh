@@ -138,7 +138,7 @@ migrate() {
 failed=0
 
 echo
-echo "== the data each application existed with before the pilot"
+echo "== the data each application existed with before the Broker"
 for service in lostatnight geonity-api openred-api; do
   if migrate "$service"; then
     seed "$service" || failed=1

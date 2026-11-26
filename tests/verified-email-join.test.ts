@@ -191,7 +191,7 @@ describe("an unverified address joins no existing Person until its mail is answe
 
     // And now that Identity is one of this Person's: arriving through the
     // source that affirmed nothing reaches the Person who holds the address,
-    // which is what the whole pilot is for.
+    // which is what the whole project is for.
     const joined = await authenticate(
       CONFIDENTIAL_CLIENT,
       newcomer.through(SOURCE_AFFIRMING_NOTHING),
@@ -389,7 +389,7 @@ describe("an unverified address joins no existing Person until its mail is answe
 
 describe("a Verified Email joins the Person that holds it", () => {
   it("gives one Person Identifier to the same address through two sources", async () => {
-    // What the pilot exists to demonstrate, and what the rule above must not
+    // What the project exists to demonstrate, and what the rule above must not
     // have cost. An enforcement that asked everyone for a mail, or turned them
     // away, would pass every case above (issue #25).
     //
