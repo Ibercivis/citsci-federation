@@ -38,6 +38,16 @@ Leave out:
 Say it plainly: short sentences, one point each, no preamble and no summing up. An agent copies the
 register of whatever it reads, which is why this file is written the way it is.
 
+## Questions
+
+Decide, say what you decided, and carry on. Every question is a stop somebody pays for, and
+`AskUserQuestion` is the second largest source of them here — the count is in
+`docs/notes/2026-11-27-what-stops-a-session.md`.
+
+Ask when the answer changes the work and nothing in the repository settles it: a choice between
+designs whose consequences differ, or an action only the user may authorise. A conventional default
+is not a question. Neither is a preference that can be stated now and reversed later.
+
 ## Agent skills
 
 ### Issue tracker
