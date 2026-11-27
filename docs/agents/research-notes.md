@@ -105,3 +105,10 @@ note only when one of its branches is yours.
   password is unchanged. So the lever converts the path to a Local Credential into a passwordless
   sign-in by mail link rather than closing it. Open it for the declaration to transcribe, or to write
   the case `issue #124` asks for.
+- **Reading the Broker's pages** (`2026-11-26-reading-the-brokers-pages.md`) — the regexes
+  `tests/brokered-app.ts` used to carry misread 64 of 370 real pages' text: undecoded entities, and
+  a script body leaked because Keycloak writes `<SCRIPT>` in upper case. happy-dom and parse5 read
+  every page cleanly and pass every adversarial snippet; linkedom, node-html-parser and cheerio each
+  have a trap. The harness moved to happy-dom (`issue #91`), adding 2 to 3 seconds to the suite,
+  with parse5 as the lighter fallback. Open it before reconsidering happy-dom or picking another
+  HTML parser.

@@ -13,6 +13,7 @@
  */
 
 import { createHash, randomBytes } from "node:crypto";
+import { type Document, Element, type Node, Text, Window } from "happy-dom";
 import { createRemoteJWKSet, jwtVerify } from "jose";
 import { type Client, DEMO_IDENTITY } from "./clients.ts";
 import { ISSUER, fetchDiscovery } from "./broker.ts";
@@ -110,14 +111,6 @@ export async function requestAuthorization(
   return browser.get(`${authorization_endpoint}?${query.toString()}`);
 }
 
-const unescapeHtml = (value: string): string =>
-  value
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&amp;/g, "&");
-
 /**
  * A page as a browser holds it: its address and its HTML. The two travel
  * together because neither is much use alone — a form on a page may submit to
@@ -142,12 +135,43 @@ export interface HtmlForm {
   controls: Record<string, string>;
 }
 
-const attributesOf = (tag: string): Record<string, string> =>
-  Object.fromEntries(
-    [...tag.matchAll(/([a-zA-Z][a-zA-Z0-9-]*)="([^"]*)"/g)].map(
-      ([, name, value]) => [name!.toLowerCase(), unescapeHtml(value!)],
-    ),
-  );
+/** One window for every page the harness reads, with nothing on a page ever
+ *  run: it is read, never executed. A window per page costs a JavaScript
+ *  context each, and the suite reads hundreds. */
+const window = new Window({ settings: { disableJavaScriptEvaluation: true } });
+const reader = new window.DOMParser();
+
+/** A page's HTML as a browser would build it, quirks and all, which is what
+ *  makes the reading below indifferent to how the markup happens to be
+ *  quoted, cased or nested. */
+const parse = (html: string): Document =>
+  reader.parseFromString(html, "text/html");
+
+/** The text under a node as a Person would read it: a space where a tag
+ *  was, and nothing from a script or a stylesheet, which a browser never
+ *  shows. */
+function textUnder(node: Node): string {
+  const parts: string[] = [];
+  const walk = (parent: Node): void => {
+    for (const child of parent.childNodes) {
+      if (child instanceof Text) {
+        parts.push(child.data);
+        continue;
+      }
+      parts.push(" ");
+      if (
+        child instanceof Element &&
+        child.localName !== "script" &&
+        child.localName !== "style"
+      ) {
+        walk(child);
+        parts.push(" ");
+      }
+    }
+  };
+  walk(node);
+  return parts.join("").replace(/\s+/g, " ").trim();
+}
 
 const PRESSABLE = new Set(["submit", "button", "image"]);
 
@@ -159,45 +183,40 @@ const PRESSABLE = new Set(["submit", "button", "image"]);
  * the Broker's behaviour.
  */
 export function formsOn(page: Page): HtmlForm[] {
-  return [...page.html.matchAll(/<form\b([^>]*)>([\s\S]*?)<\/form>/g)].map(
-    ([, attributes, body]) => {
-      const fields: Record<string, string> = {};
-      const controls: Record<string, string> = {};
-      const html = body ?? "";
-      for (const [, tag] of html.matchAll(/<input\b([^>]*)>/g)) {
-        const input = attributesOf(tag ?? "");
-        if (!input.name) continue;
-        const into = PRESSABLE.has(input.type ?? "text") ? controls : fields;
-        into[input.name] = input.value ?? "";
+  return [...parse(page.html).querySelectorAll("form")].map((form) => {
+    const fields: Record<string, string> = {};
+    const controls: Record<string, string> = {};
+    for (const input of form.querySelectorAll("input")) {
+      const name = input.getAttribute("name");
+      if (!name) continue;
+      const type = (input.getAttribute("type") ?? "text").toLowerCase();
+      // Unchecked boxes are omitted; a checked one with no `value` sends "on".
+      const box = type === "checkbox" || type === "radio";
+      if (box && !input.hasAttribute("checked")) continue;
+      const into = PRESSABLE.has(type) ? controls : fields;
+      into[name] = input.getAttribute("value") ?? (box ? "on" : "");
+    }
+    // A button is a control whether or not it says so, and an unlabelled
+    // one sends an empty value — which is what pressing it looks like on
+    // the wire.
+    for (const button of form.querySelectorAll("button")) {
+      const name = button.getAttribute("name");
+      if (name && button.getAttribute("type")?.toLowerCase() !== "button") {
+        controls[name] = button.getAttribute("value") ?? "";
       }
-      // A button is a control whether or not it says so, and an unlabelled
-      // one sends an empty value — which is what pressing it looks like on
-      // the wire.
-      for (const [, tag] of html.matchAll(/<button\b([^>]*)>/g)) {
-        const button = attributesOf(tag ?? "");
-        if (button.name && button.type !== "button") {
-          controls[button.name] = button.value ?? "";
-        }
-      }
-      const action = attributesOf(attributes ?? "").action ?? "";
-      return { action: new URL(action, page.url).href, fields, controls };
-    },
-  );
+    }
+    const action = form.getAttribute("action") ?? "";
+    return { action: new URL(action, page.url).href, fields, controls };
+  });
 }
-
-/** The text a link shows a Person, with its markup taken out. */
-const visibleText = (html: string): string =>
-  unescapeHtml(html.replace(/<[^>]*>/g, " "))
-    .replace(/\s+/g, " ")
-    .trim();
 
 /** The links in some HTML, by what they say and where they point as written. */
 function anchorsIn(html: string): Array<{ text: string; href: string }> {
-  return [...html.matchAll(/<a\b([^>]*)>([\s\S]*?)<\/a>/g)].flatMap(
-    ([, attributes, body]) => {
-      const href = attributesOf(attributes ?? "").href;
-      return href ? [{ text: visibleText(body ?? ""), href }] : [];
-    },
+  return [...parse(html).querySelectorAll("a[href]:not([href=''])")].map(
+    (anchor) => ({
+      text: textUnder(anchor),
+      href: anchor.getAttribute("href") ?? "",
+    }),
   );
 }
 
@@ -305,15 +324,10 @@ function question(page: Page, arrival: Arrival): Question | null {
   return null;
 }
 
-/** What a Person would read on a page: the markup stripped, and the scripts
- *  and stylesheets a browser never shows stripped first. Exported because a
- *  refusal the Broker words itself reaches a case through no other channel. */
-export const readableTextOf = (html: string): string =>
-  visibleText(
-    html
-      .replace(/<script\b[\s\S]*?<\/script>/g, " ")
-      .replace(/<style\b[\s\S]*?<\/style>/g, " "),
-  );
+/** What a Person would read on a page: its text, with the scripts and
+ *  stylesheets a browser never shows left out. Exported because a refusal the
+ *  Broker words itself reaches a case through no other channel. */
+export const readableTextOf = (html: string): string => textUnder(parse(html));
 
 /** Reads the Broker's own complaint off a page, so a failed step says why. */
 function pageComplaint({ html }: Page): string {
