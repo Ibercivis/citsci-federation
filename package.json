@@ -21,9 +21,10 @@
     "typecheck": "tsc --noEmit",
     "require-issue-link:check": "./scripts/check-require-issue-link.sh",
     "claim-issue:check": "./scripts/check-claim-issue.sh",
+    "reading-a-note:check": "./scripts/check-reading-a-note.sh",
     "reuse:lint": "./scripts/reuse-lint.sh",
     "demo-services:check": "./scripts/check-demo-services.sh",
-    "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm require-issue-link:check && pnpm claim-issue:check && pnpm reuse:lint && pnpm demo-services:check",
+    "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm require-issue-link:check && pnpm claim-issue:check && pnpm reading-a-note:check && pnpm reuse:lint && pnpm demo-services:check",
     "check:fix": "pnpm format && pnpm lint:fix",
     "test": "vitest run",
     "prepare": "lefthook install"

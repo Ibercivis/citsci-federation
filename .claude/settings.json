@@ -71,7 +71,8 @@
       "mcp__plugin_playwright_playwright__browser_snapshot",
       "mcp__plugin_playwright_playwright__browser_find"
     ],
-    "deny": ["Artifact", "ArtifactComments", "ArtifactData"]
+    "deny": ["Artifact", "ArtifactComments", "ArtifactData"],
+    "additionalDirectories": ["/private/tmp"]
   },
   "worktree": {
     "symlinkDirectories": ["node_modules"]

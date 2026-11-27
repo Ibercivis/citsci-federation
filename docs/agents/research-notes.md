@@ -112,3 +112,11 @@ note only when one of its branches is yours.
   have a trap. The harness moved to happy-dom (`issue #91`), adding 2 to 3 seconds to the suite,
   with parse5 as the lighter fallback. Open it before reconsidering happy-dom or picking another
   HTML parser.
+- **What stops a session**
+  (`2026-11-27-what-stops-a-session.md`) — two hooks and a symlink, not the permission rules. Of 599
+  stops in a month the note hook answered for 313, and only 84 of those opened a note;
+  `AskUserQuestion` for 163; the GitHub hook for 105, across 56 distinct actions; the shape of a Bash
+  command for 18. An allowlist entry would have reached that last row and no other: a hook's
+  `ask` outranks the rules. `user_permanent` in a transcript is not a stop.
+  Open it before widening `permissions.allow` to cut prompts, before loosening or tightening either
+  hook, or to repeat the count: the method is in the note, and a transcript is kept 30 days.
