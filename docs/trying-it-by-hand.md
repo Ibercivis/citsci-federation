@@ -241,6 +241,8 @@ The one step that needs something `.env` cannot hold. Copy [`.env.example`](../.
 registered with, and `pnpm broker:reset`. A line left empty breaks that button; leave it commented. Without them, both buttons send you to Google or GitHub with
 `client_id=not-configured`, and the source refuses you there.
 
+Each bullet is a fresh arrival at the Broker: a private window each, as in step 3.
+
 - **Google**: choose **Google** on the Broker's sign-in page and sign in with a real account. You
   come back with a Person Identifier, as in step 2, and step 4 shows the Person with a Google
   Identity and a confirmed address.
