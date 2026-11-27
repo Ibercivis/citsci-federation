@@ -130,9 +130,9 @@ instead of registered.
 
 ### 3. A Person arriving from an Identity Source
 
-The same button, in a private window opened while no other is open: private windows share one
-session among themselves. In step 2's window the Broker still holds `demo`'s session, and signs
-`demo` straight back in without showing its page, even after signing out of LostAtNight.
+The same button, in a private window, and no other private window open: they share one session
+among themselves. In step 2's window the button shows no Broker page at all, for the reason
+**Single sign-out is not settled** gives at the end of this file.
 
 Instead of typing a password choose **Mock Identity Source A, affirms addresses**: `mock-verified` /
 `mock`. The consent screen again, and back at LostAtNight as a Person who arrived from that source.
