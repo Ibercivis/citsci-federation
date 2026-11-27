@@ -25,11 +25,10 @@ import { declaredSource } from "./realm.ts";
  */
 
 /**
- * `darkMark` is the login theme's own list, not a choice of ours:
- * `keycloak.v2` ships a second mark for a dark page for GitHub, Instagram and
- * Twitter, and a single file for every other source it knows. It chooses both
- * by the provider id and never by the alias, which is why the cases below read
- * the id from the realm.
+ * `darkMark` is the theme's list, not ours: `keycloak.v2` ships a second mark
+ * for a dark page for GitHub, Instagram and Twitter, and one file for every
+ * other source it knows. It picks both by provider id, never by the alias,
+ * which is why these cases read the id from the realm.
  */
 const LAUNCH_SOURCES = [
   {

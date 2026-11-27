@@ -11,13 +11,12 @@ import org.keycloak.social.github.GitHubIdentityProviderFactory;
  * GitHub, in place of the stock provider.
  *
  * <p>{@code github} rather than an id of our own: the login theme picks the
- * button's mark by the provider id, and knows no id of ours. What that costs
- * and what was weighed against it are in {@code broker/README.md}, under "The
- * launch sources: Google and GitHub" ({@code issue #225}).
+ * button's mark by the provider id, knows no id of ours, and offers no way in
+ * short of a theme of our own. {@code broker/README.md} weighs the two, under
+ * "The launch sources: Google and GitHub" ({@code issue #225}).
  *
- * <p>Answering to it is settled rather than raced. The rule Keycloak follows
- * when two factories share an id, and the measurements, are in
- * {@code docs/notes/2026-11-25-two-provider-factories-under-one-id.md}.
+ * <p>Which of the two factories answers to the id is settled rather than
+ * raced: {@code docs/notes/2026-11-25-two-provider-factories-under-one-id.md}.
  *
  * <p>{@code tests/github-source.test.ts} is the guard, and the only one: one
  * of its cases fails on the stock provider.

@@ -457,8 +457,12 @@ later decides its own `trustEmail` (ADR-0004).
   to it.** The login theme draws GitHub's mark only for that id, and reads the
   id rather than the alias, so an id of our own cost the button its mark —
   which act 2 of `docs/demo-script.md` presses in front of people
-  (`issue #225`). The alternative was a login theme of our own, maintained
-  against every move of the Keycloak pin (ADR-0017), for the same icon.
+  (`issue #225`). Nothing lighter reaches the mark: `social-providers.ftl`
+  switches on a hardcoded list of stock ids and writes `default.svg` for
+  anything else, so there is no file to drop in, and `displayIconClasses`
+  swaps the whole button for a span `keycloak.v2` loads no icon font for. What
+  is left is a login theme of our own, maintained against every move of the
+  Keycloak pin (ADR-0017), for one icon.
 - **Their credentials are `${NAME:not-configured}`.** The value comes from
   outside the repository (`.env.example` names them). A name nobody valued
   would otherwise be imported as the literal `${NAME}`. The default makes the
