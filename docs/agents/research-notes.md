@@ -105,3 +105,12 @@ note only when one of its branches is yours.
   password is unchanged. So the lever converts the path to a Local Credential into a passwordless
   sign-in by mail link rather than closing it. Open it for the declaration to transcribe, or to write
   the case `issue #124` asks for.
+- **Activity Streams and how the Fediverse aggregates**
+  (`2026-11-26-activity-streams-and-how-the-fediverse-aggregates.md`) — AS2 is a vocabulary and
+  ActivityPub is a push-only transport that promises no acknowledgement, no ordering, no replay and
+  no history, with no authentication agreed at standardisation. The Fediverse has no aggregation
+  layer: catch-up is pull, bolted on in 2024-2025, and instance statistics are gathered by crawlers
+  polling `nodeinfo`. Open Badges 3.0 models an achievement and xAPI models a statistics feed; AS2
+  models neither. Open it before costing a page that aggregates a Person across the Brokered Apps,
+  before choosing how an application hands data to anything central, or when ActivityPub is proposed
+  by name.
