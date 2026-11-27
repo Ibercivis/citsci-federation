@@ -30,9 +30,8 @@ note() { failures+=("$1"); }
 # be written as the shell would see it.
 command_payload() { printf '%s\n' "$@" | jq -Rs '{tool_input: {command: .}}'; }
 
-# What the file tools send. `file_path` is the Read tool, which returns the
-# whole of one file; `path` belongs to Grep and Glob, which return lines and
-# names.
+# One payload per field the hook reads, each for the reason its own comment
+# gives there.
 file_payload() { printf '%s' "$1" | jq -Rs '{tool_input: {file_path: .}}'; }
 search_payload() { printf '%s' "$1" | jq -Rs '{tool_input: {path: ., pattern: "x"}}'; }
 
@@ -99,8 +98,8 @@ passes "writing a note" "$(command_payload \
 
 # --- Metadata --------------------------------------------------------------
 #
-# Names, sizes and git's own bookkeeping. None of them puts a note in the
-# context, and together they were a quarter of the waste.
+# Names, sizes and git's own bookkeeping. Together they were a quarter of the
+# waste, and not one of them opens a file.
 
 passes "listing the directory" "$(command_payload 'ls docs/notes/')"
 passes "listing one note" "$(command_payload 'ls -la docs/notes/x.md')"
@@ -114,7 +113,7 @@ passes "a path as a value" "$(command_payload 'jq -n "{path:\"docs/notes/x.md\"}
 
 # --- Lines leak, files do not ------------------------------------------------
 #
-# The rule the hook already lived by for `grep -r`, applied to the spellings
+# Extended from `grep -r`, where this was always allowed, to the spellings
 # that name the directory. A pattern returns what matched it, which is the
 # cheap read the index is meant to send a session to.
 
