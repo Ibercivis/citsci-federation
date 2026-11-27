@@ -37,9 +37,10 @@ case "$app" in
   # to finish, so it says the sign-in did not work: the code in the address
   # bar is still the Broker's half, done.
   geonity)     client=$GEONITY_CLIENT_ID;     callback=$GEONITY_WEB_BASE_URL/auth/ibercivis/callback ;;
-  # OpenRed registers its API as the client: the callback is a path on the
-  # Django side, not on the front end.
-  openred)     client=$OPENRED_CLIENT_ID;     callback=$OPENRED_API_BASE_URL/accounts/oidc/callback ;;
+  # OpenRed's callback is a page of its React app, which hands the code to its
+  # API (`issue #30`) — Geonity's shape again, and it answers the same way when
+  # reached from here, with nothing of its own to finish.
+  openred)     client=$OPENRED_CLIENT_ID;     callback=$OPENRED_WEB_BASE_URL/auth/ibercivis/callback ;;
   *)
     echo "No such application: $app" >&2
     echo "One of: lostatnight, geonity, openred" >&2

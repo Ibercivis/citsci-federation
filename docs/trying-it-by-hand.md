@@ -3,8 +3,6 @@
 What somebody with a browser does to see the composition work: the manual pass before a pull request,
 feature by feature. What the composition *is* and how it is wired is in the
 [README](../README.md) and ADR-0009 — this file is only the clicking.
-[`demo-script.md`](demo-script.md) is the ordered sequence to run in front of people, and it assumes
-this file has been read once.
 
 ## Before you start
 
@@ -51,6 +49,40 @@ The mode holds only through a reset, for the reason `.env` gives. Back to `testi
 apps:reset` without the variable. `pnpm apps:up` refuses `production`, which runs no mail catcher
 for the applications to send to.
 
+Four things to have ready. Each one breaks a demo quietly rather than visibly:
+
+- **A GitHub account whose primary address is the one Google signs in with, verified at GitHub.**
+  Step 9's third bullet is the claim worth showing a room, and two different addresses are two
+  Persons on purpose (ADR-0004), with no merge flow to fall back on. An address GitHub has not
+  verified still joins, but through the mail catcher.
+- **A private window for each run through.** Signing out of an application does not end the
+  Broker's own session, so the next arrival is asked nothing and there is nothing to watch.
+- **`pnpm persons --watch`, projected beside the browser.** Nothing else shows what is being
+  claimed: an application is told a Person Identifier and nothing more (ADR-0002), and the account
+  console shows only the Person looking at it. One row is one Person, `identities` is the sources
+  that Person can arrive through, and `pending` is what the Broker is still waiting for before they
+  may reach an application.
+- **Say once that no mail leaves this machine.** Every message lands in the catcher at
+  `mail.localhost:8080`, the Broker's included, which is what makes a real address safe to type.
+  Somebody asks.
+
+What a room asks, and where each answer is decided:
+
+- **"Must I use Google?"** No. **Register** at the Broker is an address and a password it holds
+  itself (ADR-0005).
+- **"My GitHub address is a different one."** Then you are two Persons and there is no merge flow.
+  ADR-0004 took that deliberately, and a future merge has to add an alias rather than reassign,
+  because an identifier is never reassigned (ADR-0002).
+- **"So whoever reads my mail becomes me?"** Yes, and it is written down as accepted rather than
+  overlooked (ADR-0004). The same mailbox already recovers the password.
+- **"What if somebody registers at my address first?"** They get your Person made for them and one
+  extra confirmation in your way, not access: that Person holds no credential and no way to set one
+  without the mailbox. `issue #148` owns it and ADR-0004 names it.
+- **"What do the applications learn about me?"** The identifier, and whatever you tell them
+  yourself. No name and no roles: the Broker issues neither (ADR-0003).
+- **"Where can I try it?"** Nowhere yet. The composition runs on a laptop, and a public address is
+  a later decision left cheap to take (ADR-0001).
+
 ## The addresses
 
 | | |
@@ -91,12 +123,12 @@ In order:
    `demo-password`.
 2. The **consent screen**, naming the application. That name comes from the client the realm
    registered for it.
-3. Back to the application's callback with `code=…` in the address bar. For `lostatnight` and
-   `openred` that is `…/accounts/oidc/callback`, **which 404s**. That address is this script's own:
-   LostAtNight serves its callback at `/accounts/oidc/ibercivis/login/callback/` and redeems the code
-   itself, which is step 5. Nothing serves the bare `/accounts/oidc/callback`. For `geonity` it is
-   the web app's `/auth/ibercivis/callback`, which says the sign-in did not work, because this URL
-   was not started by Geonity.
+3. Back to the application's callback with `code=…` in the address bar. For `lostatnight` that is
+   `…/accounts/oidc/callback`, **which 404s**: that address is this script's own, LostAtNight serves
+   its callback at `/accounts/oidc/ibercivis/login/callback/` and redeems the code itself, which is
+   step 5, and nothing serves the bare one. For `geonity` and `openred` it is the web app's
+   `/auth/ibercivis/callback`, which says the sign-in did not work — because this URL was not
+   started there, so the browser kept no verifier for it.
 
 The `code=` in the address bar is the Broker having done all of its half. Redeeming it needs the
 client secret, which is not a thing to put in an address bar; `pnpm test` redeems codes, over the
@@ -152,6 +184,20 @@ and the paragraph beside the button says that an address already used by a Geoni
 refused. Its API's registration endpoint stays open, because the mobile app still creates accounts
 there.
 
+OpenRed, from http://openred.localhost:8080/login (`issue #30`), is Geonity's shape again: the same
+callback page, the same refusal of an address it already holds, the same registration endpoint left
+open for a mobile client. **My Profile** names the identifier, `/register` leads to `/login`, and
+the navbar, the landing page and the confirmation screens no longer offer a sign-up either. Two
+things there are its own — its API checks the ID token's signature itself, because the allauth it
+pins would otherwise read the identity from an unsigned `userinfo` response, and the account it
+creates is named `user`, because the service sends no first name and that application's username
+generator reads nothing else.
+
+**The registration closure is walked by name**: `agorer` walks OpenRed's, `agualis` walks
+LostAtNight's and Geonity's. A name rather than a test on purpose — the Broker cannot see whether an
+application still has a sign-up form, and no test in this repository runs the JavaScript that would
+render one. `issue #34` is what turns it into an assertion; until then it is this walk.
+
 ### 6. An account that existed before the Broker
 
 Every seeded account is invented, on a `.invalid` address that can never receive mail, and its
@@ -190,8 +236,9 @@ Nothing in the composition can deliver to a real address.
 ### 8. The three applications, as the Broker knows them
 
 http://broker.localhost:8080/admin/, `admin` / `admin`, realm `citsci` → Clients: **lostatnight**,
-**geonity** and **openred**. LostAtNight's and OpenRed's redirect URIs are under `/accounts/oidc/*`.
-Geonity's is the one page of its web app, `/auth/ibercivis/callback`.
+**geonity** and **openred**. LostAtNight's redirect URI is under `/accounts/oidc/*`, because its
+own library serves that path. Geonity's and OpenRed's are the one page of each web app that receives
+a code, `/auth/ibercivis/callback`.
 
 ### 9. Google and GitHub, with real credentials
 
@@ -225,9 +272,11 @@ Broker, and is the one-line fix. `PR #164` weighed the three.
 
 ## What does not work yet, on purpose
 
-- **OpenRed has no sign-in through the Broker yet** (`issue #30`). LostAtNight and Geonity both have
-  one (step 5), so single sign-on between those two can be tried by hand; the browser test that
-  asserts it is `issue #34`.
+- **Single sign-out is not settled.** Signing out of one application leaves the Broker's session
+  standing, and the next application does not ask again.
+- **No test asserts single sign-on across two applications.** All three have a button now
+  (step 5), so it can be tried by hand — sign in at one, then open another and press its button,
+  and the Broker should not ask again. The browser test that asserts it is `issue #34`.
 - **Maps are blank.** They need a Mapbox token nobody has locally, and that is settled:
   [`local-development.md`](local-development.md) says not to spend a minute on it.
 - **"Sign in with Google" fails on OpenRed's front end**, and could not do otherwise: it would

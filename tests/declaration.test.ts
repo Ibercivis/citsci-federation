@@ -79,7 +79,7 @@ async function landingFor(client: Client) {
   const browser = new Browser();
   const { challenge } = createPkce("S256");
   const response = await requestAuthorization(browser, client, {
-    nonce: "seam-2",
+    nonce: "declaration-check",
     code_challenge: challenge,
     code_challenge_method: "S256",
   });
@@ -117,7 +117,7 @@ describe(`the running Broker is the ${MODE} declaration`, () => {
     );
     expect(
       unknown,
-      "The testing layer declares a kind seam 2 cannot look for. Teach tests/declaration.test.ts to find it the way a Brokered App or a Person would.",
+      "The testing layer declares a kind this suite cannot look for. Teach tests/declaration.test.ts to find it the way a Brokered App or a Person would.",
     ).toEqual([]);
   });
 

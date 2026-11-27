@@ -169,6 +169,25 @@ describe("the Broker takes a confidential Brokered App as the libraries write it
     if (result.outcome !== "authenticated") return;
     expect(result.claims).toHaveProperty("email");
   });
+
+  // The same request, with the secret in the Authorization header instead of
+  // the form. Which of the two a Brokered App sends is not its choice either:
+  // django-allauth reads `token_endpoint_auth_methods_supported` from the
+  // discovery document and picks `client_secret_basic` because this provider
+  // announces it first. So OpenRed (`issue #30`) redeems this way while
+  // Geonity redeems in the form, on the same library — and a realm that
+  // accepted only one of them would lock out an application nobody had
+  // configured differently.
+  it("authenticates a redemption whose secret is in the Authorization header", async () => {
+    const result = await attempt(CONFIDENTIAL_CLIENT, {
+      pkce: createPkce("S256"),
+      nonce: null,
+      clientAuth: "in the header",
+      params: { scope: "openid email" },
+    });
+
+    expect(result).toMatchObject({ outcome: "authenticated" });
+  });
 });
 
 describe("the Broker refuses to redeem a confidential Brokered App's code without its secret", () => {

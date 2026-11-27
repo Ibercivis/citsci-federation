@@ -5,18 +5,21 @@ import { configured } from "./broker.ts";
  * OpenRed's React front end, read the way a browser reads it: at its own
  * hostname, through the proxy, with every API call going to that same origin.
  *
- * It asserts no sign-in through the Broker, because there is none to assert
- * yet — OpenRed's integration is `issue #30`. This front end joins the
- * composition before it (`issue #96`) so that seam 3 (`issue #34`) has a
- * second set of screens to click into, and so the integration lands on an
- * application that already runs here.
+ * It asserts the sign-in this application has always had, and **not** the one
+ * through the Broker, which `issue #30` added: that one is a browser's, since
+ * the code is obtained and the callback page is rendered by JavaScript, and a
+ * browser is what the test that crosses two applications drives (`issue #34`).
+ * This front end joined the composition before the integration (`issue #96`),
+ * which is why this file predates it.
  *
  * **No screen is rendered here.** This suite fetches documents and calls APIs;
  * it runs no JavaScript, so what it holds is the application's own sign-in
- * contract through its own origin, not the page a Person would see. Asserting
- * the page is seam 3's job (`issue #34`). The two failures that need a browser
- * — the Google provider throwing on mount, the map with no basemap — are
- * recorded in `docs/trying-it-by-hand.md` and checked by hand.
+ * contract through its own origin, not the page a Person would see. The one
+ * thing it holds about the Broker is the field the profile screen reads the
+ * Person Identifier from, which is served whether or not a Broker account is
+ * behind it. Asserting the page is that browser test's job. The two failures
+ * that need a browser — the Google provider throwing on mount, the map with no
+ * basemap — are recorded in `docs/trying-it-by-hand.md` and checked by hand.
  */
 
 /** The front end's address, and the API's. Two hostnames, one application: the
@@ -42,6 +45,25 @@ async function answering(url: string): Promise<boolean> {
   return fetch(url, { redirect: "manual", signal: AbortSignal.timeout(5_000) })
     .then((response) => response.status < 500)
     .catch(() => false);
+}
+
+/** Signs the seeded Person in through the front end's own origin and hands
+ *  back the credential that follows.
+ *
+ *  Not a bearer token: that application sets `USE_JWT` off and keeps DRF's own
+ *  token model, so the credential is `key` and the scheme is `Token`. The front
+ *  end reads it the same way (`src/services/api.ts`). */
+async function signIn(): Promise<string> {
+  const response = await fetch(`${WEB}/dj-rest-auth/login/`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(SEEDED_PERSON),
+  });
+  expect(response.status).toBe(200);
+
+  const { key } = (await response.json()) as { key?: string };
+  if (!key) throw new Error("the sign-in answered 200 and carried no token");
+  return key;
 }
 
 const composition = await answering(`${API}/admin/login/`);
@@ -80,18 +102,7 @@ describe.skipIf(!composition)("OpenRed's React front end", () => {
     });
     expect(anonymous.status).toBe(401);
 
-    const signIn = await fetch(`${WEB}/dj-rest-auth/login/`, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify(SEEDED_PERSON),
-    });
-    expect(signIn.status).toBe(200);
-
-    // Not a bearer token: that application sets `USE_JWT` off and keeps DRF's
-    // own token model, so the credential is `key` and the scheme is `Token`.
-    // The front end reads it the same way (`src/services/api.ts`).
-    const { key } = (await signIn.json()) as { key?: string };
-    expect(key).toBeTruthy();
+    const key = await signIn();
 
     const tracks = await fetch(`${WEB}${path}`, {
       headers: { accept: "application/json", authorization: `Token ${key}` },
@@ -99,5 +110,31 @@ describe.skipIf(!composition)("OpenRed's React front end", () => {
 
     expect(tracks.status).toBe(200);
     expect((await tracks.json()) as unknown[]).not.toHaveLength(0);
+  });
+
+  it("serves the Person Identifier field its profile screen reads, null for a Person from before the Broker", async () => {
+    const key = await signIn();
+
+    const me = await fetch(`${WEB}/dj-rest-auth/user/`, {
+      headers: { accept: "application/json", authorization: `Token ${key}` },
+    });
+    expect(me.status).toBe(200);
+
+    // The endpoint that application's own profile screen calls, which is where
+    // the browser test across two applications reads the identifier
+    // (`issue #34`). This Person existed before the Broker, so hers is null —
+    // the value belongs to an arrival through the Broker, and that one is a
+    // browser's to drive. What a Person arriving here cannot show, the field
+    // being served at all can: drop it from the serializer and that test has
+    // nothing to read.
+    //
+    // It needs the application half of `issue #30` on `federation`, which is
+    // the branch `scripts/checkout-apps.sh` builds. Until that merges this is
+    // the one case here that an un-integrated OpenRed fails — which is the
+    // merge order this repository already owes the applications, asserted
+    // rather than written down.
+    const person = (await me.json()) as Record<string, unknown>;
+    expect(person).toHaveProperty("ibercivis_account_id");
+    expect(person.ibercivis_account_id).toBeNull();
   });
 });

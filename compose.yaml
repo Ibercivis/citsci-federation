@@ -131,7 +131,7 @@ services:
       GEONITY_WEB_BASE_URL: ${GEONITY_WEB_BASE_URL:?declare it in .env}
       GEONITY_CLIENT_ID: ${GEONITY_CLIENT_ID:?declare it in .env}
       GEONITY_CLIENT_SECRET: ${GEONITY_CLIENT_SECRET:?declare it in .env}
-      OPENRED_API_BASE_URL: ${OPENRED_API_BASE_URL:?declare it in .env}
+      OPENRED_WEB_BASE_URL: ${OPENRED_WEB_BASE_URL:?declare it in .env}
       OPENRED_CLIENT_ID: ${OPENRED_CLIENT_ID:?declare it in .env}
       OPENRED_CLIENT_SECRET: ${OPENRED_CLIENT_SECRET:?declare it in .env}
       # Behind the proxy, over HTTP, in production mode: the shape the ADR

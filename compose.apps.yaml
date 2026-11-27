@@ -50,24 +50,24 @@ name: citsci-apps
 
 # ----------------------------------------------------------------- shared
 #
-# What a Brokered App that is **not integrated yet** is told about the Broker
-# (ADR-0001): where it is. Configuration, read from `.env`, never compiled in.
+# Where the Broker is reaches every application as configuration, read from
+# `.env`, never compiled in (ADR-0001) — under the name each one's integration
+# settled, in that application's own words, on its `federation` branch. All
+# three chose `IBERCIVIS_ACCOUNT_*`: LostAtNight (`issue #94`), Geonity
+# (`issue #31`) and OpenRed (`issue #30`). An Ibercivis account is what they
+# call signing in through the Broker, and `Broker` names nothing in a Django
+# site that already has a task queue.
 #
-# The name here is this file's, and it lasts only as long as nothing reads it.
-# An integration settles the name the application reads the value under, in
-# that application's words, on its `federation` branch — and then this file
-# hands it that name instead.
+# Every process of every application is told, worker included, so one settings
+# file answers for all of them; only the service that runs the sign-in is given
+# the credentials. Each front end reads the same value under its own build
+# tool's prefix, which an anchor cannot carry.
 #
-# LostAtNight's integration settles it as `IBERCIVIS_ACCOUNT_*` (`issue #94`),
-# and so does Geonity's (`issue #31`), for its API and its web app alike. Each
-# is handed those names below. OpenRed has not chosen its own, and is handed
-# this one.
-#
-# The address is the issuer, reachable from inside this network as well as
-# from a browser: the proxy answers to `broker.localhost` on both sides of
-# the port mapping, and `.env` says why it has to.
-x-broker: &broker
-  BROKER_ISSUER: ${BROKER_ISSUER:?declare it in .env}
+# The value is the issuer, which has to be reachable from inside this network as
+# well as from a browser: the proxy answers to `broker.localhost` on both sides
+# of the port mapping, and `.env` says why it has to.
+x-ibercivis-account: &ibercivis-account
+  IBERCIVIS_ACCOUNT_ISSUER: ${BROKER_ISSUER:?declare it in .env}
 
 # The catcher every application here sends to; the service itself is declared
 # in compose.yaml, where the Broker's own stack is. All three applications keep
@@ -82,15 +82,9 @@ x-mail: &mail
 # the host validation the proxy makes safe — but not the client credentials:
 # those are given to the service that runs the sign-in and to nothing else.
 x-lostatnight: &lostatnight
+  <<: *ibercivis-account
   DJANGO_SETTINGS_MODULE: gdalface.settings_local
   DEBUG: "True"
-  # The Broker, under the name that application's integration gives it: an
-  # Ibercivis account is what it calls signing in through the Broker, and
-  # `Broker` is a word that names nothing in a Django site that already has a
-  # task queue.
-  # Every process is told, so one declaration of the settings answers for all
-  # of them; only the service that runs the sign-in gets the credentials.
-  IBERCIVIS_ACCOUNT_ISSUER: ${BROKER_ISSUER:?declare it in .env}
   # Host validation is left open because the proxy is the only way in and it
   # forwards nothing but the hostnames it serves. The alternative is to repeat
   # an address `.env` already declares, in a form Django can parse, which is
@@ -112,9 +106,7 @@ x-lostatnight: &lostatnight
 # filler that settings file insists on, and where the Broker is. The client
 # credentials go to the API alone.
 x-geonity: &geonity-env
-  <<: *mail
-  # The Broker, under the name Geonity's integration gives it (`issue #31`).
-  IBERCIVIS_ACCOUNT_ISSUER: ${BROKER_ISSUER:?declare it in .env}
+  <<: [*ibercivis-account, *mail]
   # Set explicitly rather than left to the default: that settings file
   # infers DEBUG from whether `runserver` is on the command line, so the
   # worker would start with DEBUG=False and try to reach SES with the
@@ -439,7 +431,7 @@ services:
     # this argument.
     command: ["api"]
     environment: &openred-env
-      <<: [*broker, *mail]
+      <<: [*ibercivis-account, *mail]
       # No default in that settings file, so it has to be given.
       SECRET_KEY: local-development-only-not-a-secret
       DEBUG: "True"
@@ -447,8 +439,13 @@ services:
       CSRF_TRUSTED_ORIGINS_EXTRA: ${OPENRED_API_BASE_URL:?declare it in .env}
       # Where its mail links send a Person: the front end's own address.
       FRONTEND_URL: ${OPENRED_WEB_BASE_URL:?declare it in .env}
-      BROKER_CLIENT_ID: ${OPENRED_CLIENT_ID:?declare it in .env}
-      BROKER_CLIENT_SECRET: ${OPENRED_CLIENT_SECRET:?declare it in .env}
+      # The Broker, under the names OpenRed's integration gives it (`issue #30`),
+      # the same three Geonity reads. Only the API holds the secret: the React
+      # app brings the code back to its own callback page and this side redeems
+      # it, naming that same page.
+      IBERCIVIS_ACCOUNT_CLIENT_ID: ${OPENRED_CLIENT_ID:?declare it in .env}
+      IBERCIVIS_ACCOUNT_CLIENT_SECRET: ${OPENRED_CLIENT_SECRET:?declare it in .env}
+      IBERCIVIS_ACCOUNT_REDIRECT_URI: ${OPENRED_WEB_BASE_URL:?declare it in .env}/auth/ibercivis/callback
       # Session authentication off, as in its own local stack: with it on, a
       # signed-in admin session makes DRF demand a CSRF token the
       # token-authenticated front end never sends.
@@ -510,16 +507,22 @@ services:
   # repository's lock file *is* in step with its package.json, and `npm ci`
   # writes to neither — so the install is reproducible and the checkout stays
   # clean, which scripts/checkout-apps.sh needs in order to keep updating it.
-  # It runs only when the volume is empty, because `npm ci` deletes
-  # node_modules before it installs and would otherwise do that on every
-  # start.
+  # It runs when the lock file is not the one already installed, which a stamp
+  # inside the volume answers: `npm ci` deletes node_modules before it
+  # installs, so running it on every start would do that every time.
+  #
+  # The stamp rather than react-scripts being present, which is what this
+  # asked for until `issue #30` added a package to that lock file: on a volume
+  # populated before such a branch the guard passes, nothing installs, and the
+  # dev server starts without the package. The install survives a populated
+  # mount, which is the question that shape raises.
   openred-web:
     image: node:24-bookworm-slim
     working_dir: /app
     volumes:
       - ./apps/openred-react:/app
       - openred-web-node-modules:/app/node_modules
-    command: sh -c "([ -x node_modules/.bin/react-scripts ] || npm ci --no-audit --no-fund) && exec npm start"
+    command: sh -ec "cmp -s package-lock.json node_modules/.installed || { npm ci --no-audit --no-fund; cp package-lock.json node_modules/.installed; }; exec npm start"
     environment:
       # The API through this dev server's own proxy (`src/setupProxy.js`), not
       # from the browser, as in production behind nginx — and what the front
@@ -547,12 +550,18 @@ services:
       # Correctly shaped and not a real client id. `GoogleOAuthProvider` is
       # mounted unconditionally and `LoginPage` calls `useGoogleLogin` as a
       # top-level hook, so an empty value throws from Google's own script
-      # before /login renders — taking email-and-password sign-in down with it,
-      # which is the one way in this application has until its integration
-      # (`issue #30`). The value is the placeholder that application's
-      # .env.example ships, for the same reason. Pressing the Google button
-      # fails, and locally it could not work anyway.
+      # before /login renders — taking the whole page down with it, the
+      # Ibercivis account button included. The value is the placeholder that
+      # application's .env.example ships, for the same reason. Pressing the
+      # Google button fails, and locally it could not work anyway.
       REACT_APP_GOOGLE_CLIENT_ID: 000000000000-localdevplaceholder.apps.googleusercontent.com
+      # The Broker's issuer and the client the API is registered as: this app
+      # reads discovery from the issuer, in the browser, and asks for a code for
+      # that client. The secret is not here, and nothing a browser loads could
+      # keep it. `react-scripts start` compiles on every start, so these are
+      # read then rather than baked into an image.
+      REACT_APP_IBERCIVIS_ACCOUNT_ISSUER: ${BROKER_ISSUER:?declare it in .env}
+      REACT_APP_IBERCIVIS_ACCOUNT_CLIENT_ID: ${OPENRED_CLIENT_ID:?declare it in .env}
       # REACT_APP_API_URL is deliberately absent. It is read at build time
       # only: `npm start` serves a relative baseURL and the proxy above decides
       # the target. Setting it here would name an address the running
