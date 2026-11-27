@@ -2,16 +2,17 @@
 
 # Reading the Broker's pages: the regexes already misread them
 
-**Verdict.** The regexes in `tests/brokered-app.ts` already misread real Broker pages. They agree
-with every DOM parser measured on forms and links, and get the readable text wrong on 64 of 370
-pages: 29 keep an entity undecoded (`&#42;`), and 35 leak a script body, because Keycloak serves one
-`<SCRIPT>` in upper case and the strip is case-sensitive. A DOM parser removes both. happy-dom and
-parse5 read every page as the regexes do apart from those two faults, and pass every adversarial
-snippet. happy-dom is the recommendation, because it reads through the standard DOM API. parse5
-is the fallback if its 22 MB matters.
+**Verdict.** The regexes `tests/brokered-app.ts` used to carry misread real Broker pages. They
+agreed with every DOM parser measured on forms and links, and got the readable text wrong on 64 of
+370 pages: 29 kept an entity undecoded (`&#42;`), and 35 leaked a script body, because Keycloak
+serves one `<SCRIPT>` in upper case and the strip was case-sensitive. happy-dom and parse5 read
+every page as the regexes did apart from those two faults, and pass every adversarial snippet.
+`tests/brokered-app.ts` now uses happy-dom, because it reads through the standard DOM API, at a
+cost of 2 to 3 seconds on the suite. parse5 is the fallback if that time or its 22 MB install
+matters.
 
-**Read on only if** you are replacing the readers, or are about to pick a parser other than these
-two.
+**Read on only if** you are reconsidering happy-dom for the harness, or are about to pick another
+HTML parser.
 
 ## How it was measured
 
@@ -55,9 +56,5 @@ twice what the per-page figures above predict.
 
 ## What this reading does not fix
 
-- **An unchecked checkbox is posted anyway.** The email update form carries `logout-sessions`
-  unchecked, and the harness sends `logout-sessions=` where a browser sends nothing. Every reader
-  measured does the same, because the readers copy attributes and never ask whether a box is
-  checked.
 - **`pageComplaint` reads by element id** (`kc-page-title`, `input-error*`). It only explains a
   failure and decides nothing, and its last line already says everything the page says.
