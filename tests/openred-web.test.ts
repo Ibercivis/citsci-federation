@@ -8,18 +8,18 @@ import { configured } from "./broker.ts";
  * It asserts the sign-in this application has always had, and **not** the one
  * through the Broker, which `issue #30` added: that one is a browser's, since
  * the code is obtained and the callback page is rendered by JavaScript, and a
- * browser is seam 3 (`issue #34`). This front end joined the composition
- * before the integration (`issue #96`), which is why this file predates it.
+ * browser is what the test that crosses two applications drives (`issue #34`).
+ * This front end joined the composition before the integration (`issue #96`),
+ * which is why this file predates it.
  *
  * **No screen is rendered here.** This suite fetches documents and calls APIs;
  * it runs no JavaScript, so what it holds is the application's own sign-in
  * contract through its own origin, not the page a Person would see. The one
- * thing it holds about the Broker is the field seam 3 reads the Person
- * Identifier from, which is served whether or not a Broker account is behind
- * it. Asserting
- * the page is seam 3's job (`issue #34`). The two failures that need a browser
- * — the Google provider throwing on mount, the map with no basemap — are
- * recorded in `docs/trying-it-by-hand.md` and checked by hand.
+ * thing it holds about the Broker is the field the profile screen reads the
+ * Person Identifier from, which is served whether or not a Broker account is
+ * behind it. Asserting the page is that browser test's job. The two failures
+ * that need a browser — the Google provider throwing on mount, the map with no
+ * basemap — are recorded in `docs/trying-it-by-hand.md` and checked by hand.
  */
 
 /** The front end's address, and the API's. Two hostnames, one application: the
@@ -112,7 +112,7 @@ describe.skipIf(!composition)("OpenRed's React front end", () => {
     expect((await tracks.json()) as unknown[]).not.toHaveLength(0);
   });
 
-  it("serves the field seam 3 reads the Person Identifier from", async () => {
+  it("serves the Person Identifier field its profile screen reads, null for a Person from before the Broker", async () => {
     const key = await signIn();
 
     const me = await fetch(`${WEB}/dj-rest-auth/user/`, {
@@ -121,11 +121,12 @@ describe.skipIf(!composition)("OpenRed's React front end", () => {
     expect(me.status).toBe(200);
 
     // The endpoint that application's own profile screen calls, which is where
-    // seam 3 will read the identifier (`issue #34`). This Person existed before
-    // the Broker, so hers is null — the value belongs to an arrival through the
-    // Broker, and that one is a browser's to drive. What a Person arriving here
-    // cannot show, the field being served at all can: drop it from the
-    // serializer and seam 3 has nothing to read.
+    // the browser test across two applications reads the identifier
+    // (`issue #34`). This Person existed before the Broker, so hers is null —
+    // the value belongs to an arrival through the Broker, and that one is a
+    // browser's to drive. What a Person arriving here cannot show, the field
+    // being served at all can: drop it from the serializer and that test has
+    // nothing to read.
     //
     // It needs the application half of `issue #30` on `federation`, which is
     // the branch `scripts/checkout-apps.sh` builds. Until that merges this is
