@@ -111,28 +111,17 @@ curl -i http://localhost:8080/
 would succeed with cookies and a `redirect_uri` of a shape production never sees, which is the
 class of failure this composition exists to meet early (ADR-0001).
 
-### 2. A sign-in at the Broker, asked for the way an application asks
+### 2. A sign-in at the Broker, asked for by an application
 
-```sh
-open "$(pnpm -s sign-in-url)"          # or `geonity`, or `openred`
-```
+http://lostatnight.localhost:8080/accounts/login/ → **Ibercivis**.
 
 In order:
 
 1. **Sign in to Ibercivis Citizen Science** — the Broker's own page, nobody else's. `demo` /
    `demo-password`.
-2. The **consent screen**, naming the application. That name comes from the client the realm
-   registered for it.
-3. Back to the application's callback with `code=…` in the address bar. For `lostatnight` that is
-   `…/accounts/oidc/callback`, **which 404s**: that address is this script's own, LostAtNight serves
-   its callback at `/accounts/oidc/ibercivis/login/callback/` and redeems the code itself, which is
-   step 5, and nothing serves the bare one. For `geonity` and `openred` it is the web app's
-   `/auth/ibercivis/callback`, which says the sign-in did not work — because this URL was not
-   started there, so the browser kept no verifier for it.
-
-The `code=` in the address bar is the Broker having done all of its half. Redeeming it needs the
-client secret, which is not a thing to put in an address bar; `pnpm test` redeems codes, over the
-protocol, with no browser involved.
+2. The **consent screen**, naming the application: **Grant Access to LostAtNight**. That name comes
+   from the client the realm registered for it. The Broker asks once per Person and application.
+3. Back at LostAtNight, signed in. What the application did with the code is step 5.
 
 That page also offers **Register**, which is the Local Credential the Broker holds itself (ADR-0005,
 `issue #26`): the form asks for an address alone, the confirmation lands in the same inbox as step 7,
@@ -141,33 +130,38 @@ instead of registered.
 
 ### 3. A Person arriving from an Identity Source
 
-The same URL, but instead of typing a password choose **Mock Identity Source**: `mock-verified` /
-`mock`.
+The same button, in a private window, and no other private window open: they share one session
+among themselves. In step 2's window the button shows no Broker page at all, for the reason
+**Single sign-out is not settled** gives at the end of this file.
 
-That source is a server this repository runs ([`mock-identity-source/`](../mock-identity-source/))
-so that the tests can decide what a source says about an address. It is not a launch source, and it
-starts only in `testing`: in `demo` the sign-in page has no **Mock Identity Source**.
+Instead of typing a password choose **Mock Identity Source A, affirms addresses**: `mock-verified` /
+`mock`. The consent screen again, and back at LostAtNight as a Person who arrived from that source.
+The plain **Mock Identity Source** affirms no address, so the Broker asks a Person arriving from it
+for one and confirms it by mail before signing them in (ADR-0004).
+
+Both are one server this repository runs ([`mock-identity-source/`](../mock-identity-source/)), so
+that the tests can decide what a source says about an address. Neither is a launch source, and both
+start only in `testing`: in `demo` the sign-in page offers no **Mock Identity Source**.
 
 ### 4. The Person, as the Broker holds them
 
-http://broker.localhost:8080/realms/citsci/account, as whoever step 2 or 3 left you signed in as.
+http://broker.localhost:8080/realms/citsci/account, in either window: each shows whoever step 2 or 3
+left signed in there.
 
 The only screen in the composition that shows the **Person** rather than one application's account:
 the profile, the sessions, and — for a Person who arrived from an Identity Source — the source they
-are linked to. Step 3's `mock-verified` is linked to `mock-identity-source`; `demo` is not linked to
-anything, because `demo` signs in with a local credential.
+are linked to. Step 3's `mock-verified` is linked to **Mock Identity Source A**; `demo` is not
+linked to anything, because `demo` signs in with a local credential.
 
 It is Keycloak's own screen, not ours. Nothing of ours links to it and nothing depends on it,
 but it is the shortest answer to "so what does the Broker actually know about me".
 
 ### 5. Signing in to an application with an Ibercivis account
 
-http://lostatnight.localhost:8080/accounts/login/ → **Sign in with your Ibercivis account**.
-
-The first half of the project's claim, clickable: the application sends you to the Broker, the Broker
-signs you in, the application redeems the code itself and you come back signed in. `demo` /
-`demo-password` as in step 2, and the Broker asks for consent on the way, because the client is
-declared `consentRequired`.
+Step 2 was this sign-in, watched at the Broker. Seen from LostAtNight it is the first half of the
+project's claim: the application sends you to the Broker, the Broker signs you in, and the
+application redeems the code itself. The consent screen is there because the client is declared
+`consentRequired`.
 
 Then http://lostatnight.localhost:8080/user-profile/: the personal area names the **Ibercivis
 account** and shows the identifier the Broker minted — the same string every application in the
@@ -246,6 +240,8 @@ The one step that needs something `.env` cannot hold. Copy [`.env.example`](../.
 `.env.local`, uncomment and fill in the client ids and secrets the two applications were
 registered with, and `pnpm broker:reset`. A line left empty breaks that button; leave it commented. Without them, both buttons send you to Google or GitHub with
 `client_id=not-configured`, and the source refuses you there.
+
+Each bullet is a fresh arrival at the Broker: a private window each, as in step 3.
 
 - **Google**: choose **Google** on the Broker's sign-in page and sign in with a real account. You
   come back with a Person Identifier, as in step 2, and step 4 shows the Person with a Google

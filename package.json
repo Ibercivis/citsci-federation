@@ -13,7 +13,6 @@
     "apps:logs": "docker compose -f compose.yaml -f compose.apps.yaml logs -f",
     "apps:reset": "./scripts/apps-up.sh --reset",
     "clean-slate": "./scripts/clean-slate.sh",
-    "sign-in-url": "./scripts/sign-in-url.sh",
     "persons": "./scripts/persons.sh",
     "format": "oxfmt .",
     "format:check": "oxfmt --check .",
