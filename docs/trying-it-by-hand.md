@@ -3,8 +3,6 @@
 What somebody with a browser does to see the composition work: the manual pass before a pull request,
 feature by feature. What the composition *is* and how it is wired is in the
 [README](../README.md) and ADR-0009 — this file is only the clicking.
-[`demo-script.md`](demo-script.md) is the ordered sequence to run in front of people, and it assumes
-this file has been read once.
 
 ## Before you start
 
@@ -50,6 +48,40 @@ GitHub, or registers at the Broker (step 2's **Register**). Wherever a step belo
 The mode holds only through a reset, for the reason `.env` gives. Back to `testing` is `pnpm
 apps:reset` without the variable. `pnpm apps:up` refuses `production`, which runs no mail catcher
 for the applications to send to.
+
+Four things to have ready. Each one breaks a demo quietly rather than visibly:
+
+- **A GitHub account whose primary address is the one Google signs in with, verified at GitHub.**
+  Step 9's third bullet is the claim worth showing a room, and two different addresses are two
+  Persons on purpose (ADR-0004), with no merge flow to fall back on. An address GitHub has not
+  verified still joins, but through the mail catcher.
+- **A private window for each run through.** Signing out of an application does not end the
+  Broker's own session, so the next arrival is asked nothing and there is nothing to watch.
+- **`pnpm persons --watch`, projected beside the browser.** Nothing else shows what is being
+  claimed: an application is told a Person Identifier and nothing more (ADR-0002), and the account
+  console shows only the Person looking at it. One row is one Person, `identities` is the sources
+  that Person can arrive through, and `pending` is what the Broker is still waiting for before they
+  may reach an application.
+- **Say once that no mail leaves this machine.** Every message lands in the catcher at
+  `mail.localhost:8080`, the Broker's included, which is what makes a real address safe to type.
+  Somebody asks.
+
+What a room asks, and where each answer is decided:
+
+- **"Must I use Google?"** No. **Register** at the Broker is an address and a password it holds
+  itself (ADR-0005).
+- **"My GitHub address is a different one."** Then you are two Persons and there is no merge flow.
+  ADR-0004 took that deliberately, and a future merge has to add an alias rather than reassign,
+  because an identifier is never reassigned (ADR-0002).
+- **"So whoever reads my mail becomes me?"** Yes, and it is written down as accepted rather than
+  overlooked (ADR-0004). The same mailbox already recovers the password.
+- **"What if somebody registers at my address first?"** They get your Person made for them and one
+  extra confirmation in your way, not access: that Person holds no credential and no way to set one
+  without the mailbox. `issue #148` owns it and ADR-0004 names it.
+- **"What do the applications learn about me?"** The identifier, and whatever you tell them
+  yourself. No name and no roles: the Broker issues neither (ADR-0003).
+- **"Where can I try it?"** Nowhere yet. The composition runs on a laptop, and a public address is
+  a later decision left cheap to take (ADR-0001).
 
 ## The addresses
 
@@ -240,6 +272,8 @@ Broker, and is the one-line fix. `PR #164` weighed the three.
 
 ## What does not work yet, on purpose
 
+- **Single sign-out is not settled.** Signing out of one application leaves the Broker's session
+  standing, and the next application does not ask again.
 - **No test asserts single sign-on across two applications.** All three have a button now
   (step 5), so it can be tried by hand — sign in at one, then open another and press its button,
   and the Broker should not ask again. The browser test that asserts it is `issue #34`.

@@ -14,7 +14,7 @@
 # `--watch` is for projecting beside a browser: the row appears as somebody
 # signs in, and changes as they answer the mail. It is what makes "nothing is
 # written until the link is followed" something a room can see rather than
-# something they are told (`docs/demo-script.md`).
+# something they are told (`docs/trying-it-by-hand.md`).
 #
 # Delete it when a screen of ours shows a Person beside their Identities, or
 # when the demo it was written for has been given for the last time.

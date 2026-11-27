@@ -43,9 +43,8 @@ pnpm apps:down    # keeps the data; `pnpm apps:reset` throws it away
 ```
 
 **The walkthrough is [`docs/trying-it-by-hand.md`](docs/trying-it-by-hand.md)**: the addresses, the
-seeded accounts, what to click, and what does not work yet.
-[`docs/demo-script.md`](docs/demo-script.md) is the same composition as a sequence to run in front
-of people.
+seeded accounts, what to click, what to have ready before running it in front of people, and what
+does not work yet.
 
 Docker, `git` and `curl` are what it needs; the scripts are POSIX shell and run
 without Node, so a machine with no pnpm on it calls
