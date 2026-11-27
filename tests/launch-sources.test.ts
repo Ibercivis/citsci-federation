@@ -6,6 +6,7 @@ import {
   createPkce,
   follow,
   linksOn,
+  marksOn,
   type Page,
   requestAuthorization,
 } from "./brokered-app.ts";
@@ -74,18 +75,6 @@ async function signInPage(): Promise<{ browser: Browser; page: Page }> {
   return { browser, page: landing.page };
 }
 
-/** One source's button, sliced out of the page by the id the login theme
- *  gives it. The mark it draws is in there, and nowhere else on the page. */
-function buttonFor(page: Page, alias: string): string {
-  const button = new RegExp(`<a[^>]*id="social-${alias}"[\\s\\S]*?</a>`).exec(
-    page.html,
-  );
-  if (!button) {
-    throw new Error(`The sign-in page offers no button for ${alias}.`);
-  }
-  return button[0];
-}
-
 /** Where the Broker sends a Person who pressed this source's button, read off
  *  the redirect and never followed. */
 async function requestSentTo(name: string): Promise<URL> {
@@ -138,27 +127,23 @@ describe.each(LAUNCH_SOURCES)(
 
     it("draws the source's own mark, never the theme's generic one", async () => {
       const { page } = await signInPage();
-      const button = buttonFor(page, alias);
+      const { drawn } = marksOn(page, alias);
 
-      expect(button).toContain(`img/social/${providerId}.svg`);
-      expect(button).not.toContain("img/social/default");
+      expect(drawn).toContain(`img/social/${providerId}.svg`);
+      expect(drawn).not.toContain("img/social/default");
     });
 
     it.runIf(darkMark)("offers a dark page the mark made for one", async () => {
       const { page } = await signInPage();
-      const button = buttonFor(page, alias);
+      const { drawn, offered } = marksOn(page, alias);
 
       // Which mark goes with which scheme, and not merely that both are
-      // named: the two are a `<picture>`, and the pair wired the other way
-      // round would satisfy their presence alone.
-      expect(button).toMatch(
-        new RegExp(
-          `<source[^>]*srcset="[^"]*img/social/${providerId}-light\\.svg"[^>]*media="\\(prefers-color-scheme: dark\\)"`,
-        ),
+      // named: the pair wired the other way round would satisfy their
+      // presence alone.
+      expect(offered["(prefers-color-scheme: dark)"]).toContain(
+        `img/social/${providerId}-light.svg`,
       );
-      expect(button).toMatch(
-        new RegExp(`<img[^>]*src="[^"]*img/social/${providerId}\\.svg"`),
-      );
+      expect(drawn).toContain(`img/social/${providerId}.svg`);
     });
 
     it("names a client id, never the placeholder's literal text", async () => {
