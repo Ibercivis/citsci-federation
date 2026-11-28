@@ -460,9 +460,10 @@ later decides its own `trustEmail` (ADR-0004).
   (`issue #225`). Nothing lighter reaches the mark: `social-providers.ftl`
   switches on a hardcoded list of stock ids and writes `default.svg` for
   anything else, so there is no file to drop in, and `displayIconClasses`
-  swaps the whole button for a span `keycloak.v2` loads no icon font for. What
-  is left is a login theme of our own, maintained against every move of the
-  Keycloak pin (ADR-0017), for one icon.
+  swaps the whole button for a span `keycloak.v2` loads no icon font for. The
+  one route left is a login theme of our own, maintained against every move of
+  the Keycloak pin (ADR-0017), for one icon: refused, and the id moved
+  instead.
 - **Their credentials are `${NAME:not-configured}`.** The value comes from
   outside the repository (`.env.example` names them). A name nobody valued
   would otherwise be imported as the literal `${NAME}`. The default makes the
@@ -502,6 +503,11 @@ the rule and the measurements. Keycloak reports the collision at debug level and
 nowhere else, so nothing announces a build that resolved it the other way: one
 case in `tests/github-source.test.ts` fails against the stock provider, and that
 is the whole guard.
+
+What the id rules out is the stock provider itself. Every realm in this image
+that declares `github` gets ours, including one somebody adds later, and no id
+is left to ask for Keycloak's by. A realm that wants GitHub's `verified`
+unread has to come off this image.
 
 ### The Mock Identity Source
 
