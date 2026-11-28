@@ -15,10 +15,6 @@ virtuous is the same in every one of these applications so far:
 Each environment lives on that application's `federation` branch, in a `LOCAL-DEV.md` at the root
 of its repository. This file is the index and holds no instructions of its own.
 
-**An integrated application may have no place in the composition at all.**
-CitSciSort is the first (ADR-0019), and for it this local environment is the
-only way to start the application rather than one of two.
-
 **This is not the Brokered Composition.** An environment here starts one application on its own, with
 ports on localhost, for building and debugging it. The composition starts the Broker and every
 integrated application together behind one proxy, each at a hostname, and is what single sign-on is
@@ -207,9 +203,9 @@ Public source: real citizen-science literature from **OpenAlex** (metadata CC0)
 published, from a snapshot committed in `local_dev/`. Accounts, profiles,
 classifications and debates invented. Sixty abstracts, five accounts.
 
-**This one is not in the Brokered Composition** (ADR-0019), so it is the first
-local environment that is the *only* way to start the application. There is no
-`pnpm apps:up` for it, and `compose.apps.yaml` does not mention it.
+**Not in the Brokered Composition** (ADR-0019), so this is the first entry here
+that is the only way to start its application: no `pnpm apps:up`, and no stack
+in `compose.apps.yaml`.
 
 Four things this one taught that the first three did not:
 
