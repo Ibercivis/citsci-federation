@@ -25,6 +25,7 @@ interface ImportedRealm {
 /** One `identityProviders` entry, as the realm holds it. */
 interface RealmProvider {
   alias: string;
+  providerId: string;
   displayName: string;
   trustEmail: boolean;
   config?: Record<string, string>;
@@ -47,6 +48,10 @@ export interface DeclaredSource {
   /** The scope the Broker asks this source for. It decides which claims the
    *  source puts in its ID token, so a case about those reads it here. */
   asksFor: string;
+  /** The id of the Keycloak provider the Broker runs this source through. The
+   *  sign-in page draws the button's mark by this id and never by the alias,
+   *  and two sources naming the same id are served by the same code. */
+  providerId: string;
 }
 
 /**
@@ -82,10 +87,17 @@ export function declaredSource(alias: string): DeclaredSource {
         "sends is Keycloak's default, not a decision anybody here made.",
     );
   }
+  if (!provider.providerId) {
+    throw new Error(
+      `The realm runs ${alias} through no provider at all: an alias with no ` +
+        "provider behind it is a sign-in no Person can start.",
+    );
+  }
   return {
     name: provider.displayName,
     affirmsAddresses: provider.trustEmail,
     asksFor,
+    providerId: provider.providerId,
   };
 }
 

@@ -4,6 +4,7 @@ import { CONFIDENTIAL_CLIENT } from "./clients.ts";
 import { PERSON_IDENTIFIER } from "./broker.ts";
 import { Browser, attempt, authenticate, follow } from "./brokered-app.ts";
 import { linkMailedTo, mailCountTo } from "./mailbox.ts";
+import { declaredSource } from "./realm.ts";
 import {
   AFFIRMING_SOURCE_A,
   AFFIRMING_SOURCE_B,
@@ -166,5 +167,21 @@ describe("a GitHub Identity whose verdict the Broker cannot read", () => {
     expect(arrival.outcome).toBe("refused-in-the-browser");
     await linkMailedTo(address);
     expect(await mailCountTo(address)).toBe(1);
+  });
+});
+
+/**
+ * Everything above is staged against the imitation, never against GitHub. It
+ * carries to the launch source — the one a Person presses, and the one no case
+ * here can reach — only while the two run through one provider.
+ *
+ * The mark that provider's id draws on the button is held in
+ * `tests/launch-sources.test.ts` (`issue #225`).
+ */
+describe("the provider these cases exercise", () => {
+  it("is the one the launch GitHub source goes through", () => {
+    expect(declaredSource("mock-identity-source-github").providerId).toBe(
+      declaredSource("github").providerId,
+    );
   });
 });

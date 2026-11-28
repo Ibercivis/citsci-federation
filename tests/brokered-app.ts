@@ -239,6 +239,38 @@ export const linkTextsOn = (html: string): string[] =>
   anchorsIn(html).map((link) => link.text);
 
 /**
+ * What one Identity Source's button draws: the file its `<img>` names, and
+ * the file a `<source>` offers instead, by the media it answers to. Read as
+ * file names, which is all a case about the mark asks.
+ *
+ * By element id, unlike `linksOn` above, and for the opposite reason: a mark
+ * is not something a Person reads, so there is no text to find it by, and the
+ * id is how the login theme names the button it drew.
+ */
+export function marksOn(
+  page: Page,
+  alias: string,
+): { drawn: string; offered: Record<string, string> } {
+  const button = parse(page.html).querySelector(`a#social-${alias}`);
+  if (!button) {
+    throw new Error(`The sign-in page offers no button for ${alias}.`);
+  }
+  const drawn = button.querySelector("img")?.getAttribute("src");
+  if (!drawn) {
+    throw new Error(`The ${alias} button draws no image.`);
+  }
+  return {
+    drawn,
+    offered: Object.fromEntries(
+      [...button.querySelectorAll("source")].map((source) => [
+        source.getAttribute("media") ?? "",
+        source.getAttribute("srcset") ?? "",
+      ]),
+    ),
+  };
+}
+
+/**
  * Who signs in, and through which Identity Source. `through` is the source's
  * name as the Broker's sign-in page shows it; absent, the Person signs in with
  * a Local Credential on the Broker's own form.

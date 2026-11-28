@@ -77,7 +77,7 @@
     {
       "alias": "github",
       "displayName": "GitHub",
-      "providerId": "citsci-github",
+      "providerId": "github",
       "enabled": true,
       "trustEmail": true,
       "storeToken": false,

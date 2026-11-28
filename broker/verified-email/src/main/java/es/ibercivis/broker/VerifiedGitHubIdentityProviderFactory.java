@@ -7,16 +7,23 @@ import org.keycloak.social.github.GitHubIdentityProvider;
 import org.keycloak.social.github.GitHubIdentityProviderFactory;
 
 /**
- * Registers {@link VerifiedGitHubIdentityProvider} under an id of its own.
+ * Registers {@link VerifiedGitHubIdentityProvider} under Keycloak's own id for
+ * GitHub, in place of the stock provider.
  *
- * <p>Its own id rather than {@code github}: two factories under one id leave
- * Keycloak to pick one, and a realm declaring {@code github} would then get
- * whichever won. A realm that wants GitHub's {@code verified} read names this
- * id, and nothing else changes: the configuration is the stock provider's.
+ * <p>{@code github} rather than an id of our own: the login theme picks the
+ * button's mark by the provider id, knows no id of ours, and offers no way in
+ * short of a theme of our own. {@code broker/README.md} weighs the two, under
+ * "The launch sources: Google and GitHub" ({@code issue #225}).
+ *
+ * <p>Which of the two factories answers to the id is settled rather than
+ * raced: {@code docs/notes/2026-11-25-two-provider-factories-under-one-id.md}.
+ *
+ * <p>{@code tests/github-source.test.ts} is the guard, and the only one: one
+ * of its cases fails on the stock provider.
  */
 public class VerifiedGitHubIdentityProviderFactory extends GitHubIdentityProviderFactory {
 
-  public static final String PROVIDER_ID = "citsci-github";
+  public static final String PROVIDER_ID = "github";
 
   @Override
   public String getName() {
@@ -26,6 +33,15 @@ public class VerifiedGitHubIdentityProviderFactory extends GitHubIdentityProvide
   @Override
   public GitHubIdentityProvider create(KeycloakSession session, IdentityProviderModel model) {
     return new VerifiedGitHubIdentityProvider(session, new OAuth2IdentityProviderConfig(model));
+  }
+
+  /**
+   * Above the stock GitHub factory's 0. This is what decides which of the two
+   * answers to the id, so it is not a number to tidy away.
+   */
+  @Override
+  public int order() {
+    return 1;
   }
 
   @Override
