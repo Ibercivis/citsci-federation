@@ -133,17 +133,19 @@ describe.each(LAUNCH_SOURCES)(
       expect(drawn).not.toContain("img/social/default");
     });
 
-    it.runIf(darkMark)("offers a dark page the mark made for one", async () => {
+    it("offers a dark page the mark made for one, where there is one", async () => {
       const { page } = await signInPage();
       const { drawn, offered } = marksOn(page, alias);
 
       // Which mark goes with which scheme, and not merely that both are
       // named: the pair wired the other way round would satisfy their
-      // presence alone.
-      expect(offered["(prefers-color-scheme: dark)"]).toContain(
-        `img/social/${providerId}-light.svg`,
-      );
+      // presence alone. A source the theme ships one mark for is held here
+      // too, at the nothing it offers a dark page, because a case that did
+      // not run would report that green whichever way the theme moved.
       expect(drawn).toContain(`img/social/${providerId}.svg`);
+      expect(offered["(prefers-color-scheme: dark)"]).toBe(
+        darkMark ? drawn.replace(".svg", "-light.svg") : undefined,
+      );
     });
 
     it("names a client id, never the placeholder's literal text", async () => {
