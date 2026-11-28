@@ -63,16 +63,15 @@ so the stock provider sits at the interface default of 0.
 answers `GitHub`.
 
 With `order()` at 1, the realm declaring `github` for both the launch source and the testing mock,
-and a fresh import, `tests/github-source.test.ts` is 4 of 4 green.
+and a fresh import, `tests/github-source.test.ts` passes.
 
 ## What the stock provider does to that suite
 
 The negative control: our factory back on `citsci-github` while the realm still declared `github`,
-so the stock one served it. **One case of the four fails** — "is a Person straight away at an address
-nobody holds". The two unverified cases pass, and so does the join onto a Person who already holds
-the address.
+so the stock one served it. **One case fails** — "is a Person straight away at an address nobody
+holds". The unverified cases pass, and so does the join onto a Person who already holds the
+address.
 
 That one case is what a test guarding the override has to carry. It also says which way a regression
 would break: a GitHub arrival GitHub did verify is asked for its address by mail, rather than an
-unverified one being let through. Fail-safe on these four cases, with `UnverifiedEmailCondition`
-installed.
+unverified one being let through. Fail-safe, with `UnverifiedEmailCondition` installed.
