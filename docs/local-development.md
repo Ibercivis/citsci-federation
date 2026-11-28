@@ -25,8 +25,8 @@ and reuses the Dockerfile and the `seed_local` command the work below produced.
 **Mail is caught, never printed.** Every one of these applications keeps
 `ACCOUNT_EMAIL_VERIFICATION = 'mandatory'`, as production does, so a sign-up cannot be finished
 without reading the message; `mailpit` catches it and shows it in a web inbox. The inboxes hold
-8025, 8026 and 8027, one per stack, because the compose files are meant to come up together — the
-fourth application takes 8028.
+8025, 8026, 8027 and 8028, one per stack, because the compose files are meant to come up
+together.
 
 **An application missing from this list has no local environment**, not an undocumented one.
 
@@ -180,9 +180,64 @@ tags tried: they are Debian bullseye, and `apt.postgresql.org` no longer serves 
 map's data paths answer with seeded rows: `…/h3-aggregation/`, which it calls below zoom 15, and
 `…/compact/`, which it calls at zoom 15 and above — for radiation and for light pollution alike.
 
+## CitSciSort
+
+- [`Ibercivis/citscisort`](https://github.com/Ibercivis/citscisort) · `federation` · `LOCAL-DEV.md` — the API and the React app, one repository
+
+Django REST + PostgreSQL, Redis, an `rq` worker and a scheduler, and a mail
+catcher. Nothing of it existed: `Dockerfile.local`, `docker-compose.local.yml`
+and the dataset are all new. The React app has **no container recipe**: here it
+is `npm ci && npm run dev` on the host.
+
+```sh
+docker compose -f docker-compose.local.yml up -d --build
+docker compose -f docker-compose.local.yml exec api python manage.py migrate
+docker compose -f docker-compose.local.yml exec api python manage.py seed_local
+```
+
+API on <http://localhost:8030/>, app on <http://localhost:3020/>, inbox on
+<http://localhost:8028/>. The fourth stack, so the fourth set of ports.
+
+Public source: real citizen-science literature from **OpenAlex** (metadata CC0)
+— titles, abstract texts, years, journals, citation counts and subject areas as
+published, from a snapshot committed in `local_dev/`. Accounts, profiles,
+classifications and debates invented. Sixty abstracts, five accounts.
+
+**Not in the Brokered Composition** (ADR-0019), so this is the first entry here
+that is the only way to start its application: no `pnpm apps:up`, and no stack
+in `compose.apps.yaml`.
+
+Four things this one taught that the first three did not:
+
+- **An application's `requirements.txt` may be uninstallable anywhere but its
+  own server.** This one is a `pip freeze` of a whole working environment, and
+  `bluepy` — a Linux Bluetooth library nothing in the application imports —
+  fails to build a wheel in a clean `python:3.12-slim-bookworm`. The branch
+  gains a `requirements-core.txt` of what the application actually imports, at
+  the versions `requirements.txt` already pins, plus a script that refuses a
+  divergence. Both CI and the image run that script before installing.
+- **A container cannot resolve the Broker's `.localhost` name when the Broker
+  is another compose project.** glibc answers for `*.localhost` with the
+  loopback, which inside a container is the container. `extra_hosts:
+  ["broker.localhost:host-gateway"]` on the application's services fixes it,
+  and this is the first environment that needed it: the other three reach the
+  Broker over the composition's own network.
+- **The bibliography is the personal-data question here, not the observations.**
+  The domain data is published literature, so the usual seam does not apply as
+  cleanly: the records are public, but the author and affiliation lines name
+  real people. The fetch script's allow-list drops every field OpenAlex has
+  about a person and the seed invents an author line; the DOI is kept, so the
+  real paper is one lookup away.
+- **A `post_save` receiver can make a nullable column unusable.** Creating a
+  classification with no user raises in that application, although the column
+  is nullable and its own account-deletion path sets it to null — that path
+  uses `.update()`, which sends no signal. The seed makes its one unattached
+  row the same way. Written up in that application's `LOCAL-DEV.md`, which is
+  where a defect we found but did not cause belongs.
+
 ## Building one for a new application
 
-The order that worked three times:
+The order that worked four times:
 
 1. **Find the seam.** Which tables hold personal data, and which hold domain data. The answer
    decides everything else. It is mostly accounts, emails and profile — but **check rather than

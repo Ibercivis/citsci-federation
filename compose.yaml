@@ -134,6 +134,11 @@ services:
       OPENRED_WEB_BASE_URL: ${OPENRED_WEB_BASE_URL:?declare it in .env}
       OPENRED_CLIENT_ID: ${OPENRED_CLIENT_ID:?declare it in .env}
       OPENRED_CLIENT_SECRET: ${OPENRED_CLIENT_SECRET:?declare it in .env}
+      # Registered here and running nowhere in this composition (ADR-0019), so
+      # the import needs these three and the proxy needs nothing.
+      CITSCISORT_WEB_BASE_URL: ${CITSCISORT_WEB_BASE_URL:?declare it in .env}
+      CITSCISORT_CLIENT_ID: ${CITSCISORT_CLIENT_ID:?declare it in .env}
+      CITSCISORT_CLIENT_SECRET: ${CITSCISORT_CLIENT_SECRET:?declare it in .env}
       # Behind the proxy, over HTTP, in production mode: the shape the ADR
       # asks for, with TLS terminated in front rather than absent.
       KC_HTTP_ENABLED: "true"

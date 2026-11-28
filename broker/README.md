@@ -178,12 +178,18 @@ serves, because the integrated applications are Django. A third,
 
 ### And one client per Brokered App
 
-One per application `compose.apps.yaml` brings up (ADR-0009); which those are
-is that file's business and `.env`'s, not this one's. Each one's id, secret and
-address are read from `.env` and substituted into the realm by the import, so
-the Broker and the application's own container are told the same three values
-from one declaration. The application reads them as configuration (ADR-0001)
-and holds none of them in its code.
+One per application that has been integrated; which those are is `.env`'s
+business, not this one's. Each one's id, secret and address are read from `.env`
+and substituted into the realm by the import, so the Broker and the application
+are told the same three values from one declaration. The application reads them
+as configuration (ADR-0001) and holds none of them in its code.
+
+**Not one per application `compose.apps.yaml` brings up.** Three of the four
+are in the Brokered Composition and CitSciSort is not (ADR-0019): it is
+registered here, absent from that file and from the proxy, and tested in its own
+repository. So the clients here are the longer list, and the one asymmetry a
+reader of those two files meets is this one. Each client's `description` says
+which it is.
 
 **They are in the base layer**, not in the testing one. A stand-in exists for
 the tests and stops existing in `production`; these are the applications
@@ -191,26 +197,35 @@ themselves, and a Broker that did not know them would have nothing to broker
 for. What is development-only about them is the value of each `${NAME}`, which
 is `.env`'s business and not the realm's.
 
-**Each redirect URI is the one its integration settled on**, and all three
-have landed (`issue #30`, `issue #31`, `issue #94`), so none of them is a
-development guess like the stand-ins above.
+**Each redirect URI is the one its integration settled on**, and three have
+landed (`issue #30`, `issue #31`, `issue #94`), so none of those is a
+development guess like the stand-ins above. CitSciSort's (`issue #242`) is the
+fourth.
 
 LostAtNight's is the namespace django-allauth serves its callbacks under,
 `<LOSTATNIGHT_BASE_URL>/accounts/oidc/*`, because its own library serves that
 path and redeems the code in the process that receives it.
 
-Geonity's and OpenRed's are one page each, and on their **web app's** address
-rather than their API's: `<GEONITY_WEB_BASE_URL>/auth/ibercivis/callback` and
-`<OPENRED_WEB_BASE_URL>/auth/ibercivis/callback`. The web app starts the code
+Geonity's, OpenRed's and CitSciSort's are one page each, and on their **web
+app's** address rather than their API's:
+`<GEONITY_WEB_BASE_URL>/auth/ibercivis/callback`,
+`<OPENRED_WEB_BASE_URL>/auth/ibercivis/callback` and
+`<CITSCISORT_WEB_BASE_URL>/auth/ibercivis/callback`. The web app starts the code
 flow and receives the code, and the API redeems it with the secret. So the
 client is confidential, and the browser carries PKCE.
 
-**Three places name that page**: here, `compose.apps.yaml`, and the front end
-that serves it. Deriving it inside the API instead would move the copy rather
-than remove it — the path would then be declared twice within one application.
-Nothing asserts the three agree, and a disagreement arrives as
-`invalid_redirect_uri` on the walk through; a case that compared them is worth
-writing the day that costs somebody an hour.
+CitSciSort's address is a **port on the machine**, not a hostname under
+`.localhost` like every other one here. Nothing in this composition serves it,
+so there is no proxy block to put it behind; `.env` says what it is instead.
+
+**Three places name that page**: here, the compose file that passes the
+application its configuration, and the front end that serves it. Deriving it
+inside the API instead would move the copy rather than remove it — the path
+would then be declared twice within one application. Nothing asserts the three
+agree, and a disagreement arrives as `invalid_redirect_uri` on the walk
+through; a case that compared them is worth writing the day that costs somebody
+an hour. For CitSciSort there are two places, because no compose file here
+starts it.
 
 An unset name survives the import as the literal `${NAME}`, so a client whose
 secret is that string is the signature of a missing variable rather than of a
