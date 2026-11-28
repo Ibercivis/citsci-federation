@@ -276,6 +276,67 @@
       "optionalClientScopes": [],
       "clientAuthenticatorType": "client-secret",
       "secret": "${OPENRED_CLIENT_SECRET}"
+    },
+    {
+      "clientId": "${CITSCISORT_CLIENT_ID}",
+      "name": "CitSciSort",
+      "description": "A Brokered App that is not in the Brokered Composition (ADR-0019): Ibercivis/citscisort, on its federation branch, tested in its own repository. It is absent from compose.apps.yaml and from the proxy, so its address is wherever its own local environment runs rather than a hostname this composition serves. The consent screen names it.",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "consentRequired": true,
+      "redirectUris": ["${CITSCISORT_WEB_BASE_URL}/auth/ibercivis/callback"],
+      "webOrigins": [],
+      "attributes": {
+        "pkce.code.challenge.method": "S256"
+      },
+      "protocolMappers": [
+        {
+          "name": "sub",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-person-identifier-mapper",
+          "config": {
+            "person.identifier.scope": "ibercivis.es",
+            "claim.name": "sub",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true",
+            "introspection.token.claim": "true"
+          }
+        },
+        {
+          "name": "voperson_id",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-person-identifier-mapper",
+          "config": {
+            "person.identifier.scope": "ibercivis.es",
+            "claim.name": "voperson_id",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true",
+            "introspection.token.claim": "true"
+          }
+        },
+        {
+          "name": "audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "config": {
+            "included.client.audience": "${CITSCISORT_CLIENT_ID}",
+            "id.token.claim": "false",
+            "access.token.claim": "true",
+            "introspection.token.claim": "true"
+          }
+        }
+      ],
+      "defaultClientScopes": ["acr", "basic", "email", "web-origins"],
+      "optionalClientScopes": [],
+      "clientAuthenticatorType": "client-secret",
+      "secret": "${CITSCISORT_CLIENT_SECRET}"
     }
   ],
   "authenticatorConfig": [

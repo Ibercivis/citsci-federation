@@ -134,6 +134,13 @@ services:
       OPENRED_WEB_BASE_URL: ${OPENRED_WEB_BASE_URL:?declare it in .env}
       OPENRED_CLIENT_ID: ${OPENRED_CLIENT_ID:?declare it in .env}
       OPENRED_CLIENT_SECRET: ${OPENRED_CLIENT_SECRET:?declare it in .env}
+      # CitSciSort is registered here and runs nowhere in this composition
+      # (ADR-0019). The realm references these three, so the import needs them
+      # in either mode exactly as it needs the others above; the proxy does
+      # not, because that application is reached at a port of its own.
+      CITSCISORT_WEB_BASE_URL: ${CITSCISORT_WEB_BASE_URL:?declare it in .env}
+      CITSCISORT_CLIENT_ID: ${CITSCISORT_CLIENT_ID:?declare it in .env}
+      CITSCISORT_CLIENT_SECRET: ${CITSCISORT_CLIENT_SECRET:?declare it in .env}
       # Behind the proxy, over HTTP, in production mode: the shape the ADR
       # asks for, with TLS terminated in front rather than absent.
       KC_HTTP_ENABLED: "true"
